@@ -51,42 +51,37 @@ public final class Constants {
     public static final double TURN_CONSTANT = 6;
   }
 
-  public final class ArmElevatorConstants {
+  public static final class ArmElevatorConstants {
 
-    // ------------------------------
-    // Motor CAN IDs
-    // ------------------------------
+    // Motor IDs
     public static final int ELEVATOR_MOTOR_A_ID = 11;
     public static final int ELEVATOR_MOTOR_B_ID = 12;
     public static final int ARM_MOTOR_ID = 13;
     public static final int INTAKE_MOTOR_ID = 14;
 
-    // ------------------------------
-    // Sensor / Geometry Conversions
-    // (ticks -> degrees, ticks -> inches)
-    // ------------------------------
-    public static final double ARM_TICKS_PER_DEG = 100.0; // FILL THIS
-    public static final double ELEV_TICKS_PER_INCH = 50.0; // FILL THIS
+    // Sensor conversions
+    public static final double ARM_TICKS_PER_DEG = 100.0;
+    public static final double ELEV_TICKS_PER_INCH = 50.0;
 
-    // ------------------------------
-    // Physical Limits
-    // ------------------------------
-    public static final double ARM_MIN_DEG = 0.0; // e.g. stowed
-    public static final double ARM_MAX_DEG = 180.0; // e.g. forward
+    // Arm/Elevator limits
+    public static final double ARM_MIN_DEG = -30.0; // behind
+    public static final double ARM_MAX_DEG = 180.0;
 
     public static final double ELEVATOR_MIN_INCHES = 0.0;
     public static final double ELEVATOR_MAX_INCHES = 50.0;
 
-    // If the arm wants to go behind the robot (funnel):
-    public static final double ARM_BEHIND_DEG = -20.0;
-    // Elevator range that’s safe for behind-robot arm:
-    public static final double ELEV_BEHIND_SAFE_MIN_INCHES = 10.0;
-    public static final double ELEV_BEHIND_SAFE_MAX_INCHES = 30.0;
+    // Funnel
+    public static final double ARM_FUNNEL_DEG = -15.0;
+    public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 10.0;
+    public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 30.0;
+    public static final double ELEVATOR_FUNNEL_INCHES = 10.0;
 
-    // ------------------------------
-    // PID Gains + Feedforward
-    // (placeholders, tune these)
-    // ------------------------------
+    // Stow
+    public static final double ARM_STOW_DEG = 0.0;
+    public static final double ARM_STOW_TOLERANCE_DEG = 5.0;
+    public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 5.0;
+
+    // PID/FF
     public static final double ARM_kP = 0.1;
     public static final double ARM_kI = 0.0;
     public static final double ARM_kD = 0.0;
@@ -100,44 +95,30 @@ public final class Constants {
     public static final double ELEV_kV = 0.0;
     public static final double ELEV_kA = 0.0;
 
-    // Elevator motion-profile constraints (inches/sec, inches/sec^2)
     public static final double ELEVATOR_MAX_VEL = 10.0;
     public static final double ELEVATOR_MAX_ACC = 20.0;
 
-    // ------------------------------
-    // Preset Positions
-    // ------------------------------
-    public static final double ARM_STOW_DEG = 0.0;
-    public static final double ARM_INTAKE_DEG = -15.0; // behind
-    public static final double ARM_LEVEL1_DEG = 30.0;
-    public static final double ARM_LEVEL2_DEG = 60.0;
-    public static final double ARM_LEVEL3_DEG = 90.0;
-    public static final double ARM_LEVEL4_DEG = 120.0;
-
+    // Presets
     public static final double ELEVATOR_STOW_INCHES = 0.0;
-    public static final double ELEVATOR_INTAKE_INCHES = 10.0;
     public static final double ELEVATOR_LEVEL1_INCHES = 20.0;
     public static final double ELEVATOR_LEVEL2_INCHES = 30.0;
     public static final double ELEVATOR_LEVEL3_INCHES = 40.0;
     public static final double ELEVATOR_LEVEL4_INCHES = 50.0;
 
-    // ------------------------------
-    // Tilt Safety
-    // ------------------------------
-    public static final double TILT_THRESHOLD_DEG = 10.0;
+    public static final double ARM_LEVEL1_DEG = 30.0;
+    public static final double ARM_LEVEL2_DEG = 60.0;
+    public static final double ARM_LEVEL3_DEG = 90.0;
+    public static final double ARM_LEVEL4_DEG = 120.0;
 
-    // ------------------------------
     // Tolerances
-    // ------------------------------
     public static final double ARM_TOLERANCE_DEG = 2.0;
     public static final double ELEVATOR_TOLERANCE_INCH = 1.0;
 
-    // ------------------------------
-    // Intake Settings
-    // ------------------------------
-    /** Speed for auto or manual intake. */
-    public static final double INTAKE_SPEED = 0.8; // Placeholder
-    /** If the SparkMax velocity (RPM) goes below this, we consider it "stopped." */
-    public static final double INTAKE_STOPPED_RPM = 50.0; // Placeholder threshold
+    // Tilt safety
+    public static final double TILT_THRESHOLD_DEG = 10.0;
+
+    // Intake
+    public static final double INTAKE_SPEED = 0.8;
+    public static final double INTAKE_STOPPED_RPM = 50.0;
   }
 }
