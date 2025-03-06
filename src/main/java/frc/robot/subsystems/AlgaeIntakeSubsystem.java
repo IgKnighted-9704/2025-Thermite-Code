@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
@@ -13,27 +12,22 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
 
     // Pivot motor (CIM in brushed mode)
     private final SparkMax pivotMotor = new SparkMax(
-        Constants.AlgaeIntakeConstants.PIVOT_MOTOR_ID, 
-        MotorType.kBrushed
-    );
+            Constants.AlgaeIntakeConstants.PIVOT_MOTOR_ID,
+            MotorType.kBrushed);
 
     // Absolute encoder (duty cycle)
-    private final AbsoluteEncoder pivotEncoder = pivotMotor.getAbsoluteEncoder(
-        SparkMaxAbsoluteEncoder.Type.kDutyCycle
-    );
+    private final AbsoluteEncoder pivotEncoder = pivotMotor.getAbsoluteEncoder();
 
     // PID controller for pivot
     private final PIDController pivotPID = new PIDController(
-        Constants.AlgaeIntakeConstants.PIVOT_kP,
-        Constants.AlgaeIntakeConstants.PIVOT_kI,
-        Constants.AlgaeIntakeConstants.PIVOT_kD
-    );
+            Constants.AlgaeIntakeConstants.PIVOT_kP,
+            Constants.AlgaeIntakeConstants.PIVOT_kI,
+            Constants.AlgaeIntakeConstants.PIVOT_kD);
 
     // Intake motor (NEO, brushless)
     private final SparkMax intakeMotor = new SparkMax(
-        Constants.AlgaeIntakeConstants.INTAKE_MOTOR_ID,
-        MotorType.kBrushless
-    );
+            Constants.AlgaeIntakeConstants.INTAKE_MOTOR_ID,
+            MotorType.kBrushless);
 
     // Desired pivot angle and a flag to enable/disable PID
     private double desiredPivotAngle = 0.0;
@@ -80,7 +74,7 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
         // If PID is enabled, run the pivot motor toward desiredPivotAngle
         if (pivotPIDEnabled) {
             // Make sure we're within min/max angles
-            if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE 
+            if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE
                     && desiredPivotAngle <= Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE) {
 
                 double currentAngle = pivotEncoder.getPosition();

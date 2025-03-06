@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
@@ -13,26 +12,21 @@ public class ClimbSubsystem extends SubsystemBase {
 
     // Main climb motor (e.g. spool/winch)
     private final SparkMax climbMotor = new SparkMax(
-        Constants.ClimbConstants.CLIMB_MOTOR_A_ID, 
-        MotorType.kBrushed
-    );
+            Constants.ClimbConstants.CLIMB_MOTOR_A_ID,
+            MotorType.kBrushed);
 
     // Pivot motor with absolute encoder (both brushed)
     private final SparkMax climbAngle = new SparkMax(
-        Constants.ClimbConstants.CLIMB_MOTOR_B_ID, 
-        MotorType.kBrushed
-    );
+            Constants.ClimbConstants.CLIMB_MOTOR_B_ID,
+            MotorType.kBrushed);
 
-    private final AbsoluteEncoder climbAngleEncoder = climbAngle.getAbsoluteEncoder(
-        SparkMaxAbsoluteEncoder.Type.kDutyCycle
-    );
+    private final AbsoluteEncoder climbAngleEncoder = climbAngle.getAbsoluteEncoder();
 
     // PID for pivot angle
     private final PIDController climbPID = new PIDController(
-        Constants.ClimbConstants.CLIMB_kP,
-        Constants.ClimbConstants.CLIMB_kI,
-        Constants.ClimbConstants.CLIMB_kD
-    );
+            Constants.ClimbConstants.CLIMB_kP,
+            Constants.ClimbConstants.CLIMB_kI,
+            Constants.ClimbConstants.CLIMB_kD);
 
     // Desired pivot angle and whether PID is enabled
     private double desiredAngle = 0.0;
@@ -53,9 +47,9 @@ public class ClimbSubsystem extends SubsystemBase {
 
     // Manually move pivot, disabling PID so it won't fight the operator
     public void changeClimbAngle(double speed) {
-        pidEnabled = false;  // turn off PID while in manual control
+        pidEnabled = false; // turn off PID while in manual control
         double currPos = climbAngleEncoder.getPosition();
-        if (currPos < Constants.ClimbConstants.CLIMB_MAX_POS 
+        if (currPos < Constants.ClimbConstants.CLIMB_MAX_POS
                 && currPos > Constants.ClimbConstants.CLIMB_MIN_POS) {
             climbAngle.set(speed);
         } else {
@@ -68,6 +62,10 @@ public class ClimbSubsystem extends SubsystemBase {
         climbMotor.set(0.35);
     }
 
+    public void stopClimbMotor() {
+        climbMotor.stopMotor();
+    }
+
     // Returns the current pivot angle for logging/debug
     public double getArmPos() {
         return climbAngleEncoder.getPosition();
@@ -78,7 +76,7 @@ public class ClimbSubsystem extends SubsystemBase {
         // If PID is enabled, hold the pivot at desiredAngle
         if (pidEnabled) {
             // Only do PID if angle is within valid range
-            if (desiredAngle >= Constants.ClimbConstants.CLIMB_MIN_POS 
+            if (desiredAngle >= Constants.ClimbConstants.CLIMB_MIN_POS
                     && desiredAngle <= Constants.ClimbConstants.CLIMB_MAX_POS) {
                 double current = climbAngleEncoder.getPosition();
                 double power = climbPID.calculate(current, desiredAngle);
@@ -94,8 +92,8 @@ public class ClimbSubsystem extends SubsystemBase {
                 // If out of range, stop the pivot
                 climbAngle.stopMotor();
             }
-        } 
-        // If pidEnabled is false, we do nothing here; 
+        }
+        // If pidEnabled is false, we do nothing here;
         // the pivot is either manual or stopped.
     }
 }
