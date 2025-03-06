@@ -2,15 +2,15 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.RelativeEncoder;
-// --- Rev Robotics "Spark" classes ---
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import frc.robot.Constants.ArmElevatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 
@@ -24,6 +24,8 @@ import frc.robot.subsystems.swervedrive.SwerveSubsystem;
  * - Automatic funnel-intake logic (stops on motor stall).
  * - Collision constraints (arm/elevator).
  * - Tilt-lowering logic (if drivebase pitch is too high).
+ * - Partial-approach "wait" logic so each axis can move partway,
+ * then continue once the other is safe.
  */
 public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
@@ -38,7 +40,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private final PIDController armPID;
 
     // Intake
-    private final SparkMax intakeMotor; // The new SparkMax object
+    private final SparkMax intakeMotor;
     private final RelativeEncoder intakeEncoder; // For measuring RPM
 
     // Desired setpoints (in real units)
@@ -52,6 +54,11 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private boolean autoIntakeActive = false;
     private boolean manualIntakeActive = false;
 
+    // A small threshold above the min elevator height
+    // at which we consider "fully down" unsafe if the arm isn't stowed.
+    private static final double SAFE_LOWER_THRESHOLD = ArmElevatorConstants.ELEVATOR_MIN_INCHES + 1.0; // 1 inch above
+                                                                                                       // bottom
+
     /**
      * Constructor
      * 
@@ -63,15 +70,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // Elevator motors
         elevatorMotorA = new TalonFX(ArmElevatorConstants.ELEVATOR_MOTOR_A_ID);
         elevatorMotorB = new TalonFX(ArmElevatorConstants.ELEVATOR_MOTOR_B_ID);
-        // Configure if needed (e.g., follower mode, neutral modes, etc.)
 
         // Arm motor
         armMotor = new TalonFX(ArmElevatorConstants.ARM_MOTOR_ID);
 
         // SparkMax for the intake
         intakeMotor = new SparkMax(ArmElevatorConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
-
-        // Get the built-in relative encoder for the intake motor
         intakeEncoder = intakeMotor.getEncoder();
 
         // Elevator motion-profiled PID
@@ -102,8 +106,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Preset Positions
     // --------------------------------------------------
     public void intakePosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_INTAKE_DEG;
-        desiredElevatorInches = ArmElevatorConstants.ELEVATOR_INTAKE_INCHES;
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_INTAKE_DEG; // -15 deg (behind)
+        desiredElevatorInches = ArmElevatorConstants.ELEVATOR_INTAKE_INCHES; // 10
         autoIntakeActive = true;
     }
 
@@ -157,13 +161,13 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Accessors
     // --------------------------------------------------
     public double getArmAngleDegrees() {
-        // Example: TalonFX integrated sensor => .getPosition().getValueAsDouble() is
-        // "ticks"
+        // Convert ticks to degrees
         double armTicks = armMotor.getPosition().getValueAsDouble();
         return armTicks / ArmElevatorConstants.ARM_TICKS_PER_DEG;
     }
 
     public double getElevatorHeightInches() {
+        // Convert ticks to inches
         double elevTicks = elevatorMotorA.getPosition().getValueAsDouble();
         return elevTicks / ArmElevatorConstants.ELEV_TICKS_PER_INCH;
     }
@@ -189,30 +193,61 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             }
         }
 
-        // 2) Collision avoidance
-        // a) If arm behind the robot, ensure elevator in safe range
-        if (desiredArmAngleDeg < 0.0) {
-            if (desiredElevatorInches < ArmElevatorConstants.ELEV_BEHIND_SAFE_MIN_INCHES
-                    || desiredElevatorInches > ArmElevatorConstants.ELEV_BEHIND_SAFE_MAX_INCHES) {
-                desiredElevatorInches = ArmElevatorConstants.ELEV_BEHIND_SAFE_MIN_INCHES;
-            }
-        }
-        // b) If elevator going fully down, arm must be stowed
-        if (desiredElevatorInches <= ArmElevatorConstants.ELEVATOR_MIN_INCHES + 0.1) {
-            if (!isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, ArmElevatorConstants.ARM_TOLERANCE_DEG)) {
-                desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
-            }
+        // 2) Determine "allowed" ranges for arm and elevator
+        // so we can move partially if needed,
+        // then continue once the other is safe.
+
+        // -- Arm constraints --
+        double allowedArmMin = ArmElevatorConstants.ARM_MIN_DEG;
+        double allowedArmMax = ArmElevatorConstants.ARM_MAX_DEG;
+
+        // a) If user wants behind (desiredArmAngleDeg < 0),
+        // but the elevator is above the behind-safe range,
+        // don't let the arm go below 0 deg (so we don't collide).
+        boolean wantsBehind = (desiredArmAngleDeg < 0);
+        boolean elevatorTooHighForBehind = (currentElevInch > ArmElevatorConstants.ELEV_BEHIND_SAFE_MAX_INCHES);
+        if (wantsBehind && elevatorTooHighForBehind) {
+            // Force the arm to stop at 0 deg minimum
+            allowedArmMin = Math.max(allowedArmMin, 0.0);
         }
 
-        // 3) Clamp setpoints
+        // b) If user wants to move the elevator fully down,
+        // but the arm isn't stowed, we won't stop the arm from moving (the arm can
+        // move),
+        // but we might clamp the elevator below.
+
+        // -- Elevator constraints --
+        double allowedElevMin = ArmElevatorConstants.ELEVATOR_MIN_INCHES;
+        double allowedElevMax = ArmElevatorConstants.ELEVATOR_MAX_INCHES;
+
+        // If the elevator wants to go below SAFE_LOWER_THRESHOLD,
+        // but the arm is not stowed, clamp the elevator from going that low.
+        boolean wantsElevatorFullyDown = (desiredElevatorInches < SAFE_LOWER_THRESHOLD);
+        boolean armNotStowed = !isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG,
+                ArmElevatorConstants.ARM_TOLERANCE_DEG);
+        if (wantsElevatorFullyDown && armNotStowed) {
+            // Prevent the elevator from going below the current height
+            // so it doesn't descend into the arm's space.
+            allowedElevMin = Math.max(allowedElevMin, currentElevInch);
+        }
+
+        // Also, if the arm is behind but the elevator is below behind-safe range,
+        // we might clamp the elevator from going *too low* if that would cause
+        // collision.
+        // But typically your behind-safe range is 10-30;
+        // if the elevator is below that, it might also be safe or not –
+        // depends on your geometry.
+        // Adjust if needed.
+
+        // 3) Apply these "allowed" ranges to produce final setpoints
         double finalArmDeg = clamp(
                 desiredArmAngleDeg,
-                ArmElevatorConstants.ARM_MIN_DEG,
-                ArmElevatorConstants.ARM_MAX_DEG);
+                allowedArmMin,
+                allowedArmMax);
         double finalElevInch = clamp(
                 desiredElevatorInches,
-                ArmElevatorConstants.ELEVATOR_MIN_INCHES,
-                ArmElevatorConstants.ELEVATOR_MAX_INCHES);
+                allowedElevMin,
+                allowedElevMax);
 
         // 4) Elevator motion-profile
         elevatorController.setGoal(finalElevInch);
@@ -230,7 +265,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
         // 7) Intake control logic
         if (manualIntakeActive) {
-            // If user manually started intake, only run if at funnel position:
             boolean atFunnelArm = isArmInTolerance(ArmElevatorConstants.ARM_INTAKE_DEG,
                     ArmElevatorConstants.ARM_TOLERANCE_DEG);
             boolean atFunnelElev = isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_INTAKE_INCHES,
@@ -238,11 +272,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             if (atFunnelArm && atFunnelElev) {
                 intakeMotor.set(ArmElevatorConstants.INTAKE_SPEED);
             } else {
-                // Not in funnel => no intake
                 intakeMotor.set(0.0);
             }
         } else if (autoIntakeActive) {
-            // Auto-intake if in funnel
             boolean atFunnelArm = isArmInTolerance(ArmElevatorConstants.ARM_INTAKE_DEG,
                     ArmElevatorConstants.ARM_TOLERANCE_DEG);
             boolean atFunnelElev = isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_INTAKE_INCHES,
@@ -252,10 +284,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
                 // Stop if the motor "stalls" (RPM too low)
                 if (Math.abs(getIntakeRPM()) < ArmElevatorConstants.INTAKE_STOPPED_RPM) {
-                    stopIntake(); // also resets autoIntakeActive/manualIntakeActive
+                    stopIntake();
                 }
             } else {
-                // Not in funnel => no intake
                 intakeMotor.set(0.0);
             }
         } else {
