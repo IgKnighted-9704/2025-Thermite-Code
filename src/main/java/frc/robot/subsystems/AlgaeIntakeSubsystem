@@ -1,0 +1,102 @@
+package frc.robot.subsystems;
+
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+
+public class AlgaeIntakeSubsystem extends SubsystemBase {
+
+    // Pivot motor (CIM in brushed mode)
+    private final SparkMax pivotMotor = new SparkMax(
+        Constants.AlgaeIntakeConstants.PIVOT_MOTOR_ID, 
+        MotorType.kBrushed
+    );
+
+    // Absolute encoder for pivot (duty cycle input on Spark Max)
+    private final AbsoluteEncoder pivotEncoder = pivotMotor.getAbsoluteEncoder(
+        SparkMaxAbsoluteEncoder.Type.kDutyCycle
+    );
+
+    // PID for pivot angle
+    private final PIDController pivotPID = new PIDController(
+        Constants.AlgaeIntakeConstants.PIVOT_kP,
+        Constants.AlgaeIntakeConstants.PIVOT_kI,
+        Constants.AlgaeIntakeConstants.PIVOT_kD
+    );
+
+    // Intake motor (NEO in brushless mode)
+    private final SparkMax intakeMotor = new SparkMax(
+        Constants.AlgaeIntakeConstants.INTAKE_MOTOR_ID,
+        MotorType.kBrushless
+    );
+
+    // Store the pivot angle we want
+    private double desiredPivotAngle = 0.0;
+
+    public AlgaeIntakeSubsystem() {
+        // motor settings
+    }
+
+    // Set the desired pivot angle
+    public void setPivotAngle(double angle) {
+        desiredPivotAngle = angle;
+    }
+
+    // Manual pivot (ignores PID, sets motor directly)
+    public void changePivotAngle(double speed) {
+        double currAngle = pivotEncoder.getPosition();
+        boolean withinMax = currAngle < Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE;
+        boolean withinMin = currAngle > Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE;
+
+        if (withinMax && withinMin) {
+            pivotMotor.set(speed);
+        } else {
+            pivotMotor.stopMotor();
+        }
+    }
+
+    // Spin intake forward
+    public void intakeForward() {
+        intakeMotor.set(Constants.AlgaeIntakeConstants.INTAKE_SPEED);
+    }
+
+    // Spin intake backward
+    public void intakeReverse() {
+        intakeMotor.set(-Constants.AlgaeIntakeConstants.INTAKE_SPEED);
+    }
+
+    // Stop intake
+    public void intakeStop() {
+        intakeMotor.set(0.0);
+    }
+
+    // Get current pivot angle (for logging/debug)
+    public double getPivotAngle() {
+        return pivotEncoder.getPosition();
+    }
+
+    @Override
+    public void periodic() {
+        // (only if desiredPivotAngle is within min/max)
+        if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE
+                && desiredPivotAngle <= Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE) {
+            double currentAngle = pivotEncoder.getPosition();
+            double power = pivotPID.calculate(currentAngle, desiredPivotAngle);
+
+            if (power > 1) {
+                power = 1;
+            } else if (power < -1) {
+                power = -1;
+            }
+            pivotMotor.set(power);
+        } else {
+            // If out of range, just stop
+            pivotMotor.stopMotor();
+        }
+    }
+}

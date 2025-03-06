@@ -137,4 +137,25 @@ public final class Constants {
     public static final double CLIMB_kI = 0.0;
     public static final double CLIMB_kD = 0.0;
   }
+
+  public static final class AlgaeIntakeConstants {
+
+    // Pivot motor (CIM) on Spark Max (brushed mode)
+    public static final int PIVOT_MOTOR_ID = 31;
+
+    // Intake motor (NEO) on Spark Max (brushless mode)
+    public static final int INTAKE_MOTOR_ID = 32;
+
+    // Pivot angle limits
+    public static final double PIVOT_MIN_ANGLE = 0.0;
+    public static final double PIVOT_MAX_ANGLE = 100.0;
+
+    // PID gains for pivot control (placeholder values)
+    public static final double PIVOT_kP = 0.1;
+    public static final double PIVOT_kI = 0.0;
+    public static final double PIVOT_kD = 0.0;
+
+    // Intake speed (adjust as needed)
+    public static final double INTAKE_SPEED = 0.8;
+  }
 }
