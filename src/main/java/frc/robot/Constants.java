@@ -64,7 +64,7 @@ public final class Constants {
     public static final double ELEV_TICKS_PER_INCH = 50.0;
 
     // Arm/Elevator limits
-    public static final double ARM_MIN_DEG = -30.0; // behind
+    public static final double ARM_MIN_DEG = -30.0; // inside robot
     public static final double ARM_MAX_DEG = 180.0;
 
     public static final double ELEVATOR_MIN_INCHES = 0.0;

@@ -165,30 +165,31 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         double allowedElevMax = ArmElevatorConstants.ELEVATOR_MAX_INCHES;
 
         // ----------------------
-        // 1) Behind logic
+        // 1) Inside robot logic
         // ----------------------
-        boolean wantsBehind = (desiredArmAngleDeg < 0.0);
-        double behindMin = ArmElevatorConstants.ELEV_FUNNEL_SAFE_MIN_INCHES;
-        double behindMax = ArmElevatorConstants.ELEV_FUNNEL_SAFE_MAX_INCHES;
+        boolean wantsInsideRobot = (desiredArmAngleDeg < 0.0);
+        double insideRobotMin = ArmElevatorConstants.ELEV_FUNNEL_SAFE_MIN_INCHES;
+        double insideRobotMax = ArmElevatorConstants.ELEV_FUNNEL_SAFE_MAX_INCHES;
 
-        if (wantsBehind) {
-            // Clamp elevator to behind range
+        if (wantsInsideRobot) {
+            // Clamp elevator to inside robot range
             double origElev = desiredElevInches;
-            double newElev = clamp(origElev, behindMin, behindMax);
+            double newElev = clamp(origElev, insideRobotMin, insideRobotMax);
             if (Math.abs(newElev - origElev) > 0.001) {
                 // Elevator not in safe range => keep arm >= 0
                 allowedArmMin = Math.max(allowedArmMin, 0.0);
             }
             desiredElevInches = newElev;
         } else {
-            // If arm is behind but we want elevator out of behind range, clamp until arm is
-            // out
-            boolean armIsBehind = (currentArmDeg < 0.0);
-            boolean elevatorOutOfBehind = (desiredElevInches < behindMin) || (desiredElevInches > behindMax);
+            // If arm is inside robot but we want elevator out of inside robot range,
+            // clamp until arm is out
+            boolean armIsInsideRobot = (currentArmDeg < 0.0);
+            boolean elevatorOutOfInsideRobot = (desiredElevInches < insideRobotMin)
+                    || (desiredElevInches > insideRobotMax);
 
-            if (armIsBehind && elevatorOutOfBehind) {
+            if (armIsInsideRobot && elevatorOutOfInsideRobot) {
                 double origElev = desiredElevInches;
-                double newElev = clamp(origElev, behindMin, behindMax);
+                double newElev = clamp(origElev, insideRobotMin, insideRobotMax);
                 desiredElevInches = newElev;
                 allowedArmMin = Math.max(allowedArmMin, 0.0);
             }
