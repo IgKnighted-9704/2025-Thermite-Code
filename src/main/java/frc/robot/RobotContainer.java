@@ -194,4 +194,9 @@ public class RobotContainer {
   public void setMotorBrake(boolean brake) {
     drivebase.setMotorBrake(brake);
   }
+
+  public SwerveSubsystem getDrivebase() {
+    return drivebase;
+}
+
 }
