@@ -1,0 +1,81 @@
+package frc.robot.subsystems;
+
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+
+public class ClimbSubsystem extends SubsystemBase {
+
+    // Spark Max controllers in brushed mode for CIM motors
+    private final SparkMax climbMotor = new SparkMax(
+        Constants.ClimbConstants.CLIMB_MOTOR_A_ID, 
+        MotorType.kBrushed
+    );
+    private final SparkMax climbAngle = new SparkMax(
+        Constants.ClimbConstants.CLIMB_MOTOR_B_ID, 
+        MotorType.kBrushed
+    );
+
+    // Using an absolute encoder on the climbAngle motor
+    private final AbsoluteEncoder climbAngleEncoder = climbAngle.getAbsoluteEncoder(
+        SparkMaxAbsoluteEncoder.Type.kDutyCycle
+    );
+
+    // Basic PID controller for the climb angle
+    private final PIDController climbPID = new PIDController(
+        Constants.ClimbConstants.CLIMB_kP,
+        Constants.ClimbConstants.CLIMB_kI,
+        Constants.ClimbConstants.CLIMB_kD
+    );
+
+    public ClimbSubsystem() {
+        // motor settings here
+    }
+
+    // Moves the climb angle to a target position if it's within our limits
+    public void raiseClimbAngle(double targetPos) {
+        if (targetPos > Constants.ClimbConstants.CLIMB_MIN_POS 
+                && targetPos < Constants.ClimbConstants.CLIMB_MAX_POS) {
+            double currentPos = climbAngleEncoder.getPosition();
+            double power = climbPID.calculate(currentPos, targetPos);
+
+            // Make sure power is between -1 and 1
+            if (power > 1) {
+                power = 1;
+            } else if (power < -1) {
+                power = -1;
+            }
+
+            climbAngle.set(power);
+        } else {
+            // Stop if the target is out of range
+            climbAngle.stopMotor();
+        }
+    }
+
+    // Lets you manually change the climb angle, but stops if we go beyond min or max
+    public void changeClimbAngle(double speed) {
+        double currPosition = climbAngleEncoder.getPosition();
+        if (currPosition < Constants.ClimbConstants.CLIMB_MAX_POS 
+                && currPosition > Constants.ClimbConstants.CLIMB_MIN_POS) {
+            climbAngle.set(speed);
+        } else {
+            climbAngle.stopMotor();
+        }
+    }
+
+    // Spins the main climb motor at a fixed speed (e.g. for a spool or winch)
+    public void climb() {
+        climbMotor.set(0.35);
+    }
+
+    // Returns the current angle position for logging or debugging
+    public double getArmPos() {
+        return climbAngleEncoder.getPosition();
+    }
+}

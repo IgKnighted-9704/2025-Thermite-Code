@@ -121,4 +121,20 @@ public final class Constants {
     public static final double INTAKE_SPEED = 0.8;
     public static final double INTAKE_STOPPED_RPM = 50.0;
   }
+
+  public static final class ClimbConstants {
+
+    // Motor CAN IDs for CIMs
+    public static final int CLIMB_MOTOR_A_ID = 21;
+    public static final int CLIMB_MOTOR_B_ID = 22;
+
+    // Position limits for the climb angle (placeholders)
+    public static final double CLIMB_MAX_POS = 100.0;
+    public static final double CLIMB_MIN_POS = 0.0;
+
+    // PID gains for controlling the angle
+    public static final double CLIMB_kP = 0.1;
+    public static final double CLIMB_kI = 0.0;
+    public static final double CLIMB_kD = 0.0;
+  }
 }

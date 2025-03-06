@@ -39,10 +39,15 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private boolean autoIntakeActive = false;
     private boolean manualIntakeActive = false;
 
+    // Track setpoints before tilt forces elevator down
+    private double storedArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+    private double storedElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
+    private boolean wasTilted = false;
+
     public ArmElevatorEndEffectorSubsystem(SwerveSubsystem drivebase) {
         this.drivebase = drivebase;
 
-        // Elevator stuff
+        // Elevator
         elevatorMotorA = new TalonFX(ArmElevatorConstants.ELEVATOR_MOTOR_A_ID);
         elevatorMotorB = new TalonFX(ArmElevatorConstants.ELEVATOR_MOTOR_B_ID);
 
@@ -61,7 +66,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 ArmElevatorConstants.ELEV_kV,
                 ArmElevatorConstants.ELEV_kA);
 
-        // Arm stuff
+        // Arm
         armMotor = new TalonFX(ArmElevatorConstants.ARM_MOTOR_ID);
         armPID = new PIDController(
                 ArmElevatorConstants.ARM_kP,
@@ -151,38 +156,48 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         double currentArmDeg = getArmAngleDegrees();
         double currentElevInch = getElevatorHeightInches();
 
-        // If robot is tilting, force elevator down
+        // Check if we're tilted and force elevator down if needed
         if (drivebase != null) {
             double pitchDeg = Math.abs(drivebase.getPitch().getDegrees());
-            if (pitchDeg > ArmElevatorConstants.TILT_THRESHOLD_DEG) {
+            boolean isTiltedNow = (pitchDeg > ArmElevatorConstants.TILT_THRESHOLD_DEG);
+
+            if (isTiltedNow) {
+                // If we weren't tilted before, store our current desired positions
+                if (!wasTilted) {
+                    storedArmAngleDeg = desiredArmAngleDeg;
+                    storedElevInches = desiredElevInches;
+                }
+                // Force elevator down while tilted
                 desiredElevInches = ArmElevatorConstants.ELEVATOR_MIN_INCHES;
+            } else {
+                // If we just went back to level, restore the old setpoints
+                if (wasTilted) {
+                    desiredArmAngleDeg = storedArmAngleDeg;
+                    desiredElevInches = storedElevInches;
+                }
             }
+            wasTilted = isTiltedNow;
         }
 
+        // Collision checks
         double allowedArmMin = ArmElevatorConstants.ARM_MIN_DEG;
         double allowedArmMax = ArmElevatorConstants.ARM_MAX_DEG;
         double allowedElevMin = ArmElevatorConstants.ELEVATOR_MIN_INCHES;
         double allowedElevMax = ArmElevatorConstants.ELEVATOR_MAX_INCHES;
 
-        // ----------------------
         // 1) Inside robot logic
-        // ----------------------
         boolean wantsInsideRobot = (desiredArmAngleDeg < 0.0);
         double insideRobotMin = ArmElevatorConstants.ELEV_FUNNEL_SAFE_MIN_INCHES;
         double insideRobotMax = ArmElevatorConstants.ELEV_FUNNEL_SAFE_MAX_INCHES;
 
         if (wantsInsideRobot) {
-            // Clamp elevator to inside robot range
             double origElev = desiredElevInches;
             double newElev = clamp(origElev, insideRobotMin, insideRobotMax);
             if (Math.abs(newElev - origElev) > 0.001) {
-                // Elevator not in safe range => keep arm >= 0
                 allowedArmMin = Math.max(allowedArmMin, 0.0);
             }
             desiredElevInches = newElev;
         } else {
-            // If arm is inside robot but we want elevator out of inside robot range,
-            // clamp until arm is out
             boolean armIsInsideRobot = (currentArmDeg < 0.0);
             boolean elevatorOutOfInsideRobot = (desiredElevInches < insideRobotMin)
                     || (desiredElevInches > insideRobotMax);
@@ -195,9 +210,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             }
         }
 
-        // ----------------------
         // 2) Elevator-down logic
-        // ----------------------
         boolean wantsElevDown = (desiredElevInches <= (ArmElevatorConstants.ELEVATOR_MIN_INCHES + 0.01));
         boolean armOutsideStow = !isArmInTolerance(
                 ArmElevatorConstants.ARM_STOW_DEG,
@@ -207,53 +220,38 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             allowedElevMin = Math.max(allowedElevMin, currentElevInch);
         }
 
-        // ----------------------
         // 3) Arm-out logic
-        // ----------------------
         boolean armWantsOutOfStow = (Math.abs(desiredArmAngleDeg) > ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG);
         boolean elevatorTooLow = (desiredElevInches < ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD);
 
         if (armWantsOutOfStow && elevatorTooLow) {
             double origElev = desiredElevInches;
-            double newElev = clamp(
-                    origElev,
-                    ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD,
-                    allowedElevMax);
+            double newElev = clamp(origElev, ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD, allowedElevMax);
             if (Math.abs(newElev - origElev) > 0.001) {
-                // Wait for elevator to raise first
                 allowedArmMin = -ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG;
                 allowedArmMax = ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG;
             }
             desiredElevInches = newElev;
         }
 
-        // ----------------------
         // Final clamp
-        // ----------------------
         double finalArmDeg = clamp(desiredArmAngleDeg, allowedArmMin, allowedArmMax);
         double finalElevInch = clamp(desiredElevInches, allowedElevMin, allowedElevMax);
 
-        // ----------------------
         // Elevator control
-        // ----------------------
         elevatorController.setGoal(finalElevInch);
         double elevOut = elevatorController.calculate(currentElevInch);
         double elevFF = elevatorFF.calculate(elevatorController.getSetpoint().velocity);
         double elevVolts = elevOut + elevFF;
 
-        // ----------------------
         // Arm control
-        // ----------------------
         double armOutput = armPID.calculate(currentArmDeg, finalArmDeg);
 
-        // Send voltages
         elevatorMotorA.setVoltage(elevVolts);
         elevatorMotorB.setVoltage(elevVolts);
         armMotor.set(armOutput);
 
-        // ----------------------
         // Intake logic
-        // ----------------------
         if (manualIntakeActive) {
             boolean atFunnelArm = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
                     ArmElevatorConstants.ARM_TOLERANCE_DEG);
@@ -285,9 +283,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         }
     }
 
-    // -------------------------------
-    // Helpers
-    // -------------------------------
     private double clamp(double val, double min, double max) {
         return Math.max(min, Math.min(max, val));
     }
