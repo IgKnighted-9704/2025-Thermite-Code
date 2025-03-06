@@ -11,23 +11,20 @@ import frc.robot.Constants;
 public class AlgaeIntakeSubsystem extends SubsystemBase {
 
     // This motor controls the pivot using a CIM in brushed mode
-    private final SparkMax pivotMotor = new SparkMax(
-            Constants.AlgaeIntakeConstants.PIVOT_MOTOR_ID,
-            MotorType.kBrushed);
+    private final SparkMax pivotMotor =
+            new SparkMax(Constants.AlgaeIntakeConstants.PIVOT_MOTOR_ID, MotorType.kBrushed);
 
     // Absolute encoder for measuring the pivot angle
     private final AbsoluteEncoder pivotEncoder = pivotMotor.getAbsoluteEncoder();
 
     // PID controller for precise pivot control
     private final PIDController pivotPID = new PIDController(
-            Constants.AlgaeIntakeConstants.PIVOT_kP,
-            Constants.AlgaeIntakeConstants.PIVOT_kI,
+            Constants.AlgaeIntakeConstants.PIVOT_kP, Constants.AlgaeIntakeConstants.PIVOT_kI,
             Constants.AlgaeIntakeConstants.PIVOT_kD);
 
     // Brushless NEO motor that drives the intake
-    private final SparkMax intakeMotor = new SparkMax(
-            Constants.AlgaeIntakeConstants.INTAKE_MOTOR_ID,
-            MotorType.kBrushless);
+    private final SparkMax intakeMotor =
+            new SparkMax(Constants.AlgaeIntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
 
     // Holds the target pivot angle and whether PID is active
     private double desiredPivotAngle = 0.0;

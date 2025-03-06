@@ -55,26 +55,19 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         elevatorMotorA = new TalonFX(ArmElevatorConstants.ELEVATOR_MOTOR_A_ID);
         elevatorMotorB = new TalonFX(ArmElevatorConstants.ELEVATOR_MOTOR_B_ID);
 
-        elevatorController = new ProfiledPIDController(
-                ArmElevatorConstants.ELEVATOR_kP,
-                ArmElevatorConstants.ELEVATOR_kI,
-                ArmElevatorConstants.ELEVATOR_kD,
-                new TrapezoidProfile.Constraints(
-                        ArmElevatorConstants.ELEVATOR_MAX_VEL,
+        elevatorController = new ProfiledPIDController(ArmElevatorConstants.ELEVATOR_kP,
+                ArmElevatorConstants.ELEVATOR_kI, ArmElevatorConstants.ELEVATOR_kD,
+                new TrapezoidProfile.Constraints(ArmElevatorConstants.ELEVATOR_MAX_VEL,
                         ArmElevatorConstants.ELEVATOR_MAX_ACC));
         elevatorController.setGoal(ArmElevatorConstants.ELEVATOR_STOW_INCHES);
 
-        elevatorFF = new ElevatorFeedforward(
-                ArmElevatorConstants.ELEV_kS,
-                ArmElevatorConstants.ELEV_kG,
-                ArmElevatorConstants.ELEV_kV,
-                ArmElevatorConstants.ELEV_kA);
+        elevatorFF =
+                new ElevatorFeedforward(ArmElevatorConstants.ELEV_kS, ArmElevatorConstants.ELEV_kG,
+                        ArmElevatorConstants.ELEV_kV, ArmElevatorConstants.ELEV_kA);
 
         // Arm components
         armMotor = new TalonFX(ArmElevatorConstants.ARM_MOTOR_ID);
-        armPID = new PIDController(
-                ArmElevatorConstants.ARM_kP,
-                ArmElevatorConstants.ARM_kI,
+        armPID = new PIDController(ArmElevatorConstants.ARM_kP, ArmElevatorConstants.ARM_kI,
                 ArmElevatorConstants.ARM_kD);
 
         // Intake mechanism
@@ -206,8 +199,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             // If the arm is inside but the elevator tries to move out of funnel range,
             // clamp
             boolean armIsInsideRobot = (currentArmDeg < 0.0);
-            boolean elevatorOutOfInsideRobotRange = (desiredElevInches < insideRobotMin)
-                    || (desiredElevInches > insideRobotMax);
+            boolean elevatorOutOfInsideRobotRange =
+                    (desiredElevInches < insideRobotMin) || (desiredElevInches > insideRobotMax);
 
             if (armIsInsideRobot && elevatorOutOfInsideRobotRange) {
                 double originalElev = desiredElevInches;
@@ -218,9 +211,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         }
 
         // 2) Prevent elevator from going down if the arm isn't near stow
-        boolean wantsElevDown = (desiredElevInches <= (ArmElevatorConstants.ELEVATOR_MIN_INCHES + 0.01));
-        boolean armOutsideStow = !isArmInTolerance(
-                ArmElevatorConstants.ARM_STOW_DEG,
+        boolean wantsElevDown =
+                (desiredElevInches <= (ArmElevatorConstants.ELEVATOR_MIN_INCHES + 0.01));
+        boolean armOutsideStow = !isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG,
                 ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG);
 
         if (wantsElevDown && armOutsideStow) {
@@ -228,12 +221,15 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         }
 
         // 3) Keep the elevator above a safe threshold if the arm is moving out of stow
-        boolean armWantsOutOfStow = (Math.abs(desiredArmAngleDeg) > ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG);
-        boolean elevatorTooLow = (desiredElevInches < ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD);
+        boolean armWantsOutOfStow =
+                (Math.abs(desiredArmAngleDeg) > ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG);
+        boolean elevatorTooLow =
+                (desiredElevInches < ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD);
 
         if (armWantsOutOfStow && elevatorTooLow) {
             double originalElev = desiredElevInches;
-            double newElev = clamp(originalElev, ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD, allowedElevMax);
+            double newElev = clamp(originalElev, ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD,
+                    allowedElevMax);
             // If we had to clamp elevator, limit the arm within stow tolerance
             if (Math.abs(newElev - originalElev) > 0.001) {
                 allowedArmMin = -ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG;
@@ -259,7 +255,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         elevatorMotorA.setVoltage(totalElevVolts);
         elevatorMotorB.setVoltage(totalElevVolts);
 
-        drivebase.setMaximumAllowableSpeeds(Units.feetToMeters(Constants.MAX_SPEED - (getElevatorHeightInches() * ArmElevatorConstants.ACCEL_LIMIT_SCALE)), drivebase.getMaximumChassisAngularVelocity());
+        drivebase.setMaximumAllowableSpeeds(
+                Units.feetToMeters(Constants.MAX_SPEED
+                        - (getElevatorHeightInches() * ArmElevatorConstants.ACCEL_LIMIT_SCALE)),
+                drivebase.getMaximumChassisAngularVelocity());
         // Send raw PID output to the arm motor
         armMotor.set(armOutput);
 
@@ -268,8 +267,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             // Only run the intake if arm and elevator are at the funnel position
             boolean armAtFunnel = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
                     ArmElevatorConstants.ARM_TOLERANCE_DEG);
-            boolean elevatorAtFunnel = isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
-                    ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH);
+            boolean elevatorAtFunnel =
+                    isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
+                            ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH);
 
             if (armAtFunnel && elevatorAtFunnel) {
                 intakeMotor.set(ArmElevatorConstants.INTAKE_SPEED);
@@ -280,8 +280,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             // Auto intake runs if we are at funnel position; stops if the intake is stalled
             boolean armAtFunnel = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
                     ArmElevatorConstants.ARM_TOLERANCE_DEG);
-            boolean elevatorAtFunnel = isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
-                    ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH);
+            boolean elevatorAtFunnel =
+                    isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
+                            ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH);
 
             if (armAtFunnel && elevatorAtFunnel) {
                 intakeMotor.set(ArmElevatorConstants.INTAKE_SPEED);

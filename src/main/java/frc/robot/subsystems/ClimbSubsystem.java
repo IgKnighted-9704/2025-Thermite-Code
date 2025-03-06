@@ -11,22 +11,18 @@ import frc.robot.Constants;
 public class ClimbSubsystem extends SubsystemBase {
 
     // Main climb motor
-    private final SparkMax climbMotor = new SparkMax(
-            Constants.ClimbConstants.CLIMB_MOTOR_A_ID,
-            MotorType.kBrushed);
+    private final SparkMax climbMotor =
+            new SparkMax(Constants.ClimbConstants.CLIMB_MOTOR_A_ID, MotorType.kBrushed);
 
     // Pivot motor (brushed) equipped with an absolute encoder
-    private final SparkMax climbAngle = new SparkMax(
-            Constants.ClimbConstants.CLIMB_MOTOR_B_ID,
-            MotorType.kBrushed);
+    private final SparkMax climbAngle =
+            new SparkMax(Constants.ClimbConstants.CLIMB_MOTOR_B_ID, MotorType.kBrushed);
 
     private final AbsoluteEncoder climbAngleEncoder = climbAngle.getAbsoluteEncoder();
 
     // PID controller that manages pivot angle
-    private final PIDController climbPID = new PIDController(
-            Constants.ClimbConstants.CLIMB_kP,
-            Constants.ClimbConstants.CLIMB_kI,
-            Constants.ClimbConstants.CLIMB_kD);
+    private final PIDController climbPID = new PIDController(Constants.ClimbConstants.CLIMB_kP,
+            Constants.ClimbConstants.CLIMB_kI, Constants.ClimbConstants.CLIMB_kD);
 
     // Tracks the target pivot angle and whether the PID is actively holding it
     private double desiredAngle = 0.0;
