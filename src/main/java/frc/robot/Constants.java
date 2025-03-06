@@ -132,6 +132,8 @@ public final class Constants {
     public static final double CLIMB_MAX_POS = 100.0;
     public static final double CLIMB_MIN_POS = 0.0;
 
+    public static final double CLIMB_HOLD_ANGLE = 50.0;
+
     // PID gains for controlling the angle
     public static final double CLIMB_kP = 0.1;
     public static final double CLIMB_kI = 0.0;
@@ -149,6 +151,7 @@ public final class Constants {
     // Pivot angle limits
     public static final double PIVOT_MIN_ANGLE = 0.0;
     public static final double PIVOT_MAX_ANGLE = 100.0;
+    public static final double PIVOT_INTAKE_ANGLE = 30.0; // Example
 
     // PID gains for pivot control (placeholder values)
     public static final double PIVOT_kP = 0.1;
