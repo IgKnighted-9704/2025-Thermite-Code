@@ -1,27 +1,27 @@
 {
-  "location": {
-    "front": 12.5,
-    "left":  12.5
-  },
-  "absoluteEncoderOffset": 0,
   "drive": {
-    "type": "falcon500foc",
-    "id": 17,
+    "type": "sparkmax_neo",
+    "id": 12,
     "canbus": null
   },
   "angle": {
     "type": "sparkmax_neo550",
-    "id": 18,
+    "id": 11,
     "canbus": null
   },
   "encoder": {
     "type": "attached",
-    "id": 19,
+    "id": 0,
     "canbus": null
   },
-  "absoluteEncoderInverted": true,
   "inverted": {
     "drive": false,
     "angle": false
+  },
+  "absoluteEncoderInverted": true,
+  "absoluteEncoderOffset": -90,
+  "location": {
+    "front": 12,
+    "left": -12
   }
 }

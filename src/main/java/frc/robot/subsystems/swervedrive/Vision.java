@@ -53,7 +53,7 @@ public class Vision
    * April Tag Field Layout of the year.
    */
   public static final AprilTagFieldLayout fieldLayout                     = AprilTagFieldLayout.loadField(
-      AprilTagFields.k2025Reefscape);
+      AprilTagFields.k2025ReefscapeAndyMark);
   /**
    * Ambiguity defined as a value between (0,1). Used in {@link Vision#filterPose}.
    */
@@ -394,7 +394,8 @@ public class Vision
     /**
      * Estimated robot pose.
      */
-    public        Optional<EstimatedRobotPose> estimatedRobotPose;
+    public        Optional<EstimatedRobotPose> estimatedRobotPose = Optional.empty();
+
     /**
      * Simulated camera instance which only exists during simulations.
      */

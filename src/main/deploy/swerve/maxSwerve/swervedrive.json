@@ -1,6 +1,6 @@
 {
   "imu": {
-    "type": "pigeon2",
+    "type": "navx_spi",
     "id": 0,
     "canbus": null
   },
