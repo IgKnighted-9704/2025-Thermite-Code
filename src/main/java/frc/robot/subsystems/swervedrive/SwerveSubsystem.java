@@ -716,4 +716,12 @@ public class SwerveSubsystem extends SubsystemBase {
   public SwerveDrive getSwerveDrive() {
     return swerveDrive;
   }
+
+  public void setMaximumAllowableSpeeds(double maxTranslational, double maxRotational) {
+    swerveDrive.setMaximumAllowableSpeeds(maxTranslational, maxRotational);
+  }
+
+  public double getMaximumChassisAngularVelocity() {
+    return swerveDrive.getMaximumChassisAngularVelocity();
+  }
 }

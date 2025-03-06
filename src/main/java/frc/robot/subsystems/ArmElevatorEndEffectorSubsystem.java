@@ -9,9 +9,11 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmElevatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import frc.robot.Constants;
 
 public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
@@ -256,6 +258,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // Send voltages to the elevator motors
         elevatorMotorA.setVoltage(totalElevVolts);
         elevatorMotorB.setVoltage(totalElevVolts);
+
+        drivebase.setMaximumAllowableSpeeds(Units.feetToMeters(Constants.MAX_SPEED - (getElevatorHeightInches() * ArmElevatorConstants.ACCEL_LIMIT_SCALE)), drivebase.getMaximumChassisAngularVelocity());
         // Send raw PID output to the arm motor
         armMotor.set(armOutput);
 
