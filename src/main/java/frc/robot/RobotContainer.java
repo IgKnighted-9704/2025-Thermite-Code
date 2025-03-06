@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller; // <-- PS4
+import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
@@ -24,10 +24,10 @@ import swervelib.SwerveInputStream;
 
 public class RobotContainer {
 
-  // Replace the old driverXbox with a PS4 controller
+  // Using a PS4 controller for driver input instead of the old Xbox controller.
   private final CommandPS4Controller driverPS4 = new CommandPS4Controller(0);
 
-  // final CommandXboxController auxXbox = new CommandXboxController(1);
+  // private final CommandXboxController auxXbox = new CommandXboxController(1);
 
   // Subsystems
   private final SwerveSubsystem drivebase = new SwerveSubsystem(
@@ -36,7 +36,7 @@ public class RobotContainer {
   private final ArmElevatorEndEffectorSubsystem armElevator = new ArmElevatorEndEffectorSubsystem(drivebase);
   private final ClimbSubsystem climbSubsystem = new ClimbSubsystem();
 
-  // Example SwerveInputStreams for the drivebase
+  // Set up example input streams for controlling the swerve drive.
   SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
       () -> driverPS4.getLeftY() * -1,
       () -> driverPS4.getLeftX() * -1)
@@ -57,15 +57,17 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    // Example default command for drivebase
+    // Set the default command for the drivebase: use direct angle control in
+    // simulation,
+    // and angular velocity control in real-world operation.
     if (RobotBase.isSimulation()) {
       drivebase.setDefaultCommand(drivebase.driveFieldOriented(driveDirectAngle));
     } else {
       drivebase.setDefaultCommand(drivebase.driveFieldOriented(driveAngularVelocity));
     }
 
-    // L2: Move algae pivot to intake angle and start intake while held.
-    // When released, stop pivot and intake.
+    // Press L2 to pivot the algae intake to the proper position and start intake.
+    // Releasing L2 stops both the pivot and intake.
     driverPS4.L2()
         .whileTrue(
             Commands.run(
@@ -82,7 +84,8 @@ public class RobotContainer {
                 },
                 algaeIntake));
 
-    // L1: Outtake algae intake while held, stop when released
+    // Hold L1 to run the algae intake in reverse (outtaking).
+    // Releasing L1 stops the reverse action.
     driverPS4.L1()
         .whileTrue(
             Commands.run(
@@ -93,14 +96,14 @@ public class RobotContainer {
                 algaeIntake::intakeStop,
                 algaeIntake));
 
-    // R1: Funnel position (once on press)
+    // Press R1 to move the arm elevator to the funnel position.
     driverPS4.R1()
         .onTrue(
             Commands.runOnce(
                 armElevator::funnelPosition,
                 armElevator));
 
-    // R2: Start manual intake while held, stop on release
+    // Hold R2 to activate manual intake; releasing R2 stops the intake.
     driverPS4.R2()
         .whileTrue(
             Commands.run(
@@ -111,42 +114,43 @@ public class RobotContainer {
                 armElevator::stopIntake,
                 armElevator));
 
-    // D-Pad Up: Elevator to level 4
+    // Press D-Pad Up to move the elevator to level 4.
     driverPS4.povUp()
         .onTrue(
             Commands.runOnce(
                 armElevator::goToLevel4Position,
                 armElevator));
 
-    // D-Pad Right: Elevator to level 3
+    // Press D-Pad Right to move the elevator to level 3.
     driverPS4.povRight()
         .onTrue(
             Commands.runOnce(
                 armElevator::goToLevel3Position,
                 armElevator));
 
-    // D-Pad Down: Elevator to level 2
+    // Press D-Pad Down to move the elevator to level 2.
     driverPS4.povDown()
         .onTrue(
             Commands.runOnce(
                 armElevator::goToLevel2Position,
                 armElevator));
 
-    // D-Pad Left: Elevator to level 1
+    // Press D-Pad Left to move the elevator to level 1.
     driverPS4.povLeft()
         .onTrue(
             Commands.runOnce(
                 armElevator::goToLevel1Position,
                 armElevator));
 
-    // Cross (X button): reset gyro
+    // Press the X button to reset the gyro.
     driverPS4.cross()
         .onTrue(
             Commands.runOnce(
                 drivebase::zeroGyro,
                 drivebase));
 
-    // Square: set climb to fixed speed while held, stop on release
+    // Hold Square to engage the climb mechanism at a fixed speed; releasing stops
+    // the climb motor.
     driverPS4.square()
         .whileTrue(
             Commands.run(
@@ -157,14 +161,14 @@ public class RobotContainer {
                 climbSubsystem::stopClimbMotor,
                 climbSubsystem));
 
-    // Circle: stow elevator
+    // Press Circle to stow the elevator.
     driverPS4.circle()
         .onTrue(
             Commands.runOnce(
                 armElevator::stowElevator,
                 armElevator));
 
-    // Triangle: set climb angle
+    // Press Triangle to set the climb pivot to the correct angle.
     driverPS4.triangle()
         .onTrue(
             Commands.runOnce(

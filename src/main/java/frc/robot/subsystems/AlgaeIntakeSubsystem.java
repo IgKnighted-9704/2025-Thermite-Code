@@ -10,77 +10,77 @@ import frc.robot.Constants;
 
 public class AlgaeIntakeSubsystem extends SubsystemBase {
 
-    // Pivot motor (CIM in brushed mode)
+    // This motor controls the pivot using a CIM in brushed mode
     private final SparkMax pivotMotor = new SparkMax(
             Constants.AlgaeIntakeConstants.PIVOT_MOTOR_ID,
             MotorType.kBrushed);
 
-    // Absolute encoder (duty cycle)
+    // Absolute encoder for measuring the pivot angle
     private final AbsoluteEncoder pivotEncoder = pivotMotor.getAbsoluteEncoder();
 
-    // PID controller for pivot
+    // PID controller for precise pivot control
     private final PIDController pivotPID = new PIDController(
             Constants.AlgaeIntakeConstants.PIVOT_kP,
             Constants.AlgaeIntakeConstants.PIVOT_kI,
             Constants.AlgaeIntakeConstants.PIVOT_kD);
 
-    // Intake motor (NEO, brushless)
+    // Brushless NEO motor that drives the intake
     private final SparkMax intakeMotor = new SparkMax(
             Constants.AlgaeIntakeConstants.INTAKE_MOTOR_ID,
             MotorType.kBrushless);
 
-    // Desired pivot angle and a flag to enable/disable PID
+    // Holds the target pivot angle and whether PID is active
     private double desiredPivotAngle = 0.0;
     private boolean pivotPIDEnabled = false;
 
     public AlgaeIntakeSubsystem() {
-        // motor settings
+        // Configure motor settings here if needed
     }
 
-    // Set the pivot to the intake angle and enable PID
+    // Moves the pivot to the defined intake angle and turns on the PID
     public void setPivotToIntake() {
         desiredPivotAngle = Constants.AlgaeIntakeConstants.PIVOT_INTAKE_ANGLE;
         pivotPIDEnabled = true;
     }
 
-    // Disable PID and stop the motor so the pivot can fall
+    // Turns off the PID and stops the pivot motor, letting it fall freely
     public void stopPivot() {
         pivotPIDEnabled = false;
         pivotMotor.stopMotor();
     }
 
-    // Spin the intake forward
+    // Runs the intake forward at the set speed
     public void intakeForward() {
         intakeMotor.set(Constants.AlgaeIntakeConstants.INTAKE_SPEED);
     }
 
-    // Spin the intake backward
+    // Reverses the intake at the same speed
     public void intakeReverse() {
         intakeMotor.set(-Constants.AlgaeIntakeConstants.INTAKE_SPEED);
     }
 
-    // Stop the intake motor
+    // Stops the intake motor
     public void intakeStop() {
         intakeMotor.set(0.0);
     }
 
-    // Get the current pivot angle (for logging or debug)
+    // Returns the current pivot angle (useful for logging or debugging)
     public double getPivotAngle() {
         return pivotEncoder.getPosition();
     }
 
     @Override
     public void periodic() {
-        // If PID is enabled, run the pivot motor toward desiredPivotAngle
+        // If the pivot PID is active, drive the pivot to the target angle
         if (pivotPIDEnabled) {
-            // Make sure we're within min/max angles
+            // Check if the desired pivot angle is within the allowed range
             if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE
                     && desiredPivotAngle <= Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE) {
 
                 double currentAngle = pivotEncoder.getPosition();
                 double power = pivotPID.calculate(currentAngle, desiredPivotAngle);
 
-                // Clamp power to [-1, 1]
+                // Limit motor power to the range [-1, 1]
                 if (power > 1) {
                     power = 1;
                 } else if (power < -1) {
@@ -88,11 +88,11 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
                 }
                 pivotMotor.set(power);
             } else {
-                // Out of range: just stop for safety
+                // If the angle is out of range, stop the motor for safety
                 pivotMotor.stopMotor();
             }
         }
-        // If pivotPIDEnabled is false, we do nothing here,
-        // so the pivot motor doesn't hold position.
+        // If pivotPIDEnabled is false, we do nothing to control the pivot,
+        // allowing it to move freely.
     }
 }

@@ -10,45 +10,45 @@ import frc.robot.Constants;
 
 public class ClimbSubsystem extends SubsystemBase {
 
-    // Main climb motor (e.g. spool/winch)
+    // Main climb motor
     private final SparkMax climbMotor = new SparkMax(
             Constants.ClimbConstants.CLIMB_MOTOR_A_ID,
             MotorType.kBrushed);
 
-    // Pivot motor with absolute encoder (both brushed)
+    // Pivot motor (brushed) equipped with an absolute encoder
     private final SparkMax climbAngle = new SparkMax(
             Constants.ClimbConstants.CLIMB_MOTOR_B_ID,
             MotorType.kBrushed);
 
     private final AbsoluteEncoder climbAngleEncoder = climbAngle.getAbsoluteEncoder();
 
-    // PID for pivot angle
+    // PID controller that manages pivot angle
     private final PIDController climbPID = new PIDController(
             Constants.ClimbConstants.CLIMB_kP,
             Constants.ClimbConstants.CLIMB_kI,
             Constants.ClimbConstants.CLIMB_kD);
 
-    // Desired pivot angle and whether PID is enabled
+    // Tracks the target pivot angle and whether the PID is actively holding it
     private double desiredAngle = 0.0;
     private boolean pidEnabled = false;
 
     public ClimbSubsystem() {
-        // Optional: set idle modes or current limits here
-        // For example:
+        // Optionally set idle modes or current limits here, for example:
         // climbMotor.setIdleMode(IdleMode.kBrake);
         // climbAngle.setIdleMode(IdleMode.kBrake);
     }
 
-    // Moves pivot to a preset climb angle, enabling PID to hold it
+    // Moves the pivot to a preset angle and enables the PID to hold that position
     public void setPivotToClimbAngle() {
         desiredAngle = Constants.ClimbConstants.CLIMB_HOLD_ANGLE;
         pidEnabled = true;
     }
 
-    // Manually move pivot, disabling PID so it won't fight the operator
+    // Manually adjusts the pivot angle
     public void changeClimbAngle(double speed) {
-        pidEnabled = false; // turn off PID while in manual control
+        pidEnabled = false; // turn off PID during manual control
         double currPos = climbAngleEncoder.getPosition();
+
         if (currPos < Constants.ClimbConstants.CLIMB_MAX_POS
                 && currPos > Constants.ClimbConstants.CLIMB_MIN_POS) {
             climbAngle.set(speed);
@@ -57,43 +57,45 @@ public class ClimbSubsystem extends SubsystemBase {
         }
     }
 
-    // Spins the main climb motor (e.g., spool or winch)
+    // Runs the main climb motor at a set speed
     public void climb() {
         climbMotor.set(0.35);
     }
 
+    // Immediately stops the climb motor
     public void stopClimbMotor() {
         climbMotor.stopMotor();
     }
 
-    // Returns the current pivot angle for logging/debug
+    // Returns the current pivot angle for logging or diagnostics
     public double getArmPos() {
         return climbAngleEncoder.getPosition();
     }
 
     @Override
     public void periodic() {
-        // If PID is enabled, hold the pivot at desiredAngle
+        // If PID is enabled, hold the pivot at the desired angle
         if (pidEnabled) {
-            // Only do PID if angle is within valid range
+            // Only run PID if the desired angle is within valid limits
             if (desiredAngle >= Constants.ClimbConstants.CLIMB_MIN_POS
                     && desiredAngle <= Constants.ClimbConstants.CLIMB_MAX_POS) {
-                double current = climbAngleEncoder.getPosition();
-                double power = climbPID.calculate(current, desiredAngle);
 
-                // Clamp power to [-1, 1]
-                if (power > 1) {
-                    power = 1;
-                } else if (power < -1) {
-                    power = -1;
+                double currentAngle = climbAngleEncoder.getPosition();
+                double output = climbPID.calculate(currentAngle, desiredAngle);
+
+                // Clamp motor output between [-1, 1]
+                if (output > 1) {
+                    output = 1;
+                } else if (output < -1) {
+                    output = -1;
                 }
-                climbAngle.set(power);
+                climbAngle.set(output);
             } else {
-                // If out of range, stop the pivot
+                // Stop if we're outside the acceptable range
                 climbAngle.stopMotor();
             }
         }
-        // If pidEnabled is false, we do nothing here;
-        // the pivot is either manual or stopped.
+        // If PID is disabled, we do nothing here and rely on manual controls or a
+        // stopped motor.
     }
 }
