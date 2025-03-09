@@ -1,125 +1,137 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
-import frc.robot.subsystems.swervedrive.Vision;
-
+import frc.robot.subsystems.AlgaeIntakeSubsystem;
+import frc.robot.subsystems.ArmElevatorEndEffectorSubsystem;
+import frc.robot.subsystems.ClimbSubsystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
-import frc.robot.subsystems.miscellaneous.*;
 
-/**
- * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
- * little robot logic should actually be handled in the {@link Robot} periodic methods (other than the scheduler calls).
- * Instead, the structure of the robot (including subsystems, commands, and trigger mappings) should be declared here.
- */
-public class RobotContainer
-{
+public class RobotContainer {
 
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final    CommandXboxController driverXbox = new CommandXboxController(0);
-  // The robot's subsystems and commands are defined here...
-  private final SwerveSubsystem       drivebase  = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
-                                                                                "swerve/maxSwerve"));
-  private final ArmSubsystem armBase = new ArmSubsystem();
-  private final ClimbSubsystem climbBase = new ClimbSubsystem();
-  private final ElevatorSubsystem elevatorbase = new ElevatorSubsystem();
-  private final MainSubsystem mainBase = new MainSubsystem();
+        // Using a PS4 controller for driver input instead of the old Xbox controller.
+        private final CommandPS4Controller driverPS4 = new CommandPS4Controller(0);
 
-  /**
-   * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
-   */
-  SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
-                                                                () -> driverXbox.getLeftY() * -1,
-                                                                () -> driverXbox.getLeftX(    ) * -1)
-                                                            .withControllerRotationAxis(driverXbox::getRightX)
-                                                            .deadband(OperatorConstants.DEADBAND)
-                                                            .scaleTranslation(0.8)
-                                                            .allianceRelativeControl(true);
+        // private final CommandXboxController auxXbox = new CommandXboxController(1);
 
-  /**
-   * Clone's the angular velocity input stream and converts it to a fieldRelative input stream.
-   */
-  SwerveInputStream driveDirectAngle = driveAngularVelocity.copy().withControllerHeadingAxis(driverXbox::getRightX,
-                                                                                             driverXbox::getRightY)
-                                                           .headingWhile(true);
+        // Subsystems
+        private final SwerveSubsystem drivebase = new SwerveSubsystem(
+                        new File(Filesystem.getDeployDirectory(), "swerve/maxSwerve"));
+        private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
+        private final ArmElevatorEndEffectorSubsystem armElevator =
+                        new ArmElevatorEndEffectorSubsystem(drivebase);
+        private final ClimbSubsystem climbSubsystem = new ClimbSubsystem();
 
-  Command driveFieldOrientedDirectAngle = drivebase.driveFieldOriented(driveDirectAngle);
-  Command driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
-  /**
-   * The container for the robot. Contains subsystems, OI devices, and commands.
-   */
-  public RobotContainer()
-  {
-    // Configure the trigger bindings
-    configureBindings();
-    drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
-    
-  }
+        // Set up example input streams for controlling the swerve drive.
+        SwerveInputStream driveAngularVelocity = SwerveInputStream
+                        .of(drivebase.getSwerveDrive(), () -> driverPS4.getLeftY() * -1,
+                                        () -> driverPS4.getLeftX() * -1)
+                        .withControllerRotationAxis(driverPS4::getRightX)
+                        .deadband(OperatorConstants.DEADBAND).scaleTranslation(0.8)
+                        .allianceRelativeControl(true);
 
-  /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
-   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary predicate, or via the
-   * named factories in {@link edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for
-   * {@link CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller PS4}
-   * controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}.
-   */
-  private void configureBindings()
-  {
-      //subsystems
+        SwerveInputStream driveDirectAngle = driveAngularVelocity.copy()
+                        .withControllerHeadingAxis(driverPS4::getRightX, driverPS4::getRightY)
+                        .headingWhile(true);
 
-        //drivetrain
-        driverXbox.a().onTrue((Commands.runOnce(drivebase::zeroGyro))); //zero the gyro
+        public RobotContainer() {
+                configureBindings();
 
-        //arm subsystem
-          driverXbox.povUp().onTrue(new RunCommand(() -> armBase.raiseArm2pos(Constants.ArmPositions.coralOuttakePos))); //change arm position to coral scoring position
-          driverXbox.povDown().onTrue(new RunCommand(() -> armBase.raiseArm2pos(Constants.ArmPositions.reefIntakePos))); // change arm position to reef station intake position
+                DriverStation.silenceJoystickConnectionWarning(true);
+                NamedCommands.registerCommand("test", Commands.print("I EXIST"));
+        }
 
-        //climb subsystem
-          driverXbox.rightTrigger().whileTrue(new RunCommand(() -> climbBase.changeClimbAngle(0.5))).onFalse(new InstantCommand(() -> climbBase.changeClimbAngle(0))); //forward climb
-          driverXbox.leftTrigger().whileTrue(new RunCommand(() -> climbBase.changeClimbAngle(-0.5))).onFalse(new InstantCommand(() -> climbBase.changeClimbAngle(0))); // reverse climb
-          driverXbox.povRight().onTrue(new InstantCommand(() -> climbBase.raiseClimbAngle(Constants.ClimbPositions.climbEstimatePos))); //preset climb angle/position
+        private void configureBindings() {
+                // Set the default command for the drivebase: use direct angle control in
+                // simulation,
+                // and angular velocity control in real-world operation.
+                if (RobotBase.isSimulation()) {
+                        drivebase.setDefaultCommand(drivebase.driveFieldOriented(driveDirectAngle));
+                } else {
+                        drivebase.setDefaultCommand(
+                                        drivebase.driveFieldOriented(driveAngularVelocity));
+                }
 
-        //elevator subsystem
-          driverXbox.x().onTrue(new InstantCommand(() -> elevatorbase.raiseElevatorPos(Constants.ElevatorPositions.level2))); //elevator height to level 2
-          driverXbox.y().onTrue(new InstantCommand(() -> elevatorbase.raiseElevatorPos(Constants.ElevatorPositions.level3))); //elevator height to level 3
-          driverXbox.b().onTrue(new InstantCommand(() -> elevatorbase.raiseElevatorPos(Constants.ElevatorPositions.level4))); //elevator height to level 4
+                // Press L2 to pivot the algae intake to the proper position and start intake.
+                // Releasing L2 stops both the pivot and intake.
+                driverPS4.L2().whileTrue(Commands.run(() -> {
+                        algaeIntake.setPivotToIntake();
+                        algaeIntake.intakeForward();
+                }, algaeIntake)).onFalse(Commands.runOnce(() -> {
+                        algaeIntake.stopPivot();
+                        algaeIntake.intakeStop();
+                }, algaeIntake));
 
-        //main subsystem
-          driverXbox.rightBumper().whileTrue(new RunCommand(() -> mainBase.endEffector(0.5))).onFalse(new InstantCommand(() -> mainBase.endEffector(0))); //intake for end effector
-          driverXbox.leftBumper().whileTrue(new RunCommand(() -> mainBase.endEffector(-0.5))).onFalse(new InstantCommand(() -> mainBase.endEffector(0))); //outtake for end effector
-  }
+                // Hold L1 to run the algae intake in reverse (outtaking).
+                // Releasing L1 stops the reverse action.
+                driverPS4.L1().whileTrue(
+                                Commands.run(() -> algaeIntake.intakeReverse(), algaeIntake))
+                                .onFalse(Commands.runOnce(algaeIntake::intakeStop, algaeIntake));
 
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous    
-   */
-  public Command getAutonomousCommand()
-  {
-    // An example command will be run in autonomous
-    return drivebase.getAutonomousCommand("New Auto");
-  }
+                // Press R1 to move the arm elevator to the funnel position.
+                driverPS4.R1().onTrue(Commands.runOnce(armElevator::funnelPosition, armElevator));
 
-  public void setMotorBrake(boolean brake)
-  {
-    drivebase.setMotorBrake(brake);
-  }
+                // Hold R2 to activate manual intake; releasing R2 stops the intake.
+                driverPS4.R2().whileTrue(Commands.run(armElevator::startManualIntake, armElevator))
+                                .onFalse(Commands.runOnce(armElevator::stopIntake, armElevator));
+
+                // Press D-Pad Up to move the elevator to level 4.
+                driverPS4.povUp().onTrue(
+                                Commands.runOnce(armElevator::goToLevel4Position, armElevator));
+
+                // Press D-Pad Right to move the elevator to level 3.
+                driverPS4.povRight().onTrue(
+                                Commands.runOnce(armElevator::goToLevel3Position, armElevator));
+
+                // Press D-Pad Down to move the elevator to level 2.
+                driverPS4.povDown().onTrue(
+                                Commands.runOnce(armElevator::goToLevel2Position, armElevator));
+
+                // Press D-Pad Left to move the elevator to level 1.
+                driverPS4.povLeft().onTrue(
+                                Commands.runOnce(armElevator::goToLevel1Position, armElevator));
+
+                // Press the X button to reset the gyro.
+                driverPS4.cross().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
+
+                // Hold Square to engage the climb mechanism at a fixed speed; releasing stops
+                // the climb motor.
+                driverPS4.square().whileTrue(Commands.run(climbSubsystem::climb, climbSubsystem))
+                                .onFalse(Commands.runOnce(climbSubsystem::stopClimbMotor,
+                                                climbSubsystem));
+
+                // Press Circle to stow the elevator.
+                driverPS4.circle().onTrue(Commands.runOnce(armElevator::stowElevator, armElevator));
+
+                // Press Triangle to set the climb pivot to the correct angle.
+                driverPS4.triangle().onTrue(Commands.runOnce(climbSubsystem::setPivotToClimbAngle,
+                                climbSubsystem));
+        }
+
+        public Command getAutonomousCommand() {
+                return drivebase.getAutonomousCommand("New Auto");
+        }
+
+        public void setMotorBrake(boolean brake) {
+                drivebase.setMotorBrake(brake);
+        }
+
+        public SwerveSubsystem getDrivebase() {
+                return drivebase;
+        }
 }
