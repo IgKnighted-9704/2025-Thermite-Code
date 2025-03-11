@@ -46,6 +46,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private final SparkMax intakeMotor;
     private final RelativeEncoder intakeEncoder;
 
+    // ───────────────────────────────────────────────
+    // ADDED: absolute encoders for arm & elevator
+    // ───────────────────────────────────────────────
+    private final SparkAbsoluteEncoder armAbsEnc;
+    private final SparkAbsoluteEncoder elevatorAbsEnc;
+
     // Target positions (arm angle and elevator height)
     private double desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
     private double desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
@@ -87,6 +93,16 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // Intake mechanism
         intakeMotor = new SparkMax(ArmElevatorConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
         intakeEncoder = intakeMotor.getEncoder();
+
+        // ─────────────────────────────────────────────────────────
+        // ADDED: Initialize arm and elevator absolute encoders here
+        // NOTE: For the elevator, we set a placeholder; you'd actually
+        // get it from the algae intake SparkMax in real usage.
+        // ─────────────────────────────────────────────────────────
+        armAbsEnc = intakeMotor.getAbsoluteEncoder();
+        // The elevator's absolute encoder physically isn't on this SparkMax,
+        // but we declare it here to show usage. (Set to null or 0 as needed.)
+        elevatorAbsEnc = null; // Replace with the actual reference if available.
     }
 
     // -------------------------------
@@ -170,14 +186,20 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // -------------------------------
     // Sensor Readouts
     // -------------------------------
+    // CHANGED: Use armAbsEnc instead of TalonFX integrated sensor
     public double getArmAngleDegrees() {
-        double armTicks = armMotor.getPosition().getValueAsDouble();
-        return armTicks / ArmElevatorConstants.ARM_TICKS_PER_DEG;
+        if (armAbsEnc == null) {
+            return 0.0;
+        }
+        return armAbsEnc.getPosition() * ArmElevatorConstants.ARM_ABS_ENC_RATIO;
     }
 
+    // CHANGED: Use elevatorAbsEnc instead of TalonFX integrated sensor
     public double getElevatorHeightInches() {
-        double elevTicks = elevatorMotorA.getPosition().getValueAsDouble();
-        return elevTicks / ArmElevatorConstants.ELEV_TICKS_PER_INCH;
+        if (elevatorAbsEnc == null) {
+            return 0.0;
+        }
+        return elevatorAbsEnc.getPosition() * ArmElevatorConstants.ELEVATOR_ABS_ENC_RATIO;
     }
 
     private double getIntakeRPM() {

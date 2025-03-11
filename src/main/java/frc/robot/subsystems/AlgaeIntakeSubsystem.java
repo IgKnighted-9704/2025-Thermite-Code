@@ -26,12 +26,19 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
     private final SparkMax intakeMotor =
             new SparkMax(Constants.AlgaeIntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
 
+
+    private final AbsoluteEncoder elevatorAbsEncoder = intakeMotor.getAbsoluteEncoder();;
+
     // Holds the target pivot angle and whether PID is active
     private double desiredPivotAngle = 0.0;
     private boolean pivotPIDEnabled = false;
 
     public AlgaeIntakeSubsystem() {
         // Configure motor settings here if needed
+    }
+
+    public AbsoluteEncoder getElevatorAbsEncoder() {
+        return elevatorAbsEncoder;
     }
 
     // Moves the pivot to the defined intake angle and turns on the PID
