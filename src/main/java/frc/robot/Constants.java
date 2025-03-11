@@ -54,7 +54,7 @@ public final class Constants {
     public static final int ELEVATOR_MOTOR_A_ID = 11;
     public static final int ELEVATOR_MOTOR_B_ID = 12;
     public static final int ARM_MOTOR_ID = 13;
-    public static final int INTAKE_MOTOR_ID = 14;
+    public static final int INTAKE_MOTOR_ID = 10;
 
     // Sensor conversion factors
     public static final double ARM_TICKS_PER_DEG = 100.0;
@@ -122,8 +122,8 @@ public final class Constants {
 
   public static final class ClimbConstants {
     // Motor IDs for the climbing mechanism
-    public static final int CLIMB_MOTOR_A_ID = 21;
-    public static final int CLIMB_MOTOR_B_ID = 22;
+    public static final int CLIMB_MOTOR_A_ID = 16;
+    public static final int CLIMB_MOTOR_B_ID = 17;
 
     // Physical limits for the climb pivot
     public static final double CLIMB_MAX_POS = 100.0;
@@ -140,8 +140,8 @@ public final class Constants {
 
   public static final class AlgaeIntakeConstants {
     // Motor IDs (CIM in brushed mode for pivot, NEO in brushless mode for intake)
-    public static final int PIVOT_MOTOR_ID = 31;
-    public static final int INTAKE_MOTOR_ID = 32;
+    public static final int PIVOT_MOTOR_ID = 14;
+    public static final int INTAKE_MOTOR_ID = 15;
 
     // Limits and preset angle for the intake pivot
     public static final double PIVOT_MIN_ANGLE = 0.0;
