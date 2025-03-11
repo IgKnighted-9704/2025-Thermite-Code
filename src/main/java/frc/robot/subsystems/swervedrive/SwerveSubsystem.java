@@ -20,6 +20,7 @@ import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -33,12 +34,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
+import frc.robot.Constants.CoralConstants;
 import frc.robot.subsystems.swervedrive.Vision.Cameras;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.json.simple.parser.ParseException;
@@ -62,7 +66,7 @@ public class SwerveSubsystem extends SubsystemBase {
   /**
    * Enable vision odometry updates while driving.
    */
-  private final boolean visionDriveTest = false;
+  private final boolean visionDriveTest = true;
   /**
    * PhotonVision class to keep an accurate odometry.
    */
@@ -211,6 +215,82 @@ public class SwerveSubsystem extends SubsystemBase {
     // Preload PathPlanner Path finding
     // IF USING CUSTOM PATHFINDER ADD BEFORE THIS LINE
     PathfindingCommand.warmupCommand().schedule();
+  }
+
+  /**
+   * A helper that drives in two phases: 1) Drive to a "partial pose" that is finalDistance away
+   * from finalPose at normal speed 2) Drive the remaining finalDistance at a slower speed
+   *
+   * This method was introduced in the new code, so we merge it here.
+   */
+  public Command twoStepApproach(Pose2d finalPose, double finalDistanceMeters) {
+    // Shift the final pose by +X in local coords to define a partialPose
+    Transform2d partialShift =
+        new Transform2d(new Translation2d(-finalDistanceMeters, 0.0), new Rotation2d());
+    Pose2d partialPose = finalPose.transformBy(partialShift);
+
+    // Normal path constraints
+    PathConstraints normalConstraints = new PathConstraints(swerveDrive.getMaximumChassisVelocity(),
+        4.0, swerveDrive.getMaximumChassisAngularVelocity(), Units.degreesToRadians(720));
+
+    // Slower constraints for final approach
+    PathConstraints slowConstraints = new PathConstraints(0.4, 1.0, // smaller linear
+        0.5, Math.toRadians(90) // smaller angular
+    );
+
+    Command partialDrive = AutoBuilder.pathfindToPose(partialPose, normalConstraints, 0.0);
+    Command finalDrive = AutoBuilder.pathfindToPose(finalPose, slowConstraints, 0.0);
+
+    return Commands.sequence(partialDrive, finalDrive);
+  }
+
+  /**
+   * Example approach to the "Coral Station" from the new code: - Wait until elevator is stowed -
+   * Approach in two steps
+   */
+  public Command driveToCoralStationCommand(Supplier<Boolean> elevatorStowedCheck) {
+    // Decide alliance => pick correct IDs
+    var alliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Red);
+    List<Integer> validTags;
+    if (alliance == DriverStation.Alliance.Red) {
+      validTags = CoralConstants.CORAL_RED_IDS;
+    } else if (alliance == DriverStation.Alliance.Blue) {
+      validTags = CoralConstants.CORAL_BLUE_IDS;
+    } else {
+      return Commands.print("Alliance is Invalid, cannot drive to coral station!");
+    }
+
+    int visibleTag = findVisibleCoralTag(validTags);
+    if (visibleTag < 0) {
+      return Commands.print("No recognized Coral Station tag is visible!");
+    }
+
+    // The final approach pose from the AprilTag
+    Pose2d approachPose = Vision.getAprilTagPose(visibleTag, new Transform2d(
+        new Translation2d(-CoralConstants.APPROACH_OFFSET_METERS, 0.0), new Rotation2d()));
+
+    // Drive in two steps, slow for last 0.1 m
+    Command approachInTwoSteps = twoStepApproach(approachPose, 0.1);
+
+    // Wait for elevator stowed, then do approach
+    return Commands.sequence(Commands.waitUntil((BooleanSupplier) elevatorStowedCheck),
+        approachInTwoSteps);
+  }
+
+  /**
+   * Helper from new code to see if we have a coral tag in the best target set
+   */
+  private int findVisibleCoralTag(List<Integer> validIds) {
+    var bestOpt = Cameras.CENTER_CAM.getBestResult();
+    if (bestOpt.isEmpty()) {
+      return -1;
+    }
+    var bestTarget = bestOpt.get().getBestTarget();
+    if (bestTarget == null) {
+      return -1;
+    }
+    int fiducial = bestTarget.getFiducialId();
+    return validIds.contains(fiducial) ? fiducial : -1;
   }
 
   /**

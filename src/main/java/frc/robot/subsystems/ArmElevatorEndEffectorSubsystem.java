@@ -1,18 +1,32 @@
 package frc.robot.subsystems;
 
+import java.util.List;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
+
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import frc.robot.Constants;
 import frc.robot.Constants.ArmElevatorConstants;
+import frc.robot.Constants.ReefConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import frc.robot.subsystems.swervedrive.Vision;
 import frc.robot.Constants;
 
 public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
@@ -114,9 +128,34 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         autoIntakeActive = false;
     }
 
-    // -------------------------------
-    // Funnel/Intake
-    // -------------------------------
+    // Score positions (new)
+    public void goToLevel1ScorePosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL1_DEG;
+        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL1_SCORE_INCHES;
+        autoIntakeActive = false;
+    }
+
+    public void goToLevel2ScorePosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL2_DEG;
+        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL2_SCORE_INCHES;
+        autoIntakeActive = false;
+    }
+
+    public void goToLevel3ScorePosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL3_DEG;
+        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL3_SCORE_INCHES;
+        autoIntakeActive = false;
+    }
+
+    public void goToLevel4ScorePosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL4_DEG;
+        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL4_SCORE_INCHES;
+        autoIntakeActive = false;
+    }
+
+    // -----------------------------------------------------------------------
+    // Intake (Manual & Auto)
+    // -----------------------------------------------------------------------
     public void startManualIntake() {
         manualIntakeActive = true;
         autoIntakeActive = false;
@@ -143,6 +182,88 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
     private double getIntakeRPM() {
         return intakeEncoder.getVelocity();
+    }
+
+    // ------------------------------------------------------------------------
+    // Reef Score Command (new code)
+    // Slows for last 0.1m and checks elevator up/down states.
+    // ------------------------------------------------------------------------
+    public Command createReefScoreCommand(boolean leftBranch, int level) {
+        var alliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Red);
+        List<Integer> allianceTags =
+                (alliance == DriverStation.Alliance.Red) ? ReefConstants.REEF_RED_IDS
+                        : ReefConstants.REEF_BLUE_IDS;
+
+        int visibleTag = findVisibleReefTag(allianceTags);
+        if (visibleTag < 0) {
+            return Commands
+                    .print("[ReefScore] No recognized reef tag is visible for our alliance!");
+        }
+
+        double yOffset = leftBranch ? -ReefConstants.BRANCH_OFFSET_METERS
+                : ReefConstants.BRANCH_OFFSET_METERS;
+
+        Transform2d approachOffset =
+                new Transform2d(new Translation2d(-ReefConstants.APPROACH_X_OFFSET_METERS, yOffset),
+                        new Rotation2d());
+        Pose2d reefContactPose = Vision.getAprilTagPose(visibleTag, approachOffset);
+
+        Command elevatorNormalCmd;
+        Command elevatorScoreCmd;
+        switch (level) {
+            case 4:
+                elevatorNormalCmd = Commands.runOnce(this::goToLevel4Position, this);
+                elevatorScoreCmd = Commands.runOnce(this::goToLevel4ScorePosition, this);
+                break;
+            case 3:
+                elevatorNormalCmd = Commands.runOnce(this::goToLevel3Position, this);
+                elevatorScoreCmd = Commands.runOnce(this::goToLevel3ScorePosition, this);
+                break;
+            case 2:
+                elevatorNormalCmd = Commands.runOnce(this::goToLevel2Position, this);
+                elevatorScoreCmd = Commands.runOnce(this::goToLevel2ScorePosition, this);
+                break;
+            default: // covers level 1
+                elevatorNormalCmd = Commands.runOnce(this::goToLevel1Position, this);
+                elevatorScoreCmd = Commands.runOnce(this::goToLevel1ScorePosition, this);
+                break;
+        }
+
+        Command waitForNormalPos = Commands.waitUntil(() -> isElevatorInTolerance(desiredElevInches,
+                ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH));
+        Command waitForScorePos = Commands.waitUntil(() -> isElevatorInTolerance(desiredElevInches,
+                ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH));
+
+        Command elevatorStow = Commands.runOnce(this::stowElevator, this);
+        Command waitForStowPos = Commands
+                .waitUntil(() -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_STOW_INCHES,
+                        ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH));
+
+        Command driveUp = drivebase.twoStepApproach(reefContactPose, 0.1);
+
+        Pose2d retreatPose = reefContactPose.transformBy(new Transform2d(
+                new Translation2d(-ReefConstants.RETREAT_DISTANCE_METERS, 0.0), new Rotation2d()));
+        Command backAway = drivebase.driveToPose(retreatPose);
+
+        return Commands.sequence(elevatorNormalCmd, waitForNormalPos, driveUp, elevatorScoreCmd,
+                waitForScorePos, elevatorStow, waitForStowPos, backAway);
+    }
+
+    private int findVisibleReefTag(List<Integer> validTagIds) {
+        for (Vision.Cameras cam : Vision.Cameras.values()) {
+            var bestResultOpt = cam.getBestResult();
+            if (bestResultOpt.isEmpty()) {
+                continue;
+            }
+            var bestTarget = bestResultOpt.get().getBestTarget();
+            if (bestTarget != null) {
+                int fid = bestTarget.getFiducialId();
+                if (validTagIds.contains(fid)) {
+                    return fid;
+                }
+            }
+        }
+        return -1;
     }
 
     // -------------------------------

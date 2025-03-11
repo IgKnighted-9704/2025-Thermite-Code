@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import java.util.List;
 import swervelib.math.Matter;
 
 /**
@@ -19,27 +20,37 @@ import swervelib.math.Matter;
  */
 public final class Constants {
 
-  public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // 32lbs * kg per pound
+  // Robot mass and other global constants
+  // 32lbs * kg per pound, removing ~20.3 lbs for manipulator weight if desired.
+  public static final double ROBOT_MASS = (148 - 20.3) * 0.453592;
   public static final Matter CHASSIS =
       new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
-  public static final double LOOP_TIME = 0.13; // s, 20ms + 110ms sprk max velocity lag
-  public static final double MAX_SPEED = Units.feetToMeters(15.2);
-  // Maximum speed of the robot in meters per second, used to limit acceleration.
 
+  // s, 20ms + 110ms Spark MAX velocity lag (example figure)
+  public static final double LOOP_TIME = 0.13;
+
+  // Maximum speed of the robot in meters per second, used to limit acceleration.
+  public static final double MAX_SPEED = Units.feetToMeters(15.2);
+
+  // If you had an AutonConstants block, you could keep it here as commented code:
   // public static final class AutonConstants
   // {
-  //
-  // public static final PIDConstants TRANSLATION_PID = new PIDConstants(0.7, 0,
-  // 0);
+  // public static final PIDConstants TRANSLATION_PID = new PIDConstants(0.7, 0, 0);
   // public static final PIDConstants ANGLE_PID = new PIDConstants(0.4, 0, 0.01);
   // }
 
+  /**
+   * Constants for the drivebase.
+   */
   public static final class DrivebaseConstants {
 
     // Hold time on motor brakes when disabled
     public static final double WHEEL_LOCK_TIME = 10; // seconds
   }
 
+  /**
+   * Operator-related constants (joystick deadbands, etc.).
+   */
   public static class OperatorConstants {
 
     // Joystick Deadband
@@ -49,12 +60,33 @@ public final class Constants {
     public static final double TURN_CONSTANT = 6;
   }
 
+  /**
+   * Constants related to navigating or scoring near reefs (AprilTag sets).
+   */
+  public static final class ReefConstants {
+
+    public static final List<Integer> REEF_RED_IDS = List.of(6, 7, 8, 9, 10, 11);
+    public static final List<Integer> REEF_BLUE_IDS = List.of(17, 18, 19, 20, 21, 22);
+
+    public static final double BRANCH_OFFSET_METERS = 0.5;
+    public static final double APPROACH_X_OFFSET_METERS = 0.0;
+    public static final double RETREAT_DISTANCE_METERS = 1.0;
+  }
+
+  /**
+   * Constants for the Arm and Elevator subsystems.
+   */
   public static final class ArmElevatorConstants {
+
+    // Absolute encoder ratios: if 1 sensor rotation = 360 deg, set to 1.0, etc.
+    public static final double ARM_ABS_ENC_RATIO = 1.0;
+    public static final double ELEVATOR_ABS_ENC_RATIO = 1.0;
+
     // Motor CAN IDs
     public static final int ELEVATOR_MOTOR_A_ID = 11;
     public static final int ELEVATOR_MOTOR_B_ID = 12;
     public static final int ARM_MOTOR_ID = 13;
-    public static final int INTAKE_MOTOR_ID = 10;
+    public static final int INTAKE_MOTOR_ID = 10; // The "end effector" Spark MAX
 
     // Sensor conversion factors
     public static final double ARM_TICKS_PER_DEG = 100.0;
@@ -99,6 +131,17 @@ public final class Constants {
     public static final double ELEVATOR_LEVEL3_INCHES = 40.0;
     public static final double ELEVATOR_LEVEL4_INCHES = 50.0;
 
+    // Offset used to calculate "score" positions for each level
+    public static final double ELEVATOR_SCORE_OFFSET = 6.0;
+    public static final double ELEVATOR_LEVEL1_SCORE_INCHES =
+        ELEVATOR_LEVEL1_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL2_SCORE_INCHES =
+        ELEVATOR_LEVEL2_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL3_SCORE_INCHES =
+        ELEVATOR_LEVEL3_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL4_SCORE_INCHES =
+        ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
+
     // Corresponding arm angles for these levels
     public static final double ARM_LEVEL1_DEG = 30.0;
     public static final double ARM_LEVEL2_DEG = 60.0;
@@ -109,8 +152,7 @@ public final class Constants {
     public static final double ARM_TOLERANCE_DEG = 2.0;
     public static final double ELEVATOR_TOLERANCE_INCH = 1.0;
 
-    // Safety measure: if the robot is tilted beyond this angle, we adjust
-    // elevator/arm
+    // Safety measure: if the robot is tilted beyond this angle, we adjust elevator/arm
     public static final double TILT_THRESHOLD_DEG = 10.0;
 
     // Intake constants
@@ -120,6 +162,9 @@ public final class Constants {
     public static final double ACCEL_LIMIT_SCALE = 0.01;
   }
 
+  /**
+   * Climber-related constants.
+   */
   public static final class ClimbConstants {
     // Motor IDs for the climbing mechanism
     public static final int CLIMB_MOTOR_A_ID = 16;
@@ -138,8 +183,11 @@ public final class Constants {
     public static final double CLIMB_kD = 0.0;
   }
 
+  /**
+   * Constants specific to the Algae Intake subsystem.
+   */
   public static final class AlgaeIntakeConstants {
-    // Motor IDs (CIM in brushed mode for pivot, NEO in brushless mode for intake)
+    // Motor IDs (pivot with a CIM in brushed mode, NEO in brushless mode for intake)
     public static final int PIVOT_MOTOR_ID = 14;
     public static final int INTAKE_MOTOR_ID = 15;
 
@@ -155,5 +203,14 @@ public final class Constants {
 
     // Intake power level
     public static final double INTAKE_SPEED = 0.8;
+  }
+
+  /**
+   * Additional constants for the coral portion of the field or scoring areas.
+   */
+  public static final class CoralConstants {
+    public static final List<Integer> CORAL_RED_IDS = List.of(1, 2);
+    public static final List<Integer> CORAL_BLUE_IDS = List.of(12, 13);
+    public static final double APPROACH_OFFSET_METERS = 0.3;
   }
 }

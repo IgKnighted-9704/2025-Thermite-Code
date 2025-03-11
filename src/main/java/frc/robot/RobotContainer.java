@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.AlgaeIntakeSubsystem;
@@ -24,12 +23,8 @@ import swervelib.SwerveInputStream;
 
 public class RobotContainer {
 
-        // Using a PS4 controller for driver input instead of the old Xbox controller.
         private final CommandPS4Controller driverPS4 = new CommandPS4Controller(0);
 
-        // private final CommandXboxController auxXbox = new CommandXboxController(1);
-
-        // Subsystems
         private final SwerveSubsystem drivebase = new SwerveSubsystem(
                         new File(Filesystem.getDeployDirectory(), "swerve/maxSwerve"));
         private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
@@ -37,7 +32,7 @@ public class RobotContainer {
                         new ArmElevatorEndEffectorSubsystem(drivebase);
         private final ClimbSubsystem climbSubsystem = new ClimbSubsystem();
 
-        // Set up example input streams for controlling the swerve drive.
+        // Example input streams for controlling the swerve
         SwerveInputStream driveAngularVelocity = SwerveInputStream
                         .of(drivebase.getSwerveDrive(), () -> driverPS4.getLeftY() * -1,
                                         () -> driverPS4.getLeftX() * -1)
@@ -51,15 +46,12 @@ public class RobotContainer {
 
         public RobotContainer() {
                 configureBindings();
-
                 DriverStation.silenceJoystickConnectionWarning(true);
                 NamedCommands.registerCommand("test", Commands.print("I EXIST"));
         }
 
         private void configureBindings() {
-                // Set the default command for the drivebase: use direct angle control in
-                // simulation,
-                // and angular velocity control in real-world operation.
+                // Default drive command
                 if (RobotBase.isSimulation()) {
                         drivebase.setDefaultCommand(drivebase.driveFieldOriented(driveDirectAngle));
                 } else {
@@ -67,8 +59,7 @@ public class RobotContainer {
                                         drivebase.driveFieldOriented(driveAngularVelocity));
                 }
 
-                // Press L2 to pivot the algae intake to the proper position and start intake.
-                // Releasing L2 stops both the pivot and intake.
+                // L2 => pivot algae intake + run intake
                 driverPS4.L2().whileTrue(Commands.run(() -> {
                         algaeIntake.setPivotToIntake();
                         algaeIntake.intakeForward();
@@ -77,48 +68,43 @@ public class RobotContainer {
                         algaeIntake.intakeStop();
                 }, algaeIntake));
 
-                // Hold L1 to run the algae intake in reverse (outtaking).
-                // Releasing L1 stops the reverse action.
+                // Example: Press Options => run reef score command
+                driverPS4.options().onTrue(armElevator.createReefScoreCommand(true, 3));
+
+                // L1 => outtake while held
                 driverPS4.L1().whileTrue(
                                 Commands.run(() -> algaeIntake.intakeReverse(), algaeIntake))
                                 .onFalse(Commands.runOnce(algaeIntake::intakeStop, algaeIntake));
 
-                // Press R1 to move the arm elevator to the funnel position.
+                // R1 => funnel position
                 driverPS4.R1().onTrue(Commands.runOnce(armElevator::funnelPosition, armElevator));
 
-                // Hold R2 to activate manual intake; releasing R2 stops the intake.
+                // R2 => manual intake
                 driverPS4.R2().whileTrue(Commands.run(armElevator::startManualIntake, armElevator))
                                 .onFalse(Commands.runOnce(armElevator::stopIntake, armElevator));
 
-                // Press D-Pad Up to move the elevator to level 4.
+                // Elevator level shortcuts
                 driverPS4.povUp().onTrue(
                                 Commands.runOnce(armElevator::goToLevel4Position, armElevator));
-
-                // Press D-Pad Right to move the elevator to level 3.
                 driverPS4.povRight().onTrue(
                                 Commands.runOnce(armElevator::goToLevel3Position, armElevator));
-
-                // Press D-Pad Down to move the elevator to level 2.
                 driverPS4.povDown().onTrue(
                                 Commands.runOnce(armElevator::goToLevel2Position, armElevator));
-
-                // Press D-Pad Left to move the elevator to level 1.
                 driverPS4.povLeft().onTrue(
                                 Commands.runOnce(armElevator::goToLevel1Position, armElevator));
 
-                // Press the X button to reset the gyro.
+                // Cross => zero gyro
                 driverPS4.cross().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
 
-                // Hold Square to engage the climb mechanism at a fixed speed; releasing stops
-                // the climb motor.
+                // Square => climb while held
                 driverPS4.square().whileTrue(Commands.run(climbSubsystem::climb, climbSubsystem))
                                 .onFalse(Commands.runOnce(climbSubsystem::stopClimbMotor,
                                                 climbSubsystem));
 
-                // Press Circle to stow the elevator.
+                // Circle => stow elevator
                 driverPS4.circle().onTrue(Commands.runOnce(armElevator::stowElevator, armElevator));
 
-                // Press Triangle to set the climb pivot to the correct angle.
+                // Triangle => pivot climb
                 driverPS4.triangle().onTrue(Commands.runOnce(climbSubsystem::setPivotToClimbAngle,
                                 climbSubsystem));
         }
