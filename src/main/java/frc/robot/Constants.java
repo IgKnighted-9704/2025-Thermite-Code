@@ -98,8 +98,8 @@ public final class Constants {
 
     // Funnel or intake positioning
     // all elevator heights are -2
-    public static final double ARM_LOADING_DEG = 187;
-    public static final double ARM_FUNNEL_DEG = 190;
+    public static final double ARM_LOADING_DEG = -27;
+    public static final double ARM_FUNNEL_DEG = -30;
     public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
     public static final double ELEVATOR_FUNNEL_INCHES = 12.8125;

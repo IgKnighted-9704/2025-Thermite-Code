@@ -105,6 +105,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         autoIntakeActive = true;
     }
 
+    public void loadingPosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+        autoIntakeActive = true;
+    }
+
     public void stowElevator() {
         desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
         desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
@@ -178,8 +184,14 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Sensor Readouts
     // -------------------------------
     public double getArmAngleDegrees() {
-        return armAbsEnc.getPosition() * ArmElevatorConstants.ARM_ABS_ENC_RATIO;
+        double sensorDeg = armAbsEnc.getPosition();
+
+        if (sensorDeg > 180.0) {
+            sensorDeg -= 360.0;
+        }
+        return sensorDeg * Constants.ArmElevatorConstants.ARM_ABS_ENC_RATIO;
     }
+
 
     public double getElevatorHeightInches() {
         double elevTicks = (elevatorMotorA.getPosition().getValueAsDouble()
