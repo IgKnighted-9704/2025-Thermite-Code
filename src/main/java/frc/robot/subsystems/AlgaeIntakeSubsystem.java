@@ -26,19 +26,12 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
     private final SparkMax intakeMotor =
             new SparkMax(Constants.AlgaeIntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
 
-
-    private final AbsoluteEncoder elevatorAbsEncoder = intakeMotor.getAbsoluteEncoder();;
-
     // Holds the target pivot angle and whether PID is active
     private double desiredPivotAngle = 0.0;
     private boolean pivotPIDEnabled = false;
 
     public AlgaeIntakeSubsystem() {
         // Configure motor settings here if needed
-    }
-
-    public AbsoluteEncoder getElevatorAbsEncoder() {
-        return elevatorAbsEncoder;
     }
 
     // Moves the pivot to the defined intake angle and turns on the PID
@@ -75,28 +68,28 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // If the pivot PID is active, drive the pivot to the target angle
-        if (pivotPIDEnabled) {
-            // Check if the desired pivot angle is within the allowed range
-            if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE
-                    && desiredPivotAngle <= Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE) {
+    //     // If the pivot PID is active, drive the pivot to the target angle
+    //     if (pivotPIDEnabled) {
+    //         // Check if the desired pivot angle is within the allowed range
+    //         if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE
+    //                 && desiredPivotAngle <= Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE) {
 
-                double currentAngle = pivotEncoder.getPosition();
-                double power = pivotPID.calculate(currentAngle, desiredPivotAngle);
+    //             double currentAngle = pivotEncoder.getPosition();
+    //             double power = pivotPID.calculate(currentAngle, desiredPivotAngle);
 
-                // Limit motor power to the range [-1, 1]
-                if (power > 1) {
-                    power = 1;
-                } else if (power < -1) {
-                    power = -1;
-                }
-                pivotMotor.set(power);
-            } else {
-                // If the angle is out of range, stop the motor for safety
-                pivotMotor.stopMotor();
-            }
-        }
-        // If pivotPIDEnabled is false, we do nothing to control the pivot,
-        // allowing it to move freely.
+    //             // Limit motor power to the range [-1, 1]
+    //             if (power > 1) {
+    //                 power = 1;
+    //             } else if (power < -1) {
+    //                 power = -1;
+    //             }
+    //             pivotMotor.set(power);
+    //         } else {
+    //             // If the angle is out of range, stop the motor for safety
+    //             pivotMotor.stopMotor();
+    //         }
+    //     }
+    //     // If pivotPIDEnabled is false, we do nothing to control the pivot,
+    //     // allowing it to move freely.
     }
 }
