@@ -63,6 +63,13 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private boolean autoIntakeActive = false;
     private boolean manualIntakeActive = false;
 
+    // Track whether we need to outtake at a scoring position
+    private boolean scoringActive = false;
+    private int scoringLevel = 0;
+
+    // Track if we were at funnel
+    private boolean wasAtFunnel = false;
+
     // Stores the last known positions in case the robot tilts and we need to revert
     private double storedArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
     private double storedElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
@@ -144,26 +151,34 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Score positions (new)
     public void goToLevel1ScorePosition() {
         desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL1_DEG;
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL1_SCORE_INCHES;
+        // desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL1_SCORE_INCHES; // removed
         autoIntakeActive = false;
+        scoringActive = true;
+        scoringLevel = 1;
     }
 
     public void goToLevel2ScorePosition() {
         desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL2_DEG;
         desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL2_SCORE_INCHES;
         autoIntakeActive = false;
+        scoringActive = true;
+        scoringLevel = 2;
     }
 
     public void goToLevel3ScorePosition() {
         desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL3_DEG;
         desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL3_SCORE_INCHES;
         autoIntakeActive = false;
+        scoringActive = true;
+        scoringLevel = 3;
     }
 
     public void goToLevel4ScorePosition() {
         desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL4_DEG;
         desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL4_SCORE_INCHES;
         autoIntakeActive = false;
+        scoringActive = true;
+        scoringLevel = 4;
     }
 
     // -----------------------------------------------------------------------
@@ -185,13 +200,11 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // -------------------------------
     public double getArmAngleDegrees() {
         double sensorDeg = armAbsEnc.getPosition();
-
         if (sensorDeg > 180.0) {
             sensorDeg -= 360.0;
         }
         return sensorDeg * Constants.ArmElevatorConstants.ARM_ABS_ENC_RATIO;
     }
-
 
     public double getElevatorHeightInches() {
         double elevTicks = (elevatorMotorA.getPosition().getValueAsDouble()
@@ -375,8 +388,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Arm Abs Encoder Ratio", ArmElevatorConstants.ARM_ABS_ENC_RATIO);
         SmartDashboard.putNumber("Elev Ticks per Inch", ArmElevatorConstants.ELEV_TICKS_PER_INCH);
 
-        // Same for ELEVATOR_MAX_INCHES if you have it
-
         SmartDashboard.putNumber("Arm Angle (Deg)", getArmAngleDegrees());
         SmartDashboard.putNumber("Elevator Height (In)", getElevatorHeightInches());
         SmartDashboard.putNumber("Arm Desired Position", desiredArmAngleDeg);
@@ -511,6 +522,49 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // }
         // } else if (autoIntakeActive) {
         // // Auto intake runs if we are at funnel position; stops if the intake is stalled
+
+        boolean currentlyAtFunnel = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
+                ArmElevatorConstants.ARM_TOLERANCE_DEG);
+        if (wasAtFunnel && !currentlyAtFunnel) {
+            loadingPosition();
+        }
+        wasAtFunnel = currentlyAtFunnel;
+
+        // ------------------------------------------------
+        // Make it outtake once elevator is at scoring position
+        // ------------------------------------------------
+        if (scoringActive) {
+            if (scoringLevel == 1) {
+                // Level1 only checks arm angle, not elevator
+                if (isArmInTolerance(ArmElevatorConstants.ARM_LEVEL1_DEG,
+                        ArmElevatorConstants.ARM_TOLERANCE_DEG)) {
+                    // outtake
+                    intakeMotor.set(-ArmElevatorConstants.INTAKE_SPEED);
+                }
+            } else if (scoringLevel == 2) {
+                if (isArmInTolerance(ArmElevatorConstants.ARM_LEVEL2_DEG,
+                        ArmElevatorConstants.ARM_TOLERANCE_DEG)
+                        && isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_LEVEL2_SCORE_INCHES,
+                                ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH)) {
+                    intakeMotor.set(-ArmElevatorConstants.INTAKE_SPEED);
+                }
+            } else if (scoringLevel == 3) {
+                if (isArmInTolerance(ArmElevatorConstants.ARM_LEVEL3_DEG,
+                        ArmElevatorConstants.ARM_TOLERANCE_DEG)
+                        && isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_LEVEL3_SCORE_INCHES,
+                                ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH)) {
+                    intakeMotor.set(-ArmElevatorConstants.INTAKE_SPEED);
+                }
+            } else if (scoringLevel == 4) {
+                if (isArmInTolerance(ArmElevatorConstants.ARM_LEVEL4_DEG,
+                        ArmElevatorConstants.ARM_TOLERANCE_DEG)
+                        && isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_LEVEL4_SCORE_INCHES,
+                                ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH)) {
+                    intakeMotor.set(-ArmElevatorConstants.INTAKE_SPEED);
+                }
+            }
+        }
+
         // boolean armAtFunnel = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
         // ArmElevatorConstants.ARM_TOLERANCE_DEG);
         // boolean elevatorAtFunnel =
@@ -532,18 +586,14 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // }
     }
 
-    // Ensures a value stays within [min, max]
     private double clamp(double val, double min, double max) {
         return Math.max(min, Math.min(max, val));
     }
 
-    // Checks if the arm is close enough to a target angle within some tolerance
     private boolean isArmInTolerance(double targetDeg, double toleranceDeg) {
         return Math.abs(getArmAngleDegrees() - targetDeg) <= toleranceDeg;
     }
 
-    // Checks if the elevator is close enough to a target height within some
-    // tolerance
     private boolean isElevatorInTolerance(double targetIn, double toleranceIn) {
         return Math.abs(getElevatorHeightInches() - targetIn) <= toleranceIn;
     }
