@@ -79,8 +79,7 @@ public final class Constants {
   public static final class ArmElevatorConstants {
 
     // Absolute encoder ratios: if 1 sensor rotation = 360 deg, set to 1.0, etc.
-    public static final double ARM_ABS_ENC_RATIO = 1.0;
-    public static final double ELEVATOR_ABS_ENC_RATIO = 1.0;
+    public static double ARM_ABS_ENC_RATIO = 0.61111111;
 
     // Motor CAN IDs
     public static final int ELEVATOR_MOTOR_A_ID = 11;
@@ -89,50 +88,52 @@ public final class Constants {
     public static final int INTAKE_MOTOR_ID = 10; // The "end effector" Spark MAX
 
     // Sensor conversion factors
-    public static final double ARM_TICKS_PER_DEG = 100.0;
-    public static final double ELEV_TICKS_PER_INCH = 50.0;
+    public static double ELEV_TICKS_PER_INCH = 1.0;
 
     // Physical constraints for arm and elevator
-    public static final double ARM_MIN_DEG = -30.0; // Retracted inside robot
-    public static final double ARM_MAX_DEG = 180.0;
-    public static final double ELEVATOR_MIN_INCHES = 0.0;
-    public static final double ELEVATOR_MAX_INCHES = 50.0;
+    public static double ARM_MIN_DEG = -167.0; // Retracted inside robot
+    public static double ARM_MAX_DEG = 160.0;
+    public static double ELEVATOR_MIN_INCHES = 0.0;
+    public static final double ELEVATOR_MAX_INCHES = 84.0;
 
     // Funnel or intake positioning
-    public static final double ARM_FUNNEL_DEG = -15.0;
-    public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 10.0;
-    public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 30.0;
-    public static final double ELEVATOR_FUNNEL_INCHES = 10.0;
+    // all elevator heights are -2
+    public static final double ARM_LOADING_DEG = 187;
+    public static final double ARM_FUNNEL_DEG = 190;
+    public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
+    public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
+    public static final double ELEVATOR_FUNNEL_INCHES = 12.8125;
+    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 16.5;
 
     // Stow position constants
     public static final double ARM_STOW_DEG = 0.0;
-    public static final double ARM_STOW_TOLERANCE_DEG = 5.0;
-    public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 5.0;
+    public static final double ARM_STOW_TOLERANCE_DEG = 4.0;
+    public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
     // PID and feedforward values for the arm and elevator
-    public static final double ARM_kP = 0.1;
-    public static final double ARM_kI = 0.0;
-    public static final double ARM_kD = 0.0;
-    public static final double ELEVATOR_kP = 0.1;
-    public static final double ELEVATOR_kI = 0.0;
-    public static final double ELEVATOR_kD = 0.0;
-    public static final double ELEV_kS = 0.0;
-    public static final double ELEV_kG = 0.0;
-    public static final double ELEV_kV = 0.0;
-    public static final double ELEV_kA = 0.0;
+    public static double ARM_kP = 0.03;
+    public static double ARM_kI = 0.0;
+    public static double ARM_kD = 0.0;
+    public static double ELEVATOR_kP = 0.0;
+    public static double ELEVATOR_kI = 0.0;
+    public static double ELEVATOR_kD = 0.0;
+    public static double ELEV_kS = 0.0;
+    public static double ELEV_kG = 0.0;
+    public static double ELEV_kV = 0.0;
+    public static double ELEV_kA = 0.0;
 
-    public static final double ELEVATOR_MAX_VEL = 10.0;
-    public static final double ELEVATOR_MAX_ACC = 20.0;
+    public static double ELEVATOR_MAX_VEL = 10.0;
+    public static double ELEVATOR_MAX_ACC = 20.0;
 
     // Elevator position presets
     public static final double ELEVATOR_STOW_INCHES = 0.0;
-    public static final double ELEVATOR_LEVEL1_INCHES = 20.0;
-    public static final double ELEVATOR_LEVEL2_INCHES = 30.0;
-    public static final double ELEVATOR_LEVEL3_INCHES = 40.0;
-    public static final double ELEVATOR_LEVEL4_INCHES = 50.0;
+    public static final double ELEVATOR_LEVEL1_INCHES = 8.25;
+    public static final double ELEVATOR_LEVEL2_INCHES = 10.0625;
+    public static final double ELEVATOR_LEVEL3_INCHES = 19.5;
+    public static final double ELEVATOR_LEVEL4_INCHES = 22.8125;
 
     // Offset used to calculate "score" positions for each level
-    public static final double ELEVATOR_SCORE_OFFSET = 6.0;
+    public static final double ELEVATOR_SCORE_OFFSET = 10.0;
     public static final double ELEVATOR_LEVEL1_SCORE_INCHES =
         ELEVATOR_LEVEL1_INCHES - ELEVATOR_SCORE_OFFSET;
     public static final double ELEVATOR_LEVEL2_SCORE_INCHES =
@@ -143,10 +144,10 @@ public final class Constants {
         ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
 
     // Corresponding arm angles for these levels
-    public static final double ARM_LEVEL1_DEG = 30.0;
-    public static final double ARM_LEVEL2_DEG = 60.0;
-    public static final double ARM_LEVEL3_DEG = 90.0;
-    public static final double ARM_LEVEL4_DEG = 120.0;
+    public static final double ARM_LEVEL1_DEG = 65.0;
+    public static final double ARM_LEVEL2_DEG = 99.5;
+    public static final double ARM_LEVEL3_DEG = 117;
+    public static final double ARM_LEVEL4_DEG = 141;
 
     // Tolerances for checking if the arm or elevator are at their targets
     public static final double ARM_TOLERANCE_DEG = 2.0;
@@ -197,7 +198,7 @@ public final class Constants {
     public static final double PIVOT_INTAKE_ANGLE = 30.0;
 
     // PID constants for pivot angle control
-    public static final double PIVOT_kP = 0.1;
+    public static final double PIVOT_kP = 0.0;
     public static final double PIVOT_kI = 0.0;
     public static final double PIVOT_kD = 0.0;
 

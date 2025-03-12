@@ -18,6 +18,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -36,7 +37,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private final TalonFX elevatorMotorA;
     private final TalonFX elevatorMotorB;
     private final ProfiledPIDController elevatorController;
-    private final ElevatorFeedforward elevatorFF;
+    private ElevatorFeedforward elevatorFF;
 
     // One kraken motor for the arm, using a standard PID controller
     private final TalonFX armMotor;
@@ -181,8 +182,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     public double getElevatorHeightInches() {
-        double elevTicks = (elevatorMotorA.getPosition().getValueAsDouble() + elevatorMotorB
-                .getPosition().getValueAsDouble()) / 2.0;
+        double elevTicks = (elevatorMotorA.getPosition().getValueAsDouble()
+                + elevatorMotorB.getPosition().getValueAsDouble()) / 2.0;
         return elevTicks / ArmElevatorConstants.ELEV_TICKS_PER_INCH;
     }
 
@@ -272,35 +273,127 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         return -1;
     }
 
+    public void setManualElevatorSpeed(double leftTrigger, double rightTrigger) {
+        double speed = rightTrigger - leftTrigger;
+        // Clamp speed to [-1,1]
+        speed = Math.max(-1.0, Math.min(1.0, speed));
+        double volts = 6.0 * speed;
+        elevatorMotorA.setVoltage(-volts);
+        elevatorMotorB.setVoltage(volts);
+    }
+
     // -------------------------------
     // Main Periodic Update
     // -------------------------------
     @Override
     public void periodic() {
-        // double currentArmDeg = getArmAngleDegrees();
-        // double currentElevInch = getElevatorHeightInches();
+        // ------------------------------------------------
+        // 1) Read updated values from the SmartDashboard
+        // ------------------------------------------------
+        ArmElevatorConstants.ELEVATOR_kP =
+                SmartDashboard.getNumber("Elevator kP", ArmElevatorConstants.ELEVATOR_kP);
+        ArmElevatorConstants.ELEVATOR_kI =
+                SmartDashboard.getNumber("Elevator kI", ArmElevatorConstants.ELEVATOR_kI);
+        ArmElevatorConstants.ELEVATOR_kD =
+                SmartDashboard.getNumber("Elevator kD", ArmElevatorConstants.ELEVATOR_kD);
+        ArmElevatorConstants.ELEVATOR_MAX_VEL = SmartDashboard.getNumber("Elevator MaxVelocity",
+                ArmElevatorConstants.ELEVATOR_MAX_VEL);
+        ArmElevatorConstants.ELEVATOR_MAX_ACC = SmartDashboard.getNumber("Elevator MaxAccel",
+                ArmElevatorConstants.ELEVATOR_MAX_ACC);
+
+        ArmElevatorConstants.ARM_kP =
+                SmartDashboard.getNumber("Arm kP", ArmElevatorConstants.ARM_kP);
+        ArmElevatorConstants.ARM_kI =
+                SmartDashboard.getNumber("Arm kI", ArmElevatorConstants.ARM_kI);
+        ArmElevatorConstants.ARM_kD =
+                SmartDashboard.getNumber("Arm kD", ArmElevatorConstants.ARM_kD);
+
+        // Feedforward constants
+        ArmElevatorConstants.ELEV_kS =
+                SmartDashboard.getNumber("Elev kS", ArmElevatorConstants.ELEV_kS);
+        ArmElevatorConstants.ELEV_kG =
+                SmartDashboard.getNumber("Elev kG", ArmElevatorConstants.ELEV_kG);
+        ArmElevatorConstants.ELEV_kV =
+                SmartDashboard.getNumber("Elev kV", ArmElevatorConstants.ELEV_kV);
+        ArmElevatorConstants.ELEV_kA =
+                SmartDashboard.getNumber("Elev kA", ArmElevatorConstants.ELEV_kA);
+
+        // Update the feedforward object with new constants
+        elevatorFF =
+                new ElevatorFeedforward(ArmElevatorConstants.ELEV_kS, ArmElevatorConstants.ELEV_kG,
+                        ArmElevatorConstants.ELEV_kV, ArmElevatorConstants.ELEV_kA);
+
+        // Also read & update additional constants
+        ArmElevatorConstants.ARM_ABS_ENC_RATIO = SmartDashboard.getNumber("Arm Abs Encoder Ratio",
+                ArmElevatorConstants.ARM_ABS_ENC_RATIO);
+        ArmElevatorConstants.ELEV_TICKS_PER_INCH = SmartDashboard.getNumber("Elev Ticks per Inch",
+                ArmElevatorConstants.ELEV_TICKS_PER_INCH);
+
+        // ------------------------------------------------
+        // 2) Apply updated constants to controllers, etc.
+        // ------------------------------------------------
+        elevatorController.setP(ArmElevatorConstants.ELEVATOR_kP);
+        elevatorController.setI(ArmElevatorConstants.ELEVATOR_kI);
+        elevatorController.setD(ArmElevatorConstants.ELEVATOR_kD);
+        elevatorController.setConstraints(new TrapezoidProfile.Constraints(
+                ArmElevatorConstants.ELEVATOR_MAX_VEL, ArmElevatorConstants.ELEVATOR_MAX_ACC));
+
+        armPID.setP(ArmElevatorConstants.ARM_kP);
+        armPID.setI(ArmElevatorConstants.ARM_kI);
+        armPID.setD(ArmElevatorConstants.ARM_kD);
+
+        // ------------------------------------------------
+        // 3) Continuously send the updated values back to SmartDashboard
+        // ------------------------------------------------
+        SmartDashboard.putNumber("Elevator kP", ArmElevatorConstants.ELEVATOR_kP);
+        SmartDashboard.putNumber("Elevator kI", ArmElevatorConstants.ELEVATOR_kI);
+        SmartDashboard.putNumber("Elevator kD", ArmElevatorConstants.ELEVATOR_kD);
+        SmartDashboard.putNumber("Elevator MaxVelocity", ArmElevatorConstants.ELEVATOR_MAX_VEL);
+        SmartDashboard.putNumber("Elevator MaxAccel", ArmElevatorConstants.ELEVATOR_MAX_ACC);
+
+        SmartDashboard.putNumber("Arm kP", ArmElevatorConstants.ARM_kP);
+        SmartDashboard.putNumber("Arm kI", ArmElevatorConstants.ARM_kI);
+        SmartDashboard.putNumber("Arm kD", ArmElevatorConstants.ARM_kD);
+
+        SmartDashboard.putNumber("Elev kS", ArmElevatorConstants.ELEV_kS);
+        SmartDashboard.putNumber("Elev kG", ArmElevatorConstants.ELEV_kG);
+        SmartDashboard.putNumber("Elev kV", ArmElevatorConstants.ELEV_kV);
+        SmartDashboard.putNumber("Elev kA", ArmElevatorConstants.ELEV_kA);
+
+        SmartDashboard.putNumber("Arm Abs Encoder Ratio", ArmElevatorConstants.ARM_ABS_ENC_RATIO);
+        SmartDashboard.putNumber("Elev Ticks per Inch", ArmElevatorConstants.ELEV_TICKS_PER_INCH);
+
+        // Same for ELEVATOR_MAX_INCHES if you have it
+
+        SmartDashboard.putNumber("Arm Angle (Deg)", getArmAngleDegrees());
+        SmartDashboard.putNumber("Elevator Height (In)", getElevatorHeightInches());
+        SmartDashboard.putNumber("Arm Desired Position", desiredArmAngleDeg);
+        SmartDashboard.putNumber("Elevator Desired Position", desiredElevInches);
+
+        double currentArmDeg = getArmAngleDegrees();
+        double currentElevInch = getElevatorHeightInches();
 
         // // Check for pitch angle from the drivebase and adjust if the robot is tilted
         // if (drivebase != null) {
-        //     double pitchDeg = Math.abs(drivebase.getPitch().getDegrees());
-        //     boolean isTiltedNow = (pitchDeg > ArmElevatorConstants.TILT_THRESHOLD_DEG);
+        // double pitchDeg = Math.abs(drivebase.getPitch().getDegrees());
+        // boolean isTiltedNow = (pitchDeg > ArmElevatorConstants.TILT_THRESHOLD_DEG);
 
-        //     if (isTiltedNow) {
-        //         // If this is a new tilt event, record current setpoints
-        //         if (!wasTilted) {
-        //             storedArmAngleDeg = desiredArmAngleDeg;
-        //             storedElevInches = desiredElevInches;
-        //         }
-        //         // Force elevator down to a minimum height while tilted
-        //         desiredElevInches = ArmElevatorConstants.ELEVATOR_MIN_INCHES;
-        //     } else {
-        //         // If we were tilted but are level again, restore old setpoints
-        //         if (wasTilted) {
-        //             desiredArmAngleDeg = storedArmAngleDeg;
-        //             desiredElevInches = storedElevInches;
-        //         }
-        //     }
-        //     wasTilted = isTiltedNow;
+        // if (isTiltedNow) {
+        // // If this is a new tilt event, record current setpoints
+        // if (!wasTilted) {
+        // storedArmAngleDeg = desiredArmAngleDeg;
+        // storedElevInches = desiredElevInches;
+        // }
+        // // Force elevator down to a minimum height while tilted
+        // desiredElevInches = ArmElevatorConstants.ELEVATOR_MIN_INCHES;
+        // } else {
+        // // If we were tilted but are level again, restore old setpoints
+        // if (wasTilted) {
+        // desiredArmAngleDeg = storedArmAngleDeg;
+        // desiredElevInches = storedElevInches;
+        // }
+        // }
+        // wasTilted = isTiltedNow;
         // }
 
         // // Collision protection boundaries
@@ -315,54 +408,54 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // double insideRobotMax = ArmElevatorConstants.ELEV_FUNNEL_SAFE_MAX_INCHES;
 
         // if (wantsInsideRobot) {
-        //     double originalElev = desiredElevInches;
-        //     double newElev = clamp(originalElev, insideRobotMin, insideRobotMax);
-        //     // If we had to clamp the elevator, raise the arm's lower limit to 0
-        //     if (Math.abs(newElev - originalElev) > 0.001) {
-        //         allowedArmMin = Math.max(allowedArmMin, 0.0);
-        //     }
-        //     desiredElevInches = newElev;
+        // double originalElev = desiredElevInches;
+        // double newElev = clamp(originalElev, insideRobotMin, insideRobotMax);
+        // // If we had to clamp the elevator, raise the arm's lower limit to 0
+        // if (Math.abs(newElev - originalElev) > 0.001) {
+        // allowedArmMin = Math.max(allowedArmMin, 0.0);
+        // }
+        // desiredElevInches = newElev;
         // } else {
-        //     // If the arm is inside but the elevator tries to move out of funnel range,
-        //     // clamp
-        //     boolean armIsInsideRobot = (currentArmDeg < 0.0);
-        //     boolean elevatorOutOfInsideRobotRange =
-        //             (desiredElevInches < insideRobotMin) || (desiredElevInches > insideRobotMax);
+        // // If the arm is inside but the elevator tries to move out of funnel range,
+        // // clamp
+        // boolean armIsInsideRobot = (currentArmDeg < 0.0);
+        // boolean elevatorOutOfInsideRobotRange =
+        // (desiredElevInches < insideRobotMin) || (desiredElevInches > insideRobotMax);
 
-        //     if (armIsInsideRobot && elevatorOutOfInsideRobotRange) {
-        //         double originalElev = desiredElevInches;
-        //         double newElev = clamp(originalElev, insideRobotMin, insideRobotMax);
-        //         desiredElevInches = newElev;
-        //         allowedArmMin = Math.max(allowedArmMin, 0.0);
-        //     }
+        // if (armIsInsideRobot && elevatorOutOfInsideRobotRange) {
+        // double originalElev = desiredElevInches;
+        // double newElev = clamp(originalElev, insideRobotMin, insideRobotMax);
+        // desiredElevInches = newElev;
+        // allowedArmMin = Math.max(allowedArmMin, 0.0);
+        // }
         // }
 
         // // 2) Prevent elevator from going down if the arm isn't near stow
         // boolean wantsElevDown =
-        //         (desiredElevInches <= (ArmElevatorConstants.ELEVATOR_MIN_INCHES + 0.01));
+        // (desiredElevInches <= (ArmElevatorConstants.ELEVATOR_MIN_INCHES + 0.01));
         // boolean armOutsideStow = !isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG,
-        //         ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG);
+        // ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG);
 
         // if (wantsElevDown && armOutsideStow) {
-        //     allowedElevMin = Math.max(allowedElevMin, currentElevInch);
+        // allowedElevMin = Math.max(allowedElevMin, currentElevInch);
         // }
 
         // // 3) Keep the elevator above a safe threshold if the arm is moving out of stow
         // boolean armWantsOutOfStow =
-        //         (Math.abs(desiredArmAngleDeg) > ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG);
+        // (Math.abs(desiredArmAngleDeg) > ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG);
         // boolean elevatorTooLow =
-        //         (desiredElevInches < ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD);
+        // (desiredElevInches < ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD);
 
         // if (armWantsOutOfStow && elevatorTooLow) {
-        //     double originalElev = desiredElevInches;
-        //     double newElev = clamp(originalElev, ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD,
-        //             allowedElevMax);
-        //     // If we had to clamp elevator, limit the arm within stow tolerance
-        //     if (Math.abs(newElev - originalElev) > 0.001) {
-        //         allowedArmMin = -ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG;
-        //         allowedArmMax = ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG;
-        //     }
-        //     desiredElevInches = newElev;
+        // double originalElev = desiredElevInches;
+        // double newElev = clamp(originalElev, ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD,
+        // allowedElevMax);
+        // // If we had to clamp elevator, limit the arm within stow tolerance
+        // if (Math.abs(newElev - originalElev) > 0.001) {
+        // allowedArmMin = -ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG;
+        // allowedArmMax = ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG;
+        // }
+        // desiredElevInches = newElev;
         // }
 
         // // Clamp final target positions
@@ -377,52 +470,53 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
         // // Calculate arm control output
         // double armOutput = armPID.calculate(currentArmDeg, finalArmDeg);
+        double armOutput = armPID.calculate(currentArmDeg, desiredArmAngleDeg) / 2;
 
         // // Send voltages to the elevator motors
         // elevatorMotorA.setVoltage(totalElevVolts);
         // elevatorMotorB.setVoltage(totalElevVolts);
 
         // drivebase.setMaximumAllowableSpeeds(
-        //         Units.feetToMeters(Constants.MAX_SPEED
-        //                 - (getElevatorHeightInches() * ArmElevatorConstants.ACCEL_LIMIT_SCALE)),
-        //         drivebase.getMaximumChassisAngularVelocity());
+        // Units.feetToMeters(Constants.MAX_SPEED
+        // - (getElevatorHeightInches() * ArmElevatorConstants.ACCEL_LIMIT_SCALE)),
+        // drivebase.getMaximumChassisAngularVelocity());
         // // Send raw PID output to the arm motor
-        // armMotor.set(armOutput);
+        armMotor.set(armOutput);
 
         // // Intake logic
         // if (manualIntakeActive) {
-        //     // Only run the intake if arm and elevator are at the funnel position
-        //     boolean armAtFunnel = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
-        //             ArmElevatorConstants.ARM_TOLERANCE_DEG);
-        //     boolean elevatorAtFunnel =
-        //             isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
-        //                     ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH);
+        // // Only run the intake if arm and elevator are at the funnel position
+        // boolean armAtFunnel = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
+        // ArmElevatorConstants.ARM_TOLERANCE_DEG);
+        // boolean elevatorAtFunnel =
+        // isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
+        // ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH);
 
-        //     if (armAtFunnel && elevatorAtFunnel) {
-        //         intakeMotor.set(ArmElevatorConstants.INTAKE_SPEED);
-        //     } else {
-        //         intakeMotor.set(0.0);
-        //     }
-        // } else if (autoIntakeActive) {
-        //     // Auto intake runs if we are at funnel position; stops if the intake is stalled
-        //     boolean armAtFunnel = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
-        //             ArmElevatorConstants.ARM_TOLERANCE_DEG);
-        //     boolean elevatorAtFunnel =
-        //             isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
-        //                     ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH);
-
-        //     if (armAtFunnel && elevatorAtFunnel) {
-        //         intakeMotor.set(ArmElevatorConstants.INTAKE_SPEED);
-
-        //         // Check for a stall condition, then shut off intake
-        //         if (Math.abs(getIntakeRPM()) < ArmElevatorConstants.INTAKE_STOPPED_RPM) {
-        //             stopIntake();
-        //         }
-        //     } else {
-        //         intakeMotor.set(0.0);
-        //     }
+        // if (armAtFunnel && elevatorAtFunnel) {
+        // intakeMotor.set(ArmElevatorConstants.INTAKE_SPEED);
         // } else {
-        //     intakeMotor.set(0.0);
+        // intakeMotor.set(0.0);
+        // }
+        // } else if (autoIntakeActive) {
+        // // Auto intake runs if we are at funnel position; stops if the intake is stalled
+        // boolean armAtFunnel = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
+        // ArmElevatorConstants.ARM_TOLERANCE_DEG);
+        // boolean elevatorAtFunnel =
+        // isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
+        // ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH);
+
+        // if (armAtFunnel && elevatorAtFunnel) {
+        // intakeMotor.set(ArmElevatorConstants.INTAKE_SPEED);
+
+        // // Check for a stall condition, then shut off intake
+        // if (Math.abs(getIntakeRPM()) < ArmElevatorConstants.INTAKE_STOPPED_RPM) {
+        // stopIntake();
+        // }
+        // } else {
+        // intakeMotor.set(0.0);
+        // }
+        // } else {
+        // intakeMotor.set(0.0);
         // }
     }
 
