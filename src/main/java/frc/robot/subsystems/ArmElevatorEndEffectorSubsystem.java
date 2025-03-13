@@ -489,7 +489,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         elevatorController.setGoal(desiredElevInches);
         double elevOutput = elevatorController.calculate(currentElevInch);
         double elevFeedforward = elevatorFF.calculate(elevatorController.getSetpoint().velocity);
-        double totalElevVolts = elevOutput + elevFeedforward;
+        double totalElevVolts = Math.max(-4.0, Math.min(4.0, elevOutput + elevFeedforward));
 
         SmartDashboard.putNumber("Elevator Ouput", elevOutput);
         SmartDashboard.putNumber("Elevator FF", elevFeedforward);
@@ -499,8 +499,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         double armOutput = armPID.calculate(currentArmDeg, desiredArmAngleDeg) / 2;
 
         // // Send voltages to the elevator motors
-       elevatorMotorA.setVoltage(totalElevVolts);
-        elevatorMotorB.setVoltage(-totalElevVolts);
+       // elevatorMotorA.setVoltage(totalElevVolts);
+        // elevatorMotorB.setVoltage(-totalElevVolts);
 
         // drivebase.setMaximumAllowableSpeeds(
         // Units.feetToMeters(Constants.MAX_SPEED
