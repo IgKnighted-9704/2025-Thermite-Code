@@ -10,15 +10,12 @@ import java.util.List;
 import swervelib.math.Matter;
 
 /**
- * The Constants class provides a convenient place for teams to hold robot-wide
- * numerical or boolean
- * constants. This class should not be used for any other purpose. All constants
- * should be declared
+ * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
+ * constants. This class should not be used for any other purpose. All constants should be declared
  * globally (i.e. public static). Do not put anything functional in this class.
  *
  * <p>
- * It is advised to statically import this class (or one of its inner classes)
- * wherever the
+ * It is advised to statically import this class (or one of its inner classes) wherever the
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
@@ -26,7 +23,8 @@ public final class Constants {
   // Robot mass and other global constants
   // 32lbs * kg per pound, removing ~20.3 lbs for manipulator weight if desired.
   public static final double ROBOT_MASS = (148 - 20.3) * 0.453592;
-  public static final Matter CHASSIS = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
+  public static final Matter CHASSIS =
+      new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
 
   // s, 20ms + 110ms Spark MAX velocity lag (example figure)
   public static final double LOOP_TIME = 0.13;
@@ -82,7 +80,7 @@ public final class Constants {
   public static final class ArmElevatorConstants {
 
     // Absolute encoder ratios: if 1 sensor rotation = 360 deg, set to 1.0, etc.
-    public static double ARM_ABS_ENC_RATIO = 0.61111111;
+    public static double ARM_ABS_ENC_RATIO = 0.611111;
 
     // Motor CAN IDs
     public static final int ELEVATOR_MOTOR_A_ID = 11;
@@ -91,7 +89,7 @@ public final class Constants {
     public static final int INTAKE_MOTOR_ID = 10; // The "end effector" Spark MAX
 
     // Sensor conversion factors
-    public static double ELEV_TICKS_PER_INCH = 1.0;
+    public static double ELEV_TICKS_PER_INCH = 0.7290445833333333;
 
     // Physical constraints for arm and elevator
     public static double ARM_MIN_DEG = -167.0; // Retracted inside robot
@@ -117,16 +115,16 @@ public final class Constants {
     public static double ARM_kP = 0.03;
     public static double ARM_kI = 0.0;
     public static double ARM_kD = 0.0;
-    public static double ELEVATOR_kP = 0.0;
+    public static double ELEVATOR_kP = 2.0;
     public static double ELEVATOR_kI = 0.0;
     public static double ELEVATOR_kD = 0.0;
     public static double ELEV_kS = 0.0;
-    public static double ELEV_kG = 0.0;
-    public static double ELEV_kV = 0.0;
-    public static double ELEV_kA = 0.0;
+    public static double ELEV_kG = 2.28;
+    public static double ELEV_kV = 3.07;
+    public static double ELEV_kA = 0.41;
 
-    public static double ELEVATOR_MAX_VEL = 10.0;
-    public static double ELEVATOR_MAX_ACC = 20.0;
+    public static double ELEVATOR_MAX_VEL = 0.3;
+    public static double ELEVATOR_MAX_ACC = 0.3;
 
     // Elevator position presets
     public static final double ELEVATOR_STOW_INCHES = 0.0;
@@ -137,10 +135,14 @@ public final class Constants {
 
     // Offset used to calculate "score" positions for each level
     public static final double ELEVATOR_SCORE_OFFSET = 10.0;
-    public static final double ELEVATOR_LEVEL1_SCORE_INCHES = ELEVATOR_LEVEL1_INCHES - ELEVATOR_SCORE_OFFSET;
-    public static final double ELEVATOR_LEVEL2_SCORE_INCHES = ELEVATOR_LEVEL2_INCHES - ELEVATOR_SCORE_OFFSET;
-    public static final double ELEVATOR_LEVEL3_SCORE_INCHES = ELEVATOR_LEVEL3_INCHES - ELEVATOR_SCORE_OFFSET;
-    public static final double ELEVATOR_LEVEL4_SCORE_INCHES = ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL1_SCORE_INCHES =
+        ELEVATOR_LEVEL1_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL2_SCORE_INCHES =
+        ELEVATOR_LEVEL2_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL3_SCORE_INCHES =
+        ELEVATOR_LEVEL3_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL4_SCORE_INCHES =
+        ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
 
     // Corresponding arm angles for these levels
     public static final double ARM_LEVEL1_DEG = 65.0;
@@ -195,8 +197,8 @@ public final class Constants {
 
     // Limits and preset angle for the intake pivot
     public static final double PIVOT_MIN_ANGLE = 0.0;
-    public static final double PIVOT_MAX_ANGLE = 100.0;
-    public static final double PIVOT_INTAKE_ANGLE = 30.0;
+    public static final double PIVOT_MAX_ANGLE = 300.0;
+    public static final double PIVOT_INTAKE_ANGLE = 120.0;
 
     // PID constants for pivot angle control
     public static double PIVOT_kP = 0.01;

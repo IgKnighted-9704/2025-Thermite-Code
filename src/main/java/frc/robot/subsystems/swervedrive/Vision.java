@@ -310,29 +310,29 @@ public class Vision {
      * Left Camera
      */
     LEFT_CAM("left",
-        new Rotation3d(0, Math.toRadians(-24.094), Math.toRadians(30)),
-        new Translation3d(Units.inchesToMeters(12.056),
-            Units.inchesToMeters(10.981),
-            Units.inchesToMeters(8.44)),
+        new Rotation3d(Math.toRadians(180), Math.toRadians(0), Math.toRadians(0)),
+        new Translation3d(Units.inchesToMeters(27),
+            Units.inchesToMeters(-23),
+            Units.inchesToMeters(8.75)),
         VecBuilder.fill(4, 4, 8), VecBuilder.fill(0.5, 0.5, 1)),
     /**
      * Right Camera
      */
     RIGHT_CAM("right",
-        new Rotation3d(0, Math.toRadians(-24.094), Math.toRadians(-30)),
-        new Translation3d(Units.inchesToMeters(12.056),
-            Units.inchesToMeters(-10.981),
-            Units.inchesToMeters(8.44)),
-        VecBuilder.fill(4, 4, 8), VecBuilder.fill(0.5, 0.5, 1)),
-    /**
-     * Center Camera
-     */
-    CENTER_CAM("center",
-        new Rotation3d(0, Units.degreesToRadians(18), 0),
-        new Translation3d(Units.inchesToMeters(-4.628),
-            Units.inchesToMeters(-10.687),
-            Units.inchesToMeters(16.129)),
-        VecBuilder.fill(4, 4, 8), VecBuilder.fill(0.5, 0.5, 1));
+        new Rotation3d(Math.toRadians(180), Math.toRadians(0), Math.toRadians(0)),
+        new Translation3d(Units.inchesToMeters(27),
+            Units.inchesToMeters(23),
+            Units.inchesToMeters(8.75)),
+         VecBuilder.fill(4, 4, 8), VecBuilder.fill(0.5, 0.5, 1));
+    // /**
+    //  * Center Camera
+    //  */
+    // CENTER_CAM("center",
+    //     new Rotation3d(0, Units.degreesToRadians(18), 0),
+    //     new Translation3d(Units.inchesToMeters(-4.628),
+    //         Units.inchesToMeters(-10.687),
+    //         Units.inchesToMeters(16.129)),
+    //     VecBuilder.fill(4, 4, 8), VecBuilder.fill(0.5, 0.5, 1));
 
     /**
      * Latency alert to use when high latency is detected.

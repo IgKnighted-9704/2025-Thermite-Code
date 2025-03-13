@@ -248,50 +248,50 @@ public class SwerveSubsystem extends SubsystemBase {
    * Example approach to the "Coral Station" from the new code: - Wait until elevator is stowed -
    * Approach in two steps
    */
-  public Command driveToCoralStationCommand(Supplier<Boolean> elevatorStowedCheck) {
-    // Decide alliance => pick correct IDs
-    var alliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Red);
-    List<Integer> validTags;
-    if (alliance == DriverStation.Alliance.Red) {
-      validTags = CoralConstants.CORAL_RED_IDS;
-    } else if (alliance == DriverStation.Alliance.Blue) {
-      validTags = CoralConstants.CORAL_BLUE_IDS;
-    } else {
-      return Commands.print("Alliance is Invalid, cannot drive to coral station!");
-    }
+  // public Command driveToCoralStationCommand(Supplier<Boolean> elevatorStowedCheck) {
+  //   // Decide alliance => pick correct IDs
+  //   var alliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Red);
+  //   List<Integer> validTags;
+  //   if (alliance == DriverStation.Alliance.Red) {
+  //     validTags = CoralConstants.CORAL_RED_IDS;
+  //   } else if (alliance == DriverStation.Alliance.Blue) {
+  //     validTags = CoralConstants.CORAL_BLUE_IDS;
+  //   } else {
+  //     return Commands.print("Alliance is Invalid, cannot drive to coral station!");
+  //   }
 
-    int visibleTag = findVisibleCoralTag(validTags);
-    if (visibleTag < 0) {
-      return Commands.print("No recognized Coral Station tag is visible!");
-    }
+  //   int visibleTag = findVisibleCoralTag(validTags);
+  //   if (visibleTag < 0) {
+  //     return Commands.print("No recognized Coral Station tag is visible!");
+  //   }
 
-    // The final approach pose from the AprilTag
-    Pose2d approachPose = Vision.getAprilTagPose(visibleTag, new Transform2d(
-        new Translation2d(-CoralConstants.APPROACH_OFFSET_METERS, 0.0), new Rotation2d()));
+  //   // The final approach pose from the AprilTag
+  //   Pose2d approachPose = Vision.getAprilTagPose(visibleTag, new Transform2d(
+  //       new Translation2d(-CoralConstants.APPROACH_OFFSET_METERS, 0.0), new Rotation2d()));
 
-    // Drive in two steps, slow for last 0.1 m
-    Command approachInTwoSteps = twoStepApproach(approachPose, 0.1);
+  //   // Drive in two steps, slow for last 0.1 m
+  //   Command approachInTwoSteps = twoStepApproach(approachPose, 0.1);
 
-    // Wait for elevator stowed, then do approach
-    return Commands.sequence(Commands.waitUntil((BooleanSupplier) elevatorStowedCheck),
-        approachInTwoSteps);
-  }
+  //   // Wait for elevator stowed, then do approach
+  //   return Commands.sequence(Commands.waitUntil((BooleanSupplier) elevatorStowedCheck),
+  //       approachInTwoSteps);
+  // }
 
   /**
    * Helper from new code to see if we have a coral tag in the best target set
    */
-  private int findVisibleCoralTag(List<Integer> validIds) {
-    var bestOpt = Cameras.CENTER_CAM.getBestResult();
-    if (bestOpt.isEmpty()) {
-      return -1;
-    }
-    var bestTarget = bestOpt.get().getBestTarget();
-    if (bestTarget == null) {
-      return -1;
-    }
-    int fiducial = bestTarget.getFiducialId();
-    return validIds.contains(fiducial) ? fiducial : -1;
-  }
+  // private int findVisibleCoralTag(List<Integer> validIds) {
+  //   var bestOpt = Cameras.CENTER_CAM.getBestResult();
+  //   if (bestOpt.isEmpty()) {
+  //     return -1;
+  //   }
+  //   var bestTarget = bestOpt.get().getBestTarget();
+  //   if (bestTarget == null) {
+  //     return -1;
+  //   }
+  //   int fiducial = bestTarget.getFiducialId();
+  //   return validIds.contains(fiducial) ? fiducial : -1;
+  // }
 
   /**
    * Aim the robot at the target returned by PhotonVision.

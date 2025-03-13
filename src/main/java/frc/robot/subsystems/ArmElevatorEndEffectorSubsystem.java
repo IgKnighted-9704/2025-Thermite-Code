@@ -101,6 +101,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         intakeMotor = new SparkMax(ArmElevatorConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
         intakeEncoder = intakeMotor.getEncoder();
         armAbsEnc = intakeMotor.getAbsoluteEncoder();
+
+        elevatorMotorA.setPosition(0);
+        elevatorMotorB.setPosition(0);
+        armMotor.setPosition(armAbsEnc.getPosition());
     }
 
     // -------------------------------
@@ -199,16 +203,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Sensor Readouts
     // -------------------------------
     public double getArmAngleDegrees() {
-        double sensorDeg = armAbsEnc.getPosition();
-        if (sensorDeg > 180.0) {
-            sensorDeg -= 360.0;
-        }
+        double sensorDeg = armMotor.getPosition().getValueAsDouble();
         return sensorDeg * Constants.ArmElevatorConstants.ARM_ABS_ENC_RATIO;
     }
 
     public double getElevatorHeightInches() {
-        double elevTicks = (elevatorMotorA.getPosition().getValueAsDouble()
-                + elevatorMotorB.getPosition().getValueAsDouble()) / 2.0;
+        double elevTicks = -elevatorMotorB.getPosition().getValueAsDouble();
         return elevTicks / ArmElevatorConstants.ELEV_TICKS_PER_INCH;
     }
 
@@ -496,7 +496,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         double armOutput = armPID.calculate(currentArmDeg, desiredArmAngleDeg) / 2;
 
         // // Send voltages to the elevator motors
-        // elevatorMotorA.setVoltage(totalElevVolts);
+        // elevatorMotorA.setVoltage(-totalElevVolts);
         // elevatorMotorB.setVoltage(totalElevVolts);
 
         // drivebase.setMaximumAllowableSpeeds(
@@ -504,7 +504,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // - (getElevatorHeightInches() * ArmElevatorConstants.ACCEL_LIMIT_SCALE)),
         // drivebase.getMaximumChassisAngularVelocity());
         // // Send raw PID output to the arm motor
-        armMotor.set(armOutput);
+        // armMotor.set(armOutput);
 
         // // Intake logic
         // if (manualIntakeActive) {
