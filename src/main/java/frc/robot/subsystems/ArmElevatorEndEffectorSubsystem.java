@@ -486,18 +486,21 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // double finalElevInch = clamp(desiredElevInches, allowedElevMin, allowedElevMax);
 
         // // Calculate elevator control output (PID + feedforward)
-        // elevatorController.setGoal(finalElevInch);
-        // double elevOutput = elevatorController.calculate(currentElevInch);
-        // double elevFeedforward = elevatorFF.calculate(elevatorController.getSetpoint().velocity);
-        // double totalElevVolts = elevOutput + elevFeedforward;
+        elevatorController.setGoal(desiredElevInches);
+        double elevOutput = elevatorController.calculate(currentElevInch);
+        double elevFeedforward = elevatorFF.calculate(elevatorController.getSetpoint().velocity);
+        double totalElevVolts = elevOutput + elevFeedforward;
+
+        SmartDashboard.putNumber("Elevator Ouput", elevOutput);
+        SmartDashboard.putNumber("Elevator FF", elevFeedforward);
 
         // // Calculate arm control output
         // double armOutput = armPID.calculate(currentArmDeg, finalArmDeg);
         double armOutput = armPID.calculate(currentArmDeg, desiredArmAngleDeg) / 2;
 
         // // Send voltages to the elevator motors
-        // elevatorMotorA.setVoltage(-totalElevVolts);
-        // elevatorMotorB.setVoltage(totalElevVolts);
+       elevatorMotorA.setVoltage(totalElevVolts);
+        elevatorMotorB.setVoltage(-totalElevVolts);
 
         // drivebase.setMaximumAllowableSpeeds(
         // Units.feetToMeters(Constants.MAX_SPEED

@@ -124,26 +124,26 @@ public class RobotContainer {
                         armElevator.goToLevel4Position();
                 }, armElevator));
 
-                // L2 => pivot intake forward
-                driverPS4.L2().whileTrue(Commands.run(() -> {
-                        algaeIntake.setPivotToIntake();
-                        algaeIntake.intakeForward();
-                }, algaeIntake)).onFalse(Commands.runOnce(algaeIntake::intakeStop, algaeIntake));
+                // // L2 => pivot intake forward
+                // driverPS4.L2().whileTrue(Commands.run(() -> {
+                //         algaeIntake.setPivotToIntake();
+                //         algaeIntake.intakeForward();
+                // }, algaeIntake)).onFalse(Commands.runOnce(algaeIntake::intakeStop, algaeIntake));
 
-                // R2 => pivot intake reverse
-                driverPS4.R2().whileTrue(Commands.run(() -> {
-                        algaeIntake.intakeReverse();
-                }, algaeIntake)).onFalse(Commands.runOnce(() -> {
-                        algaeIntake.stopPivot();
-                        algaeIntake.intakeStop();
-                }, algaeIntake));
+                // // R2 => pivot intake reverse
+                // driverPS4.R2().whileTrue(Commands.run(() -> {
+                //         algaeIntake.intakeReverse();
+                // }, algaeIntake)).onFalse(Commands.runOnce(() -> {
+                //         algaeIntake.stopPivot();
+                //         algaeIntake.intakeStop();
+                // }, algaeIntake));
 
-                // driverPS4.L2().or(driverPS4.R2()).whileTrue(Commands.run(() -> {
-                // double leftVal = driverPS4.getL2Axis();
-                // double rightVal = driverPS4.getR2Axis();
-                // armElevator.setManualElevatorSpeed(leftVal, rightVal);
-                // }, armElevator)).onFalse(Commands.runOnce(
-                // () -> armElevator.setManualElevatorSpeed(0.0, 0.0), armElevator));
+                driverPS4.L2().or(driverPS4.R2()).whileTrue(Commands.run(() -> {
+                double leftVal = driverPS4.getL2Axis();
+                double rightVal = driverPS4.getR2Axis();
+                armElevator.setManualElevatorSpeed(leftVal, rightVal);
+                }, armElevator)).onFalse(Commands.runOnce(
+                () -> armElevator.setManualElevatorSpeed(0.0, 0.0), armElevator));
 
 
 
@@ -268,7 +268,7 @@ public class RobotContainer {
         }
 
         public Command getAutonomousCommand() {
-                return drivebase.getAutonomousCommand("New Auto");
+                return drivebase.getAutonomousCommand("Leave Auto");
         }
 
         public void setMotorBrake(boolean brake) {
