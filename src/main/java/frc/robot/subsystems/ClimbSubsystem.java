@@ -70,28 +70,28 @@ public class ClimbSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // If PID is enabled, hold the pivot at the desired angle
-        if (pidEnabled) {
-            // Only run PID if the desired angle is within valid limits
-            if (desiredAngle >= Constants.ClimbConstants.CLIMB_MIN_POS
-                    && desiredAngle <= Constants.ClimbConstants.CLIMB_MAX_POS) {
+        // // If PID is enabled, hold the pivot at the desired angle
+        // if (pidEnabled) {
+        //     // Only run PID if the desired angle is within valid limits
+        //     if (desiredAngle >= Constants.ClimbConstants.CLIMB_MIN_POS
+        //             && desiredAngle <= Constants.ClimbConstants.CLIMB_MAX_POS) {
 
-                double currentAngle = climbAngleEncoder.getPosition();
-                double output = climbPID.calculate(currentAngle, desiredAngle);
+        //         double currentAngle = climbAngleEncoder.getPosition();
+        //         double output = climbPID.calculate(currentAngle, desiredAngle);
 
-                // Clamp motor output between [-1, 1]
-                if (output > 1) {
-                    output = 1;
-                } else if (output < -1) {
-                    output = -1;
-                }
-                climbAngle.set(output);
-            } else {
-                // Stop if we're outside the acceptable range
-                climbAngle.stopMotor();
-            }
-        }
-        // If PID is disabled, we do nothing here and rely on manual controls or a
-        // stopped motor.
+        //         // Clamp motor output between [-1, 1]
+        //         if (output > 1) {
+        //             output = 1;
+        //         } else if (output < -1) {
+        //             output = -1;
+        //         }
+        //         climbAngle.set(output);
+        //     } else {
+        //         // Stop if we're outside the acceptable range
+        //         climbAngle.stopMotor();
+        //     }
+        // }
+        // // If PID is disabled, we do nothing here and rely on manual controls or a
+        // // stopped motor.
     }
 }

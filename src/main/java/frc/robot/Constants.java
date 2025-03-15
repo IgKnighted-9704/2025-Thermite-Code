@@ -10,12 +10,15 @@ import java.util.List;
 import swervelib.math.Matter;
 
 /**
- * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
- * constants. This class should not be used for any other purpose. All constants should be declared
+ * The Constants class provides a convenient place for teams to hold robot-wide
+ * numerical or boolean
+ * constants. This class should not be used for any other purpose. All constants
+ * should be declared
  * globally (i.e. public static). Do not put anything functional in this class.
  *
  * <p>
- * It is advised to statically import this class (or one of its inner classes) wherever the
+ * It is advised to statically import this class (or one of its inner classes)
+ * wherever the
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
@@ -23,8 +26,7 @@ public final class Constants {
   // Robot mass and other global constants
   // 32lbs * kg per pound, removing ~20.3 lbs for manipulator weight if desired.
   public static final double ROBOT_MASS = (148 - 20.3) * 0.453592;
-  public static final Matter CHASSIS =
-      new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
+  public static final Matter CHASSIS = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
 
   // s, 20ms + 110ms Spark MAX velocity lag (example figure)
   public static final double LOOP_TIME = 0.13;
@@ -100,11 +102,11 @@ public final class Constants {
     // Funnel or intake positioning
     // all elevator heights are -2
     public static final double ARM_LOADING_DEG = -27;
-    public static final double ARM_FUNNEL_DEG = -30;
+    public static final double ARM_FUNNEL_DEG = -40;
     public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
-    public static final double ELEVATOR_FUNNEL_INCHES = 12.8125;
-    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 16.5;
+    public static final double ELEVATOR_FUNNEL_INCHES = 14.8125;
+    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.8;
 
     // Stow position constants
     public static final double ARM_STOW_DEG = 0.0;
@@ -115,16 +117,16 @@ public final class Constants {
     public static double ARM_kP = 0.03;
     public static double ARM_kI = 0.0;
     public static double ARM_kD = 0.0;
-    public static double ELEVATOR_kP = 2.0;
+    public static double ELEVATOR_kP = 3.0;
     public static double ELEVATOR_kI = 0.0;
     public static double ELEVATOR_kD = 0.0;
     public static double ELEV_kS = 0.0;
-    public static double ELEV_kG = 2.28;
-    public static double ELEV_kV = 3.07;
-    public static double ELEV_kA = 0.41;
+    public static double ELEV_kG = 0.41;
+    public static double ELEV_kV = 4.2;
+    public static double ELEV_kA = 0.5;
 
-    public static double ELEVATOR_MAX_VEL = 0.3;
-    public static double ELEVATOR_MAX_ACC = 0.3;
+    public static double ELEVATOR_MAX_VEL = 1.5;
+    public static double ELEVATOR_MAX_ACC = 1;
 
     // Elevator position presets
     public static final double ELEVATOR_STOW_INCHES = 0.0;
@@ -135,14 +137,10 @@ public final class Constants {
 
     // Offset used to calculate "score" positions for each level
     public static final double ELEVATOR_SCORE_OFFSET = 10.0;
-    public static final double ELEVATOR_LEVEL1_SCORE_INCHES =
-        ELEVATOR_LEVEL1_INCHES - ELEVATOR_SCORE_OFFSET;
-    public static final double ELEVATOR_LEVEL2_SCORE_INCHES =
-        ELEVATOR_LEVEL2_INCHES - ELEVATOR_SCORE_OFFSET;
-    public static final double ELEVATOR_LEVEL3_SCORE_INCHES =
-        ELEVATOR_LEVEL3_INCHES - ELEVATOR_SCORE_OFFSET;
-    public static final double ELEVATOR_LEVEL4_SCORE_INCHES =
-        ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL1_SCORE_INCHES = ELEVATOR_LEVEL1_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL2_SCORE_INCHES = ELEVATOR_LEVEL2_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL3_SCORE_INCHES = ELEVATOR_LEVEL3_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL4_SCORE_INCHES = ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
 
     // Corresponding arm angles for these levels
     public static final double ARM_LEVEL1_DEG = 65.0;
