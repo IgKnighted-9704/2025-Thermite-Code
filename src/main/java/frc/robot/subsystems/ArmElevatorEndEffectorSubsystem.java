@@ -62,6 +62,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Intake control modes
     private boolean autoIntakeActive = false;
     private boolean manualIntakeActive = false;
+    private boolean manualElevator = false;
     private boolean outtake = false;
 
     // Track whether we need to outtake at a scoring position
@@ -89,8 +90,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         ArmElevatorConstants.ELEVATOR_MAX_ACC));
         elevatorController.setGoal(ArmElevatorConstants.ELEVATOR_STOW_INCHES);
 
-        elevatorFF = new ElevatorFeedforward(ArmElevatorConstants.ELEV_kS, ArmElevatorConstants.ELEV_kG,
-                ArmElevatorConstants.ELEV_kV, ArmElevatorConstants.ELEV_kA);
+        elevatorFF =
+                new ElevatorFeedforward(ArmElevatorConstants.ELEV_kS, ArmElevatorConstants.ELEV_kG,
+                        ArmElevatorConstants.ELEV_kV, ArmElevatorConstants.ELEV_kA);
 
         // Arm components
         armMotor = new TalonFX(ArmElevatorConstants.ARM_MOTOR_ID);
@@ -107,54 +109,79 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         armMotor.setPosition(armAbsEnc.getPosition());
     }
 
-    // -------------------------------
-    // Preset Positions
-    // -------------------------------
-    public void funnelPosition() {
+    // ----------------------------------
+    // Arm Presets
+    // ----------------------------------
+    public void funnelArmPosition() {
         desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+    }
+
+    public void loadingArmPosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+    }
+
+    public void stowArmPosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+    }
+
+    public void goToLevel1ArmPosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL1_DEG;
+    }
+
+    public void goToLevel2ArmPosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL2_DEG;
+    }
+
+    public void goToLevel3ArmPosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL3_DEG;
+    }
+
+    public void goToLevel4ArmPosition() {
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL4_DEG;
+    }
+
+    // ----------------------------------
+    // Elevator Presets
+    // ----------------------------------
+    public void funnelElevatorPosition() {
         desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
         autoIntakeActive = true;
     }
 
-    public void loadingPosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+    public void loadingElevatorPosition() {
         desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
         autoIntakeActive = true;
     }
 
-    public void stowElevator() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+    public void stowElevatorPosition() {
         desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
         autoIntakeActive = false;
     }
 
-    public void goToLevel1Position() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL1_DEG;
+    public void goToLevel1ElevatorPosition() {
         desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL1_INCHES;
         autoIntakeActive = false;
     }
 
-    public void goToLevel2Position() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL2_DEG;
+    public void goToLevel2ElevatorPosition() {
         desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL2_INCHES;
         autoIntakeActive = false;
     }
 
-    public void goToLevel3Position() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL3_DEG;
+    public void goToLevel3ElevatorPosition() {
         desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL3_INCHES;
         autoIntakeActive = false;
     }
 
-    public void goToLevel4Position() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL4_DEG;
+    public void goToLevel4ElevatorPosition() {
         desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL4_INCHES;
         autoIntakeActive = false;
     }
 
+
     // Score positions (new)
     public void goToLevel1ScorePosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL1_DEG;
+        // desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL1_DEG;
         // desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL1_SCORE_INCHES; //
         // removed
         autoIntakeActive = false;
@@ -163,7 +190,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     public void goToLevel2ScorePosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL2_DEG;
+        // desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL2_DEG;
         desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL2_SCORE_INCHES;
         autoIntakeActive = false;
         scoringActive = true;
@@ -171,7 +198,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     public void goToLevel3ScorePosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL3_DEG;
+        // desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL3_DEG;
         desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL3_SCORE_INCHES;
         autoIntakeActive = false;
         scoringActive = true;
@@ -179,7 +206,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     public void goToLevel4ScorePosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL4_DEG;
+        // desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL4_DEG;
         desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL4_SCORE_INCHES;
         autoIntakeActive = false;
         scoringActive = true;
@@ -201,6 +228,13 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         outtake = true;
     }
 
+    public void slowIntake() {
+        manualIntakeActive = false;
+        autoIntakeActive = false;
+        intakeMotor.set(-0.1);
+        outtake = false;
+    }
+
     public void stopIntake() {
         manualIntakeActive = false;
         autoIntakeActive = false;
@@ -213,7 +247,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // -------------------------------
     public double getArmAngleDegrees() {
         double sensorDeg = armAbsEnc.getPosition();
-        return (sensorDeg * Constants.ArmElevatorConstants.ARM_ABS_ENC_RATIO) - 40;
+        return (sensorDeg * Constants.ArmElevatorConstants.ARM_ABS_ENC_RATIO) - 51;
     }
 
     public double getElevatorHeightInches() {
@@ -229,84 +263,86 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Reef Score Command (new code)
     // Slows for last 0.1m and checks elevator up/down states.
     // ------------------------------------------------------------------------
-    public Command createReefScoreCommand(boolean leftBranch, int level) {
-        var alliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Red);
-        List<Integer> allianceTags = (alliance == DriverStation.Alliance.Red) ? ReefConstants.REEF_RED_IDS
-                : ReefConstants.REEF_BLUE_IDS;
+    // public Command createReefScoreCommand(boolean leftBranch, int level) {
+    // var alliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Red);
+    // List<Integer> allianceTags =
+    // (alliance == DriverStation.Alliance.Red) ? ReefConstants.REEF_RED_IDS
+    // : ReefConstants.REEF_BLUE_IDS;
 
-        int visibleTag = findVisibleReefTag(allianceTags);
-        if (visibleTag < 0) {
-            return Commands
-                    .print("[ReefScore] No recognized reef tag is visible for our alliance!");
-        }
+    // int visibleTag = findVisibleReefTag(allianceTags);
+    // if (visibleTag < 0) {
+    // return Commands
+    // .print("[ReefScore] No recognized reef tag is visible for our alliance!");
+    // }
 
-        double yOffset = leftBranch ? -ReefConstants.BRANCH_OFFSET_METERS
-                : ReefConstants.BRANCH_OFFSET_METERS;
+    // double yOffset = leftBranch ? -ReefConstants.BRANCH_OFFSET_METERS
+    // : ReefConstants.BRANCH_OFFSET_METERS;
 
-        Transform2d approachOffset = new Transform2d(
-                new Translation2d(-ReefConstants.APPROACH_X_OFFSET_METERS, yOffset),
-                new Rotation2d());
-        Pose2d reefContactPose = Vision.getAprilTagPose(visibleTag, approachOffset);
+    // Transform2d approachOffset =
+    // new Transform2d(new Translation2d(-ReefConstants.APPROACH_X_OFFSET_METERS, yOffset),
+    // new Rotation2d());
+    // Pose2d reefContactPose = Vision.getAprilTagPose(visibleTag, approachOffset);
 
-        Command elevatorNormalCmd;
-        Command elevatorScoreCmd;
-        switch (level) {
-            case 4:
-                elevatorNormalCmd = Commands.runOnce(this::goToLevel4Position, this);
-                elevatorScoreCmd = Commands.runOnce(this::goToLevel4ScorePosition, this);
-                break;
-            case 3:
-                elevatorNormalCmd = Commands.runOnce(this::goToLevel3Position, this);
-                elevatorScoreCmd = Commands.runOnce(this::goToLevel3ScorePosition, this);
-                break;
-            case 2:
-                elevatorNormalCmd = Commands.runOnce(this::goToLevel2Position, this);
-                elevatorScoreCmd = Commands.runOnce(this::goToLevel2ScorePosition, this);
-                break;
-            default: // covers level 1
-                elevatorNormalCmd = Commands.runOnce(this::goToLevel1Position, this);
-                elevatorScoreCmd = Commands.runOnce(this::goToLevel1ScorePosition, this);
-                break;
-        }
+    // Command elevatorNormalCmd;
+    // Command elevatorScoreCmd;
+    // switch (level) {
+    // case 4:
+    // elevatorNormalCmd = Commands.runOnce(this::goToLevel4Position, this);
+    // elevatorScoreCmd = Commands.runOnce(this::goToLevel4ScorePosition, this);
+    // break;
+    // case 3:
+    // elevatorNormalCmd = Commands.runOnce(this::goToLevel3Position, this);
+    // elevatorScoreCmd = Commands.runOnce(this::goToLevel3ScorePosition, this);
+    // break;
+    // case 2:
+    // elevatorNormalCmd = Commands.runOnce(this::goToLevel2Position, this);
+    // elevatorScoreCmd = Commands.runOnce(this::goToLevel2ScorePosition, this);
+    // break;
+    // default: // covers level 1
+    // elevatorNormalCmd = Commands.runOnce(this::goToLevel1Position, this);
+    // elevatorScoreCmd = Commands.runOnce(this::goToLevel1ScorePosition, this);
+    // break;
+    // }
 
-        Command waitForNormalPos = Commands.waitUntil(() -> isElevatorInTolerance(desiredElevInches,
-                ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH));
-        Command waitForScorePos = Commands.waitUntil(() -> isElevatorInTolerance(desiredElevInches,
-                ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH));
+    // Command waitForNormalPos = Commands.waitUntil(() -> isElevatorInTolerance(desiredElevInches,
+    // ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH));
+    // Command waitForScorePos = Commands.waitUntil(() -> isElevatorInTolerance(desiredElevInches,
+    // ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH));
 
-        Command elevatorStow = Commands.runOnce(this::stowElevator, this);
-        Command waitForStowPos = Commands
-                .waitUntil(() -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_STOW_INCHES,
-                        ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH));
+    // Command elevatorStow = Commands.runOnce(this::stowElevator, this);
+    // Command waitForStowPos = Commands
+    // .waitUntil(() -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_STOW_INCHES,
+    // ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH));
 
-        Command driveUp = drivebase.twoStepApproach(reefContactPose, 0.1);
+    // Command driveUp = drivebase.twoStepApproach(reefContactPose, 0.1);
 
-        Pose2d retreatPose = reefContactPose.transformBy(new Transform2d(
-                new Translation2d(-ReefConstants.RETREAT_DISTANCE_METERS, 0.0), new Rotation2d()));
-        Command backAway = drivebase.driveToPose(retreatPose);
+    // Pose2d retreatPose = reefContactPose.transformBy(new Transform2d(
+    // new Translation2d(-ReefConstants.RETREAT_DISTANCE_METERS, 0.0), new Rotation2d()));
+    // Command backAway = drivebase.driveToPose(retreatPose);
 
-        return Commands.sequence(elevatorNormalCmd, waitForNormalPos, driveUp, elevatorScoreCmd,
-                waitForScorePos, elevatorStow, waitForStowPos, backAway);
-    }
+    // return Commands.sequence(elevatorNormalCmd, waitForNormalPos, driveUp, elevatorScoreCmd,
+    // waitForScorePos, elevatorStow, waitForStowPos, backAway);
+    // }
 
-    private int findVisibleReefTag(List<Integer> validTagIds) {
-        for (Vision.Cameras cam : Vision.Cameras.values()) {
-            var bestResultOpt = cam.getBestResult();
-            if (bestResultOpt.isEmpty()) {
-                continue;
-            }
-            var bestTarget = bestResultOpt.get().getBestTarget();
-            if (bestTarget != null) {
-                int fid = bestTarget.getFiducialId();
-                if (validTagIds.contains(fid)) {
-                    return fid;
-                }
-            }
-        }
-        return -1;
-    }
+    // private int findVisibleReefTag(List<Integer> validTagIds) {
+    // for (Vision.Cameras cam : Vision.Cameras.values()) {
+    // var bestResultOpt = cam.getBestResult();
+    // if (bestResultOpt.isEmpty()) {
+    // continue;
+    // }
+    // var bestTarget = bestResultOpt.get().getBestTarget();
+    // if (bestTarget != null) {
+    // int fid = bestTarget.getFiducialId();
+    // if (validTagIds.contains(fid)) {
+    // return fid;
+    // }
+    // }
+    // }
+    // return -1;
+    // }
 
     public void setManualElevatorSpeed(double leftTrigger, double rightTrigger) {
+        manualElevator = true;
         double speed = rightTrigger - leftTrigger;
         // Clamp speed to [-1,1]
         speed = Math.max(-1.0, Math.min(1.0, speed));
@@ -318,6 +354,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             elevatorMotorA.setVoltage(-volts);
             elevatorMotorB.setVoltage(volts);
         }
+    }
+
+    public void stopManualElevator() {
+        setManualElevatorSpeed(0.0, 0.0);
+        desiredElevInches = getElevatorHeightInches();
+        manualElevator = false;
     }
 
     public void setManualArm(double speed) {
@@ -334,27 +376,38 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // ------------------------------------------------
         // 1) Read updated values from the SmartDashboard
         // ------------------------------------------------
-        ArmElevatorConstants.ELEVATOR_kP = SmartDashboard.getNumber("Elevator kP", ArmElevatorConstants.ELEVATOR_kP);
-        ArmElevatorConstants.ELEVATOR_kI = SmartDashboard.getNumber("Elevator kI", ArmElevatorConstants.ELEVATOR_kI);
-        ArmElevatorConstants.ELEVATOR_kD = SmartDashboard.getNumber("Elevator kD", ArmElevatorConstants.ELEVATOR_kD);
+        ArmElevatorConstants.ELEVATOR_kP =
+                SmartDashboard.getNumber("Elevator kP", ArmElevatorConstants.ELEVATOR_kP);
+        ArmElevatorConstants.ELEVATOR_kI =
+                SmartDashboard.getNumber("Elevator kI", ArmElevatorConstants.ELEVATOR_kI);
+        ArmElevatorConstants.ELEVATOR_kD =
+                SmartDashboard.getNumber("Elevator kD", ArmElevatorConstants.ELEVATOR_kD);
         ArmElevatorConstants.ELEVATOR_MAX_VEL = SmartDashboard.getNumber("Elevator MaxVelocity",
                 ArmElevatorConstants.ELEVATOR_MAX_VEL);
         ArmElevatorConstants.ELEVATOR_MAX_ACC = SmartDashboard.getNumber("Elevator MaxAccel",
                 ArmElevatorConstants.ELEVATOR_MAX_ACC);
 
-        ArmElevatorConstants.ARM_kP = SmartDashboard.getNumber("Arm kP", ArmElevatorConstants.ARM_kP);
-        ArmElevatorConstants.ARM_kI = SmartDashboard.getNumber("Arm kI", ArmElevatorConstants.ARM_kI);
-        ArmElevatorConstants.ARM_kD = SmartDashboard.getNumber("Arm kD", ArmElevatorConstants.ARM_kD);
+        ArmElevatorConstants.ARM_kP =
+                SmartDashboard.getNumber("Arm kP", ArmElevatorConstants.ARM_kP);
+        ArmElevatorConstants.ARM_kI =
+                SmartDashboard.getNumber("Arm kI", ArmElevatorConstants.ARM_kI);
+        ArmElevatorConstants.ARM_kD =
+                SmartDashboard.getNumber("Arm kD", ArmElevatorConstants.ARM_kD);
 
         // Feedforward constants
-        ArmElevatorConstants.ELEV_kS = SmartDashboard.getNumber("Elev kS", ArmElevatorConstants.ELEV_kS);
-        ArmElevatorConstants.ELEV_kG = SmartDashboard.getNumber("Elev kG", ArmElevatorConstants.ELEV_kG);
-        ArmElevatorConstants.ELEV_kV = SmartDashboard.getNumber("Elev kV", ArmElevatorConstants.ELEV_kV);
-        ArmElevatorConstants.ELEV_kA = SmartDashboard.getNumber("Elev kA", ArmElevatorConstants.ELEV_kA);
+        ArmElevatorConstants.ELEV_kS =
+                SmartDashboard.getNumber("Elev kS", ArmElevatorConstants.ELEV_kS);
+        ArmElevatorConstants.ELEV_kG =
+                SmartDashboard.getNumber("Elev kG", ArmElevatorConstants.ELEV_kG);
+        ArmElevatorConstants.ELEV_kV =
+                SmartDashboard.getNumber("Elev kV", ArmElevatorConstants.ELEV_kV);
+        ArmElevatorConstants.ELEV_kA =
+                SmartDashboard.getNumber("Elev kA", ArmElevatorConstants.ELEV_kA);
 
         // Update the feedforward object with new constants
-        elevatorFF = new ElevatorFeedforward(ArmElevatorConstants.ELEV_kS, ArmElevatorConstants.ELEV_kG,
-                ArmElevatorConstants.ELEV_kV, ArmElevatorConstants.ELEV_kA);
+        elevatorFF =
+                new ElevatorFeedforward(ArmElevatorConstants.ELEV_kS, ArmElevatorConstants.ELEV_kG,
+                        ArmElevatorConstants.ELEV_kV, ArmElevatorConstants.ELEV_kA);
 
         // Also read & update additional constants
         ArmElevatorConstants.ARM_ABS_ENC_RATIO = SmartDashboard.getNumber("Arm Abs Encoder Ratio",
@@ -404,97 +457,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         double currentArmDeg = getArmAngleDegrees();
         double currentElevInch = getElevatorHeightInches();
 
-        // // Check for pitch angle from the drivebase and adjust if the robot is tilted
-        // if (drivebase != null) {
-        // double pitchDeg = Math.abs(drivebase.getPitch().getDegrees());
-        // boolean isTiltedNow = (pitchDeg > ArmElevatorConstants.TILT_THRESHOLD_DEG);
-
-        // if (isTiltedNow) {
-        // // If this is a new tilt event, record current setpoints
-        // if (!wasTilted) {
-        // storedArmAngleDeg = desiredArmAngleDeg;
-        // storedElevInches = desiredElevInches;
-        // }
-        // // Force elevator down to a minimum height while tilted
-        // desiredElevInches = ArmElevatorConstants.ELEVATOR_MIN_INCHES;
-        // } else {
-        // // If we were tilted but are level again, restore old setpoints
-        // if (wasTilted) {
-        // desiredArmAngleDeg = storedArmAngleDeg;
-        // desiredElevInches = storedElevInches;
-        // }
-        // }
-        // wasTilted = isTiltedNow;
-        // }
-
-        // // Collision protection boundaries
-        // double allowedArmMin = ArmElevatorConstants.ARM_MIN_DEG;
-        // double allowedArmMax = ArmElevatorConstants.ARM_MAX_DEG;
-        // double allowedElevMin = ArmElevatorConstants.ELEVATOR_MIN_INCHES;
-        // double allowedElevMax = ArmElevatorConstants.ELEVATOR_MAX_INCHES;
-
-        // // 1) Logic for allowing the arm inside the robot frame
-        // boolean wantsInsideRobot = (desiredArmAngleDeg < 0.0);
-        // double insideRobotMin = ArmElevatorConstants.ELEV_FUNNEL_SAFE_MIN_INCHES;
-        // double insideRobotMax = ArmElevatorConstants.ELEV_FUNNEL_SAFE_MAX_INCHES;
-
-        // if (wantsInsideRobot) {
-        // double originalElev = desiredElevInches;
-        // double newElev = clamp(originalElev, insideRobotMin, insideRobotMax);
-        // // If we had to clamp the elevator, raise the arm's lower limit to 0
-        // if (Math.abs(newElev - originalElev) > 0.001) {
-        // allowedArmMin = Math.max(allowedArmMin, 0.0);
-        // }
-        // desiredElevInches = newElev;
-        // } else {
-        // // If the arm is inside but the elevator tries to move out of funnel range,
-        // // clamp
-        // boolean armIsInsideRobot = (currentArmDeg < 0.0);
-        // boolean elevatorOutOfInsideRobotRange =
-        // (desiredElevInches < insideRobotMin) || (desiredElevInches > insideRobotMax);
-
-        // if (armIsInsideRobot && elevatorOutOfInsideRobotRange) {
-        // double originalElev = desiredElevInches;
-        // double newElev = clamp(originalElev, insideRobotMin, insideRobotMax);
-        // desiredElevInches = newElev;
-        // allowedArmMin = Math.max(allowedArmMin, 0.0);
-        // }
-        // }
-
-        // // 2) Prevent elevator from going down if the arm isn't near stow
-        // boolean wantsElevDown =
-        // (desiredElevInches <= (ArmElevatorConstants.ELEVATOR_MIN_INCHES + 0.01));
-        // boolean armOutsideStow = !isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG,
-        // ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG);
-
-        // if (wantsElevDown && armOutsideStow) {
-        // allowedElevMin = Math.max(allowedElevMin, currentElevInch);
-        // }
-
-        // // 3) Keep the elevator above a safe threshold if the arm is moving out of
-        // stow
-        // boolean armWantsOutOfStow =
-        // (Math.abs(desiredArmAngleDeg) > ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG);
-        // boolean elevatorTooLow =
-        // (desiredElevInches < ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD);
-
-        // if (armWantsOutOfStow && elevatorTooLow) {
-        // double originalElev = desiredElevInches;
-        // double newElev = clamp(originalElev,
-        // ArmElevatorConstants.ELEVATOR_SAFE_LOWER_THRESHOLD,
-        // allowedElevMax);
-        // // If we had to clamp elevator, limit the arm within stow tolerance
-        // if (Math.abs(newElev - originalElev) > 0.001) {
-        // allowedArmMin = -ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG;
-        // allowedArmMax = ArmElevatorConstants.ARM_STOW_TOLERANCE_DEG;
-        // }
-        // desiredElevInches = newElev;
-        // }
-
-        // // Clamp final target positions
-        // double finalArmDeg = clamp(desiredArmAngleDeg, allowedArmMin, allowedArmMax);
-        // double finalElevInch = clamp(desiredElevInches, allowedElevMin,
-        // allowedElevMax);
 
         // // Calculate elevator control output (PID + feedforward)
         elevatorController.setGoal(Units.inchesToMeters(desiredElevInches));
@@ -507,102 +469,21 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
         // // Calculate arm control output
         // double armOutput = armPID.calculate(currentArmDeg, finalArmDeg);
+        // Clamp speed to [-1,1]
         double armOutput = armPID.calculate(currentArmDeg, desiredArmAngleDeg) / 4;
 
         // // Send voltages to the elevator motors
-        // elevatorMotorA.setVoltage(totalElevVolts);
-        // elevatorMotorB.setVoltage(-totalElevVolts);
+        if (!manualElevator) {
+            // elevatorMotorA.setVoltage(totalElevVolts);
+            // elevatorMotorB.setVoltage(-totalElevVolts);
+        }
 
-        // drivebase.setMaximumAllowableSpeeds(
-        // Units.feetToMeters(Constants.MAX_SPEED
-        // - (getElevatorHeightInches() * ArmElevatorConstants.ACCEL_LIMIT_SCALE)),
-        // drivebase.getMaximumChassisAngularVelocity());
-        // // Send raw PID output to the arm motor
-        armMotor.set(armOutput);
-
-        // // Intake logic
-        // if (manualIntakeActive) {
-        // // Only run the intake if arm and elevator are at the funnel position
-        // boolean armAtFunnel = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
-        // ArmElevatorConstants.ARM_TOLERANCE_DEG);
-        // boolean elevatorAtFunnel =
-        // isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
-        // ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH);
+        // armMotor.set(Math.max(-4.0, Math.min(4.0, armOutput)));
 
         if (manualIntakeActive) {
-            intakeMotor.set(outtake ? ArmElevatorConstants.INTAKE_SPEED : -ArmElevatorConstants.INTAKE_SPEED);
+            intakeMotor.set(outtake ? ArmElevatorConstants.INTAKE_SPEED
+                    : -ArmElevatorConstants.INTAKE_SPEED);
         }
-        // if (armAtFunnel && elevatorAtFunnel) {
-        // intakeMotor.set(ArmElevatorConstants.INTAKE_SPEED);
-        // } else {
-        // intakeMotor.set(0.0);
-        // }
-        // } else if (autoIntakeActive) {
-        // // Auto intake runs if we are at funnel position; stops if the intake is
-        // stalled
-
-        // boolean currentlyAtFunnel =
-        // isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
-        // ArmElevatorConstants.ARM_TOLERANCE_DEG);
-        // if (wasAtFunnel && !currentlyAtFunnel) {
-        // loadingPosition();
-        // }
-        // wasAtFunnel = currentlyAtFunnel;
-
-        // ------------------------------------------------
-        // Make it outtake once elevator is at scoring position
-        // ------------------------------------------------
-        // if (scoringActive) {
-        // if (scoringLevel == 1) {
-        // // Level1 only checks arm angle, not elevator
-        // if (isArmInTolerance(ArmElevatorConstants.ARM_LEVEL1_DEG,
-        // ArmElevatorConstants.ARM_TOLERANCE_DEG)) {
-        // // outtake
-        // intakeMotor.set(-ArmElevatorConstants.INTAKE_SPEED);
-        // }
-        // } else if (scoringLevel == 2) {
-        // if (isArmInTolerance(ArmElevatorConstants.ARM_LEVEL2_DEG,
-        // ArmElevatorConstants.ARM_TOLERANCE_DEG)
-        // && isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_LEVEL2_SCORE_INCHES,
-        // ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH)) {
-        // intakeMotor.set(-ArmElevatorConstants.INTAKE_SPEED);
-        // }
-        // } else if (scoringLevel == 3) {
-        // if (isArmInTolerance(ArmElevatorConstants.ARM_LEVEL3_DEG,
-        // ArmElevatorConstants.ARM_TOLERANCE_DEG)
-        // && isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_LEVEL3_SCORE_INCHES,
-        // ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH)) {
-        // intakeMotor.set(-ArmElevatorConstants.INTAKE_SPEED);
-        // }
-        // } else if (scoringLevel == 4) {
-        // if (isArmInTolerance(ArmElevatorConstants.ARM_LEVEL4_DEG,
-        // ArmElevatorConstants.ARM_TOLERANCE_DEG)
-        // && isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_LEVEL4_SCORE_INCHES,
-        // ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH)) {
-        // intakeMotor.set(-ArmElevatorConstants.INTAKE_SPEED);
-        // }
-        // }
-        // }
-
-        // boolean armAtFunnel = isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG,
-        // ArmElevatorConstants.ARM_TOLERANCE_DEG);
-        // boolean elevatorAtFunnel =
-        // isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
-        // ArmElevatorConstants.ELEVATOR_TOLERANCE_INCH);
-
-        // if (armAtFunnel && elevatorAtFunnel) {
-        // intakeMotor.set(ArmElevatorConstants.INTAKE_SPEED);
-
-        // // Check for a stall condition, then shut off intake
-        // if (Math.abs(getIntakeRPM()) < ArmElevatorConstants.INTAKE_STOPPED_RPM) {
-        // stopIntake();
-        // }
-        // } else {
-        // intakeMotor.set(0.0);
-        // }
-        // } else {
-        // intakeMotor.set(0.0);
-        // }
     }
 
     private double clamp(double val, double min, double max) {

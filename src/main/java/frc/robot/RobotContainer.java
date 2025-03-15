@@ -34,7 +34,8 @@ public class RobotContainer {
         private final SwerveSubsystem drivebase = new SwerveSubsystem(
                         new File(Filesystem.getDeployDirectory(), "swerve/maxSwerve"));
         private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
-        private final ArmElevatorEndEffectorSubsystem armElevator = new ArmElevatorEndEffectorSubsystem(drivebase);
+        private final ArmElevatorEndEffectorSubsystem armElevator =
+                        new ArmElevatorEndEffectorSubsystem(drivebase);
         private final ClimbSubsystem climbSubsystem = new ClimbSubsystem();
 
         // Example input streams for controlling the swerve
@@ -61,7 +62,127 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
-                // Keep drive as is
+                // -------------------------------------------
+                // Keep existing triggers for intake as-is
+                // -------------------------------------------
+                auxXbox.rightTrigger()
+                                .whileTrue(Commands.run(() -> armElevator.startManualIntake(),
+                                                armElevator))
+                                .onFalse(Commands.runOnce(armElevator::slowIntake, armElevator));
+
+                auxXbox.leftTrigger()
+                                .whileTrue(Commands.run(() -> armElevator.startManualOuttake(),
+                                                armElevator))
+                                .onFalse(Commands.runOnce(armElevator::stopIntake, armElevator));
+
+                // -------------------------------------------
+                // Only move elevator if RB not pressed;
+                // if RB is pressed, move arm instead
+                // -------------------------------------------
+                auxXbox.y().onTrue(Commands.runOnce(() -> {
+                        if (!auxXbox.rightBumper().getAsBoolean()) {
+                                // Elevator to level 4
+                                selectedLevel = 4;
+                                armElevator.goToLevel4ElevatorPosition();
+                        } else {
+                                // Right bumper => move arm
+                                armElevator.goToLevel4ArmPosition();
+                        }
+                }, armElevator));
+
+                auxXbox.a().onTrue(Commands.runOnce(() -> {
+                        if (!auxXbox.rightBumper().getAsBoolean()) {
+                                // Elevator to level 3
+                                selectedLevel = 3;
+                                armElevator.goToLevel3ElevatorPosition();
+                        } else {
+                                // Right bumper => move arm
+                                armElevator.goToLevel3ArmPosition();
+                        }
+                }, armElevator));
+
+                auxXbox.povLeft().onTrue(Commands.runOnce(() -> {
+                        if (!auxXbox.rightBumper().getAsBoolean()) {
+                                // Elevator to level 1
+                                selectedLevel = 1;
+                                armElevator.goToLevel1ElevatorPosition();
+                        } else {
+                                // Right bumper => move arm
+                                armElevator.goToLevel1ArmPosition();
+                        }
+                }, armElevator));
+
+                auxXbox.povRight().onTrue(Commands.runOnce(() -> {
+                        if (!auxXbox.rightBumper().getAsBoolean()) {
+                                // Elevator to level 2
+                                selectedLevel = 2;
+                                armElevator.goToLevel2ElevatorPosition();
+                        } else {
+                                // Right bumper => move arm
+                                armElevator.goToLevel2ArmPosition();
+                        }
+                }, armElevator));
+
+                // X and A both send funnel commands
+                auxXbox.x().onTrue(Commands.runOnce(() -> {
+                        if (!auxXbox.rightBumper().getAsBoolean()) {
+                                armElevator.funnelElevatorPosition();
+                        } else {
+                                armElevator.funnelArmPosition();
+                        }
+                }, armElevator));
+
+                auxXbox.b().onTrue(Commands.runOnce(() -> {
+                        if (!auxXbox.rightBumper().getAsBoolean()) {
+                                armElevator.loadingElevatorPosition();
+                        } else {
+                                armElevator.loadingArmPosition();
+                        }
+                }, armElevator));
+
+                // POV Down => stow
+                auxXbox.povDown().onTrue(Commands.runOnce(() -> {
+                        if (!auxXbox.rightBumper().getAsBoolean()) {
+                                armElevator.stowElevatorPosition();
+                        } else {
+                                armElevator.stowArmPosition();
+                        }
+                }, armElevator));
+
+                // -------------------------------------------
+                // Left bumper => move elevator to score
+                // for the selected level
+                // -------------------------------------------
+                auxXbox.leftBumper().onTrue(Commands.runOnce(() -> {
+                        switch (selectedLevel) {
+                                case 1:
+                                        armElevator.goToLevel1ScorePosition();
+                                        break;
+                                case 2:
+                                        armElevator.goToLevel2ScorePosition();
+                                        break;
+                                case 3:
+                                        armElevator.goToLevel3ScorePosition();
+                                        break;
+                                case 4:
+                                        armElevator.goToLevel4ScorePosition();
+                                        break;
+                                default:
+                                        // If no valid level selected, do nothing or stow, etc.
+                                        break;
+                        }
+                }, armElevator));
+
+                new Trigger(() -> Math.abs(auxXbox.getLeftY()) > 0.1).whileTrue(Commands.run(() -> {
+                        double raw = -auxXbox.getLeftY();
+                        double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
+                        armElevator.setManualElevatorSpeed(val, 0.0);
+                }, armElevator)).onFalse(Commands.runOnce(
+                                () -> armElevator.stopManualElevator(), armElevator));
+
+                // -------------------------------------------
+                // Keep your drive bindings, etc.
+                // -------------------------------------------
                 if (RobotBase.isSimulation()) {
                         drivebase.setDefaultCommand(drivebase.driveFieldOriented(driveDirectAngle));
                 } else {
@@ -69,240 +190,22 @@ public class RobotContainer {
                                         drivebase.driveFieldOriented(driveAngularVelocity));
                 }
 
-                // Example: Press Options => run reef score command
-                // (leftBranch/selectedLevel set by L1/R1 and face buttons)
-                // This line is kept exactly to preserve the original comment; we replace the
-                // actual binding.
-
-                // driverPS4.options().onTrue(Commands.runOnce(() -> {
-                // switch (selectedLevel) {
-                // case 1:
-                // armElevator.goToLevel1ScorePosition();
-                // break;
-                // case 2:
-                // armElevator.goToLevel2ScorePosition();
-                // break;
-                // case 3:
-                // armElevator.goToLevel3ScorePosition();
-                // break;
-                // case 4:
-                // armElevator.goToLevel4ScorePosition();
-                // break;
-                // default:
-                // break;
-                // }
-                // }, armElevator));
-
-                // // L1 => hold to select left branch
-                // driverPS4.L1().onTrue(Commands.runOnce(() -> {
-                // armElevator.funnelPosition();
-                // }, armElevator));
-
-                // // R1 => hold to select right branch
-                // driverPS4.R1().onTrue(Commands.runOnce(() -> {
-                // armElevator.loadingPosition();
-                // }, armElevator));
-
-                // X => choose level 1
-                // driverPS4.cross().onTrue(Commands.runOnce(() -> {
-                // selectedLevel = 1;
-                // armElevator.goToLevel1Position();
-                // }, armElevator));
-
-                // Square => choose level 2
-                // driverPS4.square().onTrue(Commands.runOnce(() -> {
-                // selectedLevel = 2;
-                // armElevator.goToLevel2Position();
-                // }, armElevator));
-
-                // // Circle => choose level 3
-                // driverPS4.circle().onTrue(Commands.runOnce(() -> {
-                // selectedLevel = 3;
-                // armElevator.goToLevel3Position();
-                // }, armElevator));
-
-                // // Triangle => choose level 4
-                // driverPS4.triangle().onTrue(Commands.runOnce(() -> {
-                // selectedLevel = 4;
-                // armElevator.goToLevel4Position();
-                // }, armElevator));
-
-                // // L2 => pivot intake forward
-                // driverPS4.L2().whileTrue(Commands.run(() -> {
-                // algaeIntake.setPivotToIntake();
-                // algaeIntake.intakeForward();
-                // }, algaeIntake)).onFalse(Commands.runOnce(algaeIntake::intakeStop,
-                // algaeIntake));
-
-                // // R2 => pivot intake reverse
-                // driverPS4.R2().whileTrue(Commands.run(() -> {
-                // algaeIntake.intakeReverse();
-                // }, algaeIntake)).onFalse(Commands.runOnce(() -> {
-                // algaeIntake.stopPivot();
-                // algaeIntake.intakeStop();
-                // }, algaeIntake));
-
-                // driverPS4.L2().or(driverPS4.R2()).whileTrue(Commands.run(() -> {
-                // double leftVal = driverPS4.getL2Axis();
-                // double rightVal = driverPS4.getR2Axis();
-                // armElevator.setManualElevatorSpeed(leftVal, rightVal);
-                // }, armElevator)).onFalse(Commands.runOnce(
-                // () -> armElevator.setManualElevatorSpeed(0.0, 0.0), armElevator));
-
-                // Share button => stow elevator and arm
-                // driverPS4.share().onTrue(Commands.runOnce(() -> {
-                // armElevator.stowElevator();
-                // }, armElevator));
-
-                // // POV up => manual elevator up at quarter speed
-                // driverPS4.povUp()
-                // .whileTrue(Commands.run(
-                // () -> armElevator.setManualElevatorSpeed(0.0, 0.25),
-                // armElevator))
-                // .onFalse(Commands.runOnce(
-                // () -> armElevator.setManualElevatorSpeed(0.0, 0.0),
-                // armElevator));
-
-                // // POV down => manual elevator down at quarter speed
-                // driverPS4.povDown()
-                // .whileTrue(Commands.run(
-                // () -> armElevator.setManualElevatorSpeed(0.25, 0.0),
-                // armElevator))
-                // .onFalse(Commands.runOnce(
-                // () -> armElevator.setManualElevatorSpeed(0.0, 0.0),
-                // armElevator));
-
-                // Cross => zero gyro
+                // Example: Cross => zero gyro
                 driverPS4.povLeft().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
-
-                // // aux
-                // auxXbox.start().onTrue(Commands.runOnce(() -> {
-                // switch (selectedLevel) {
-                // case 1:
-                // armElevator.goToLevel1ScorePosition();
-                // break;
-                // case 2:
-                // armElevator.goToLevel2ScorePosition();
-                // break;
-                // case 3:
-                // armElevator.goToLevel3ScorePosition();
-                // break;
-                // case 4:
-                // armElevator.goToLevel4ScorePosition();
-                // break;
-                // default:
-                // break;
-                // }
-                // }, armElevator));
-
-                // L1 => hold to select left branch
-                auxXbox.leftBumper().onTrue(Commands.runOnce(() -> {
-                        armElevator.funnelPosition();
-                }, armElevator));
-
-                // // R1 => hold to select right branch
-                // auxXbox.rightBumper().onTrue(Commands.runOnce(() -> {
-                // armElevator.loadingPosition();
-                // }, armElevator));
-                // // L2 => pivot intake forward
-
-                auxXbox.rightTrigger().whileTrue(Commands.run(() -> {
-                        armElevator.startManualIntake();
-                }, armElevator)).onFalse(Commands.runOnce(armElevator::stopIntake, armElevator));
-
-                auxXbox.leftTrigger().whileTrue(Commands.run(() -> {
-                        armElevator.startManualOuttake();
-                }, armElevator)).onFalse(Commands.runOnce(armElevator::stopIntake, armElevator));
-
-                // X => choose level 1
-                auxXbox.a().onTrue(Commands.runOnce(() -> {
-                        selectedLevel = 1;
-                        armElevator.goToLevel1Position();
-                }, armElevator));
-
-                // Square => choose level 2
-                auxXbox.x().onTrue(Commands.runOnce(() -> {
-                        selectedLevel = 2;
-                        armElevator.goToLevel2Position();
-                }, armElevator));
-
-                // Circle => choose level 3
-                auxXbox.b().onTrue(Commands.runOnce(() -> {
-                        selectedLevel = 3;
-                        armElevator.goToLevel3Position();
-                }, armElevator));
-
-                // Triangle => choose level 4
-                auxXbox.y().onTrue(Commands.runOnce(() -> {
-                        selectedLevel = 4;
-                        armElevator.goToLevel4Position();
-                }, armElevator));
-
-                new Trigger(() -> Math.abs(auxXbox.getLeftY()) > 0.05)
-                                .whileTrue(Commands.run(() -> {
-                                        double raw = -auxXbox.getLeftY();
-                                        double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
-                                        armElevator.setManualElevatorSpeed(val, 0.0);
-                                }, armElevator))
-                                .onFalse(Commands.runOnce(() -> armElevator.setManualElevatorSpeed(0.0, 0.0),
-                                                armElevator));
-
-                // // L2 => pivot intake forward
-                // auxXbox.leftTrigger().whileTrue(Commands.run(() -> {
-                // algaeIntake.setPivotToIntake();
-                // algaeIntake.intakeForward();
-                // }, algaeIntake)).onFalse(Commands.runOnce(algaeIntake::intakeStop,
-                // algaeIntake));
-
-                // // R2 => pivot intake reverse
-                // auxXbox.rightTrigger().whileTrue(Commands.run(() -> {
-                // algaeIntake.intakeReverse();
-                // }, algaeIntake)).onFalse(Commands.runOnce(() -> {
-                // algaeIntake.stopPivot();
-                // algaeIntake.intakeStop();
-                // }, algaeIntake));
-
-                // Share button => stow elevator and arm
-                auxXbox.rightBumper().onTrue(Commands.runOnce(() -> {
-                        armElevator.stowElevator();
-                }, armElevator));
-
-                // // POV up => manual elevator up at quarter speed
-                // auxXbox.povUp().whileTrue(Commands.run(
-                // () -> armElevator.setManualElevatorSpeed(0.0, 0.25), armElevator))
-                // .onFalse(Commands.runOnce(
-                // () -> armElevator.setManualElevatorSpeed(0.0, 0.0),
-                // armElevator));
-
-                // // POV down => manual elevator down at quarter speed
-                // auxXbox.povDown()
-                // .whileTrue(Commands.run(
-                // () -> armElevator.setManualElevatorSpeed(0.25, 0.0),
-                // armElevator))
-                // .onFalse(Commands.runOnce(
-                // () -> armElevator.setManualElevatorSpeed(0.0, 0.0),
-                // armElevator));
-
-                // Cross => zero gyro
-                auxXbox.povLeft().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
         }
+
 
         public Command getAutonomousCommand() {
                 // return drivebase.getAutonomousCommand("Leave Auto");
                 Command autonomousCommand = new SequentialCommandGroup(
 
                                 new InstantCommand(() -> {
-                                        drivebase.driveCommand(
-                                                        () -> -0.5,
-                                                        () -> 0,
-                                                        () -> 0).schedule();
-                                }),
-                                new WaitCommand(2), // Wait for 2 seconds
+                                        drivebase.driveCommand(() -> -0.5, () -> 0, () -> 0)
+                                                        .schedule();
+                                }), new WaitCommand(2), // Wait for 2 seconds
                                 new InstantCommand(() -> {
-                                        drivebase.driveCommand(
-                                                        () -> 0,
-                                                        () -> 0,
-                                                        () -> 0).schedule();
+                                        drivebase.driveCommand(() -> 0, () -> 0, () -> 0)
+                                                        .schedule();
                                 }));
 
                 return autonomousCommand;
