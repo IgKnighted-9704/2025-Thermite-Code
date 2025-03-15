@@ -1,0 +1,79 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "start to 2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "goToLevel4ScorePosition"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "loadingPosition"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "2 to coral station"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "loadingPosition"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Coral station to 3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "goToLevel4ScorePosition"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "loadingPosition"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
