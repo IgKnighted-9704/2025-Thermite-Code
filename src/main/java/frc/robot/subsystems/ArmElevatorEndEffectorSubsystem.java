@@ -247,7 +247,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // -------------------------------
     public double getArmAngleDegrees() {
         double sensorDeg = armAbsEnc.getPosition();
-        return (sensorDeg * Constants.ArmElevatorConstants.ARM_ABS_ENC_RATIO) - 51;
+        return (sensorDeg * Constants.ArmElevatorConstants.ARM_ABS_ENC_RATIO) - 80.7;
     }
 
     public double getElevatorHeightInches() {
@@ -474,11 +474,11 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
         // // Send voltages to the elevator motors
         if (!manualElevator) {
-            // elevatorMotorA.setVoltage(totalElevVolts);
-            // elevatorMotorB.setVoltage(-totalElevVolts);
+            elevatorMotorA.setVoltage(totalElevVolts);
+            elevatorMotorB.setVoltage(-totalElevVolts);
         }
 
-        // armMotor.set(Math.max(-4.0, Math.min(4.0, armOutput)));
+        armMotor.set(Math.max(-4.0, Math.min(4.0, armOutput)));
 
         if (manualIntakeActive) {
             intakeMotor.set(outtake ? ArmElevatorConstants.INTAKE_SPEED

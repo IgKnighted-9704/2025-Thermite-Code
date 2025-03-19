@@ -15,58 +15,52 @@ public class ClimbSubsystem extends SubsystemBase {
             new SparkMax(Constants.ClimbConstants.CLIMB_MOTOR_A_ID, MotorType.kBrushed);
 
     // Pivot motor (brushed) equipped with an absolute encoder
-    private final SparkMax climbAngle =
+    private final SparkMax climbMotor2 =
             new SparkMax(Constants.ClimbConstants.CLIMB_MOTOR_B_ID, MotorType.kBrushed);
-
-    private final AbsoluteEncoder climbAngleEncoder = climbAngle.getAbsoluteEncoder();
-
-    // PID controller that manages pivot angle
-    private final PIDController climbPID = new PIDController(Constants.ClimbConstants.CLIMB_kP,
-            Constants.ClimbConstants.CLIMB_kI, Constants.ClimbConstants.CLIMB_kD);
-
-    // Tracks the target pivot angle and whether the PID is actively holding it
-    private double desiredAngle = 0.0;
-    private boolean pidEnabled = false;
 
     public ClimbSubsystem() {
         // Optionally set idle modes or current limits here, for example:
-        // climbMotor.setIdleMode(IdleMode.kBrake);
-        // climbAngle.setIdleMode(IdleMode.kBrake);
     }
 
-    // Moves the pivot to a preset angle and enables the PID to hold that position
-    public void setPivotToClimbAngle() {
-        desiredAngle = Constants.ClimbConstants.CLIMB_HOLD_ANGLE;
-        pidEnabled = true;
-    }
+    // // Moves the pivot to a preset angle and enables the PID to hold that position
+    // public void setPivotToClimbAngle() {
+    //     desiredAngle = Constants.ClimbConstants.CLIMB_HOLD_ANGLE;
+    //     pidEnabled = true;
+    // }
 
-    // Manually adjusts the pivot angle
-    public void changeClimbAngle(double speed) {
-        pidEnabled = false; // turn off PID during manual control
-        double currPos = climbAngleEncoder.getPosition();
+    // // Manually adjusts the pivot angle
+    // public void changeClimbAngle(double speed) {
+    //     pidEnabled = false; // turn off PID during manual control
+    //     double currPos = climbAngleEncoder.getPosition();
 
-        if (currPos < Constants.ClimbConstants.CLIMB_MAX_POS
-                && currPos > Constants.ClimbConstants.CLIMB_MIN_POS) {
-            climbAngle.set(speed);
-        } else {
-            climbAngle.stopMotor();
-        }
-    }
+    //     if (currPos < Constants.ClimbConstants.CLIMB_MAX_POS
+    //             && currPos > Constants.ClimbConstants.CLIMB_MIN_POS) {
+    //         climbAngle.set(speed);
+    //     } else {
+    //         climbAngle.stopMotor();
+    //     }
+    // }
 
     // Runs the main climb motor at a set speed
-    public void climb() {
-        climbMotor.set(0.35);
+    public void climb(double leftTrigger, double rightTrigger) {
+        double speed = rightTrigger - leftTrigger;
+        // Clamp speed to [-1,1]
+        speed = Math.max(-1.0, Math.min(1.0, speed));
+        double volts = 12 * speed;
+        climbMotor.setVoltage(volts);
+        climbMotor2.setVoltage(volts);
     }
 
     // Immediately stops the climb motor
     public void stopClimbMotor() {
         climbMotor.stopMotor();
+        climbMotor2.stopMotor();
     }
 
     // Returns the current pivot angle for logging or diagnostics
-    public double getArmPos() {
-        return climbAngleEncoder.getPosition();
-    }
+    // public double getArmPos() {
+    //     return climbAngleEncoder.getPosition();
+    // }
 
     @Override
     public void periodic() {
