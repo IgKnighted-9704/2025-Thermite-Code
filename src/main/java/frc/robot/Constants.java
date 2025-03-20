@@ -158,7 +158,7 @@ public final class Constants {
 
     // Intake constants
     public static final double INTAKE_SPEED = 0.8;
-    // public static final double INTAKE_STOPPED_RPM = 50.0;
+    public static final double INTAKE_STOPPED_RPM = 50.0;
 
     // public static final double ACCEL_LIMIT_SCALE = 0.01;
   }

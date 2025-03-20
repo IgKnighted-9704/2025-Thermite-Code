@@ -50,9 +50,7 @@ public class RobotContainer {
                         .withControllerHeadingAxis(driverPS4::getRightX, driverPS4::getRightY)
                         .headingWhile(true);
 
-        // These track which branch (left or right) is selected, and what level was
-        // chosen.
-        private boolean leftBranch = true;
+        // Track which level was selected
         private int selectedLevel = 1;
 
         public RobotContainer() {
@@ -76,77 +74,56 @@ public class RobotContainer {
                                 .onFalse(Commands.runOnce(armElevator::stopIntake, armElevator));
 
                 // -------------------------------------------
-                // Only move elevator if RB not pressed;
-                // if RB is pressed, move arm instead
+                // Y => go to level 4
                 // -------------------------------------------
                 auxXbox.y().onTrue(Commands.runOnce(() -> {
-                        if (!auxXbox.rightBumper().getAsBoolean()) {
-                                // Elevator to level 4
-                                selectedLevel = 4;
-                                armElevator.goToLevel4ElevatorPosition();
-                        } else {
-                                // Right bumper => move arm
-                                armElevator.goToLevel4ArmPosition();
-                        }
+                        selectedLevel = 4;
+                        armElevator.goToLevelCommand(4).schedule();
                 }, armElevator));
 
+                // -------------------------------------------
+                // A => go to level 3
+                // -------------------------------------------
                 auxXbox.a().onTrue(Commands.runOnce(() -> {
-                        if (!auxXbox.rightBumper().getAsBoolean()) {
-                                // Elevator to level 3
-                                selectedLevel = 3;
-                                armElevator.goToLevel3ElevatorPosition();
-                        } else {
-                                // Right bumper => move arm
-                                armElevator.goToLevel3ArmPosition();
-                        }
+                        selectedLevel = 3;
+                        armElevator.goToLevelCommand(3).schedule();
                 }, armElevator));
 
+                // -------------------------------------------
+                // POV Left => level 1
+                // -------------------------------------------
                 auxXbox.povLeft().onTrue(Commands.runOnce(() -> {
-                        if (!auxXbox.rightBumper().getAsBoolean()) {
-                                // Elevator to level 1
-                                selectedLevel = 1;
-                                armElevator.goToLevel1ElevatorPosition();
-                        } else {
-                                // Right bumper => move arm
-                                armElevator.goToLevel1ArmPosition();
-                        }
+                        selectedLevel = 1;
+                        armElevator.goToLevelCommand(1).schedule();
                 }, armElevator));
 
+                // -------------------------------------------
+                // POV Right => level 2
+                // -------------------------------------------
                 auxXbox.povRight().onTrue(Commands.runOnce(() -> {
-                        if (!auxXbox.rightBumper().getAsBoolean()) {
-                                // Elevator to level 2
-                                selectedLevel = 2;
-                                armElevator.goToLevel2ElevatorPosition();
-                        } else {
-                                // Right bumper => move arm
-                                armElevator.goToLevel2ArmPosition();
-                        }
+                        selectedLevel = 2;
+                        armElevator.goToLevelCommand(2).schedule();
                 }, armElevator));
 
-                // X and A both send funnel commands
+                // -------------------------------------------
+                // X => go to funnel
+                // -------------------------------------------
                 auxXbox.x().onTrue(Commands.runOnce(() -> {
-                        if (!auxXbox.rightBumper().getAsBoolean()) {
-                                armElevator.funnelElevatorPosition();
-                        } else {
-                                armElevator.funnelArmPosition();
-                        }
+                        armElevator.goToFunnelCommand().schedule();
                 }, armElevator));
 
+                // -------------------------------------------
+                // B => go to loading
+                // -------------------------------------------
                 auxXbox.b().onTrue(Commands.runOnce(() -> {
-                        if (!auxXbox.rightBumper().getAsBoolean()) {
-                                armElevator.loadingElevatorPosition();
-                        } else {
-                                armElevator.loadingArmPosition();
-                        }
+                        armElevator.goToLoadingCommand().schedule();
                 }, armElevator));
 
+                // -------------------------------------------
                 // POV Down => stow
+                // -------------------------------------------
                 auxXbox.povDown().onTrue(Commands.runOnce(() -> {
-                        if (!auxXbox.rightBumper().getAsBoolean()) {
-                                armElevator.stowElevatorPosition();
-                        } else {
-                                armElevator.stowArmPosition();
-                        }
+                        armElevator.goToStowCommand().schedule();
                 }, armElevator));
 
                 // -------------------------------------------
@@ -154,31 +131,22 @@ public class RobotContainer {
                 // for the selected level
                 // -------------------------------------------
                 auxXbox.leftBumper().onTrue(Commands.runOnce(() -> {
-                        switch (selectedLevel) {
-                                case 1:
-                                        armElevator.goToLevel1ScorePosition();
-                                        break;
-                                case 2:
-                                        armElevator.goToLevel2ScorePosition();
-                                        break;
-                                case 3:
-                                        armElevator.goToLevel3ScorePosition();
-                                        break;
-                                case 4:
-                                        armElevator.goToLevel4ScorePosition();
-                                        break;
-                                default:
-                                        // If no valid level selected, do nothing or stow, etc.
-                                        break;
-                        }
+                        // Just call the universal "goToLevelScoreCommand"
+                        // and schedule it with the currently selectedLevel
+                        armElevator.goToLevelScoreCommand(selectedLevel).schedule();
                 }, armElevator));
 
+                // -------------------------------------------
+                // Manual elevator using left Y
+                // -------------------------------------------
                 new Trigger(() -> Math.abs(auxXbox.getLeftY()) > 0.1).whileTrue(Commands.run(() -> {
                         double raw = -auxXbox.getLeftY();
                         double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
+                        // We pass `val` as "leftTrigger" and 0.0 as "rightTrigger",
+                        // so that positive or negative val raises/lowers the elevator.
                         armElevator.setManualElevatorSpeed(val, 0.0);
-                }, armElevator)).onFalse(Commands.runOnce(
-                                () -> armElevator.stopManualElevator(), armElevator));
+                }, armElevator)).onFalse(Commands.runOnce(() -> armElevator.stopManualElevator(),
+                                armElevator));
 
                 // -------------------------------------------
                 // Keep your drive bindings, etc.
@@ -194,20 +162,15 @@ public class RobotContainer {
                 driverPS4.povLeft().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
         }
 
-
         public Command getAutonomousCommand() {
                 // return drivebase.getAutonomousCommand("Leave Auto");
-                Command autonomousCommand = new SequentialCommandGroup(
-
-                                new InstantCommand(() -> {
-                                        drivebase.driveCommand(() -> -0.5, () -> 0, () -> 0)
-                                                        .schedule();
-                                }), new WaitCommand(2), // Wait for 2 seconds
+                Command autonomousCommand = new SequentialCommandGroup(new InstantCommand(() -> {
+                        drivebase.driveCommand(() -> -0.5, () -> 0, () -> 0).schedule();
+                }), new WaitCommand(2), // Wait for 2 seconds
                                 new InstantCommand(() -> {
                                         drivebase.driveCommand(() -> 0, () -> 0, () -> 0)
                                                         .schedule();
                                 }));
-
                 return autonomousCommand;
         }
 

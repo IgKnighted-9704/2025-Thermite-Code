@@ -1,11 +1,11 @@
 package frc.robot.subsystems;
 
-import java.util.List;
+import java.util.function.BooleanSupplier;
+
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
-
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -25,10 +25,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
 import frc.robot.Constants.ArmElevatorConstants;
-import frc.robot.Constants.ReefConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.swervedrive.Vision;
-import frc.robot.Constants;
+
 
 public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
@@ -46,10 +45,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Funnel/intake mechanism powered by a SparkMax (brushless) and its encoder
     private final SparkMax intakeMotor;
     private final RelativeEncoder intakeEncoder;
-
-    // ───────────────────────────────────────────────
-    // absolute encoders for arm & elevator
-    // ───────────────────────────────────────────────
     private final SparkAbsoluteEncoder armAbsEnc;
 
     // Target positions (arm angle and elevator height)
@@ -65,17 +60,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private boolean manualElevator = false;
     private boolean outtake = false;
 
-    // Track whether we need to outtake at a scoring position
-    private boolean scoringActive = false;
-    private int scoringLevel = 0;
+    // Keep track of the current “preset” we are in
+    private enum Preset {
+        STOW, FUNNEL, LOADING, LEVEL1, LEVEL2, LEVEL3, LEVEL4, LEVEL1SCORE, LEVEL2SCORE, LEVEL3SCORE, LEVEL4SCORE
+    }
 
-    // Track if we were at funnel
-    private boolean wasAtFunnel = false;
-
-    // Stores the last known positions in case the robot tilts and we need to revert
-    private double storedArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
-    private double storedElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
-    private boolean wasTilted = false;
+    private Preset currentPreset = Preset.STOW; // start assumed stowed
 
     public ArmElevatorEndEffectorSubsystem(SwerveSubsystem drivebase) {
         this.drivebase = drivebase;
@@ -104,113 +94,344 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         intakeEncoder = intakeMotor.getEncoder();
         armAbsEnc = intakeMotor.getAbsoluteEncoder();
 
+        // Zero the motor positions (if needed)
         elevatorMotorA.setPosition(0);
         elevatorMotorB.setPosition(0);
         armMotor.setPosition(armAbsEnc.getPosition());
     }
 
-    // ----------------------------------
-    // Arm Presets
-    // ----------------------------------
-    public void funnelArmPosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+    // --------------------------------------------------------------------------
+    // Automatic Movement Commands Based on Current/Target Preset
+    // --------------------------------------------------------------------------
+
+    /**
+     * Moves from the currentPreset to the “Funnel” preset, properly sequencing arm vs elevator,
+     * etc.
+     */
+    public Command goToFunnelCommand() {
+        return Commands.sequence(
+                // Decide who moves first based on which preset we’re leaving
+                Commands.runOnce(() -> {
+                    if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
+                        // If leaving STOW or Level/Score: elevator first
+                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
+                    } else {
+                        // If leaving FUNNEL or LOADING: arm first
+                        desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+                    }
+                }),
+                // Wait until that first movement is within 2 inches or 2 degrees
+                Commands.waitUntil(() -> {
+                    if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
+                        return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
+                                2.0);
+                    } else {
+                        return isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 2.0);
+                    }
+                }),
+                // Now move the second piece
+                Commands.runOnce(() -> {
+                    if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
+                        desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+                    } else {
+                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
+                    }
+                    autoIntakeActive = true; // funnel => auto intake
+                }),
+                // Optionally wait again
+                Commands.runOnce(() -> currentPreset = Preset.FUNNEL));
     }
 
-    public void loadingArmPosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+    /** Similar command to go to the “Loading” preset. */
+    public Command goToLoadingCommand() {
+        return Commands.sequence(Commands.runOnce(() -> {
+            if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
+                // elevator first
+                desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+            } else {
+                // arm first
+                desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+            }
+        }), Commands.waitUntil(() -> {
+            if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
+                return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES,
+                        2.0);
+            } else {
+                return isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, 2.0);
+            }
+        }), Commands.runOnce(() -> {
+            if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
+                desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+            } else {
+                desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+            }
+            autoIntakeActive = true;
+        }), Commands.runOnce(() -> currentPreset = Preset.LOADING));
     }
 
-    public void stowArmPosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+    /**
+     * Example: going to STOW from whatever we have. If leaving funnel/loading => arm first, else
+     * elevator first.
+     */
+    public Command goToStowCommand() {
+        return Commands.sequence(Commands.runOnce(() -> {
+            if (currentPreset == Preset.FUNNEL || currentPreset == Preset.LOADING) {
+                desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+            } else {
+                desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
+            }
+        }), Commands.waitUntil(() -> {
+            if (currentPreset == Preset.FUNNEL || currentPreset == Preset.LOADING) {
+                return isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0);
+            } else {
+                return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_STOW_INCHES, 2.0);
+            }
+        }), Commands.runOnce(() -> {
+            if (currentPreset == Preset.FUNNEL || currentPreset == Preset.LOADING) {
+                desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
+            } else {
+                desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+            }
+            autoIntakeActive = false;
+        }), Commands.runOnce(() -> currentPreset = Preset.STOW));
     }
 
-    public void goToLevel1ArmPosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL1_DEG;
+    /**
+     * Universal method to go to "level N" from the current preset. If you're in FUNNEL, do the
+     * special funnel->level logic first, then transitions to normal
+     * "goToLevelFromLoadingCommand(level)".
+     */
+    public Command goToLevelCommand(int level) {
+        if (currentPreset == Preset.FUNNEL) {
+            return Commands.sequence(
+                    // 1) Start intaking
+                    Commands.runOnce(() -> {
+                        manualIntakeActive = true;
+                        outtake = false;
+                    }),
+                    // 2) Move elevator to loading
+                    Commands.runOnce(() -> {
+                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+                    }),
+                    // 3) Wait for stall or 3 seconds
+                    Commands.race(
+                            Commands.waitUntil(
+                                    intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
+                            Commands.waitSeconds(3.0)),
+                    // 4) Slow intake
+                    Commands.runOnce(() -> slowIntake()),
+                    // 5) Move arm first
+                    Commands.runOnce(() -> {
+                        desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+                    }),
+                    // 6) Wait for arm
+                    Commands.waitUntil(
+                            () -> isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, 2.0)),
+                    // 7) Then elevator to loading again (if needed)
+                    Commands.runOnce(() -> {
+                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+                    }),
+                    Commands.waitUntil(() -> isElevatorInTolerance(
+                            ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
+                    // Now normal “loading -> level N” move
+                    goToLevelFromLoadingCommand(level));
+        } else {
+            return goToLevelFromLoadingCommand(level);
+        }
     }
 
-    public void goToLevel2ArmPosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL2_DEG;
+    /**
+     * Helper command: assume we are basically in “loading” style and want to go to "level N".
+     * Elevator-first or arm-first depends on the currentPreset.
+     */
+    private Command goToLevelFromLoadingCommand(int level) {
+        return Commands.sequence(Commands.runOnce(() -> {
+            if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                desiredArmAngleDeg = getArmAngleForLevel(level);
+            } else {
+                desiredElevInches = getElevatorInchesForLevel(level);
+            }
+        }), Commands.waitUntil(() -> {
+            if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                return isArmInTolerance(getArmAngleForLevel(level), 2.0);
+            } else {
+                return isElevatorInTolerance(getElevatorInchesForLevel(level), 2.0);
+            }
+        }), Commands.runOnce(() -> {
+            if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                desiredElevInches = getElevatorInchesForLevel(level);
+            } else {
+                desiredArmAngleDeg = getArmAngleForLevel(level);
+            }
+            autoIntakeActive = false;
+        }), Commands.runOnce(() -> {
+            currentPreset = getPresetForLevel(level);
+        }));
     }
 
-    public void goToLevel3ArmPosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL3_DEG;
+    // --------------------------------------------------------------------------
+    // NEW: Score Logic
+    // --------------------------------------------------------------------------
+
+    /**
+     * Universal method to go to "score position" for level N. Follows the same collision-avoidance
+     * logic as goToLevelCommand(...).
+     */
+    public Command goToLevelScoreCommand(int level) {
+        // If the currentPreset is FUNNEL, handle funnel->loading first
+        if (currentPreset == Preset.FUNNEL) {
+            return Commands.sequence(
+                    // 1) Start intaking
+                    Commands.runOnce(() -> {
+                        manualIntakeActive = true;
+                        outtake = false;
+                    }),
+                    // 2) Elevator to loading
+                    Commands.runOnce(() -> {
+                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+                    }),
+                    // 3) Wait for stall or 3s
+                    Commands.race(
+                            Commands.waitUntil(
+                                    intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
+                            Commands.waitSeconds(3.0)),
+                    // 4) Slow intake
+                    Commands.runOnce(() -> slowIntake()),
+                    // 5) Arm first
+                    Commands.runOnce(() -> {
+                        desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+                    }),
+                    Commands.waitUntil(
+                            () -> isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, 2.0)),
+                    // 6) Elevator to loading again if needed
+                    Commands.runOnce(() -> {
+                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+                    }),
+                    Commands.waitUntil(() -> isElevatorInTolerance(
+                            ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
+                    // Now do normal "loading -> score"
+                    goToScoreFromLoadingCommand(level));
+        } else {
+            return goToScoreFromLoadingCommand(level);
+        }
     }
 
-    public void goToLevel4ArmPosition() {
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL4_DEG;
+    /**
+     * Helper command: transitions from loading/funnel to the "score" position for level N with
+     * collision avoidance (elevator-first or arm-first).
+     */
+    private Command goToScoreFromLoadingCommand(int level) {
+        return Commands.sequence(Commands.runOnce(() -> {
+            // If leaving funnel/loading => arm first
+            // Otherwise stow/level => elevator first
+            if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                desiredArmAngleDeg = getArmAngleForLevel(level);
+            } else {
+                desiredElevInches = getElevatorInchesForScoreLevel(level);
+            }
+        }), Commands.waitUntil(() -> {
+            if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                return isArmInTolerance(getArmAngleForLevel(level), 2.0);
+            } else {
+                return isElevatorInTolerance(getElevatorInchesForScoreLevel(level), 2.0);
+            }
+        }), Commands.runOnce(() -> {
+            if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                desiredElevInches = getElevatorInchesForScoreLevel(level);
+            } else {
+                desiredArmAngleDeg = getArmAngleForLevel(level);
+            }
+            // If you want to set autoIntakeActive = false or do outtake, you can
+        }), Commands.runOnce(() -> {
+            // Mark ourselves as in the appropriate "score" preset
+            currentPreset = getScorePresetForLevel(level);
+        }));
     }
 
-    // ----------------------------------
-    // Elevator Presets
-    // ----------------------------------
-    public void funnelElevatorPosition() {
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
-        autoIntakeActive = true;
+    // --------------------------------------------------------------------------
+    // Arm & Elevator: Normal vs Score Positions
+    // --------------------------------------------------------------------------
+
+    /** Normal "level" angles. */
+    private double getArmAngleForLevel(int level) {
+        switch (level) {
+            case 1:
+                return ArmElevatorConstants.ARM_LEVEL1_DEG;
+            case 2:
+                return ArmElevatorConstants.ARM_LEVEL2_DEG;
+            case 3:
+                return ArmElevatorConstants.ARM_LEVEL3_DEG;
+            case 4:
+                return ArmElevatorConstants.ARM_LEVEL4_DEG;
+            default:
+                return ArmElevatorConstants.ARM_LEVEL1_DEG;
+        }
     }
 
-    public void loadingElevatorPosition() {
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
-        autoIntakeActive = true;
+    private double getElevatorInchesForLevel(int level) {
+        switch (level) {
+            case 1:
+                return ArmElevatorConstants.ELEVATOR_LEVEL1_INCHES;
+            case 2:
+                return ArmElevatorConstants.ELEVATOR_LEVEL2_INCHES;
+            case 3:
+                return ArmElevatorConstants.ELEVATOR_LEVEL3_INCHES;
+            case 4:
+                return ArmElevatorConstants.ELEVATOR_LEVEL4_INCHES;
+            default:
+                return ArmElevatorConstants.ELEVATOR_LEVEL1_INCHES;
+        }
     }
 
-    public void stowElevatorPosition() {
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
-        autoIntakeActive = false;
+    private double getElevatorInchesForScoreLevel(int level) {
+        switch (level) {
+            case 1:
+                return ArmElevatorConstants.ELEVATOR_LEVEL1_SCORE_INCHES;
+            case 2:
+                return ArmElevatorConstants.ELEVATOR_LEVEL2_SCORE_INCHES;
+            case 3:
+                return ArmElevatorConstants.ELEVATOR_LEVEL3_SCORE_INCHES;
+            case 4:
+                return ArmElevatorConstants.ELEVATOR_LEVEL4_SCORE_INCHES;
+            default:
+                return ArmElevatorConstants.ELEVATOR_LEVEL1_SCORE_INCHES;
+        }
     }
 
-    public void goToLevel1ElevatorPosition() {
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL1_INCHES;
-        autoIntakeActive = false;
+    /**
+     * Map normal levels 1-4 to the normal presets.
+     */
+    private Preset getPresetForLevel(int level) {
+        switch (level) {
+            case 1:
+                return Preset.LEVEL1;
+            case 2:
+                return Preset.LEVEL2;
+            case 3:
+                return Preset.LEVEL3;
+            case 4:
+                return Preset.LEVEL4;
+            default:
+                return Preset.LEVEL1;
+        }
     }
 
-    public void goToLevel2ElevatorPosition() {
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL2_INCHES;
-        autoIntakeActive = false;
-    }
-
-    public void goToLevel3ElevatorPosition() {
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL3_INCHES;
-        autoIntakeActive = false;
-    }
-
-    public void goToLevel4ElevatorPosition() {
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL4_INCHES;
-        autoIntakeActive = false;
-    }
-
-
-    // Score positions (new)
-    public void goToLevel1ScorePosition() {
-        // desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL1_DEG;
-        // desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL1_SCORE_INCHES; //
-        // removed
-        autoIntakeActive = false;
-        scoringActive = true;
-        scoringLevel = 1;
-    }
-
-    public void goToLevel2ScorePosition() {
-        // desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL2_DEG;
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL2_SCORE_INCHES;
-        autoIntakeActive = false;
-        scoringActive = true;
-        scoringLevel = 2;
-    }
-
-    public void goToLevel3ScorePosition() {
-        // desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL3_DEG;
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL3_SCORE_INCHES;
-        autoIntakeActive = false;
-        scoringActive = true;
-        scoringLevel = 3;
-    }
-
-    public void goToLevel4ScorePosition() {
-        // desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL4_DEG;
-        desiredElevInches = ArmElevatorConstants.ELEVATOR_LEVEL4_SCORE_INCHES;
-        autoIntakeActive = false;
-        scoringActive = true;
-        scoringLevel = 4;
+    /**
+     * Map "score" levels 1-4 to the appropriate "LEVELnSCORE" presets.
+     */
+    private Preset getScorePresetForLevel(int level) {
+        switch (level) {
+            case 1:
+                return Preset.LEVEL1SCORE;
+            case 2:
+                return Preset.LEVEL2SCORE;
+            case 3:
+                return Preset.LEVEL3SCORE;
+            case 4:
+                return Preset.LEVEL4SCORE;
+            default:
+                return Preset.LEVEL1SCORE;
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -243,21 +464,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     // -------------------------------
-    // Sensor Readouts
+    // Manual elevator
     // -------------------------------
-    public double getArmAngleDegrees() {
-        double sensorDeg = armAbsEnc.getPosition();
-        return (sensorDeg * Constants.ArmElevatorConstants.ARM_ABS_ENC_RATIO) - 80.7;
-    }
-
-    public double getElevatorHeightInches() {
-        double elevTicks = -elevatorMotorB.getPosition().getValueAsDouble();
-        return elevTicks / ArmElevatorConstants.ELEV_TICKS_PER_INCH;
-    }
-
-    private double getIntakeRPM() {
-        return intakeEncoder.getVelocity();
-    }
 
     // ------------------------------------------------------------------------
     // Reef Score Command (new code)
@@ -369,13 +577,29 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     // -------------------------------
+    // Sensor Readouts
+    // -------------------------------
+    public double getArmAngleDegrees() {
+        double sensorDeg = armAbsEnc.getPosition();
+        // Adjust by any offset needed for your absolute encoder
+        return (sensorDeg * ArmElevatorConstants.ARM_ABS_ENC_RATIO) - 80.7;
+    }
+
+    public double getElevatorHeightInches() {
+        double elevTicks = -elevatorMotorB.getPosition().getValueAsDouble();
+        return elevTicks / ArmElevatorConstants.ELEV_TICKS_PER_INCH;
+    }
+
+    private double getIntakeRPM() {
+        return intakeEncoder.getVelocity();
+    }
+
+    // -------------------------------
     // Main Periodic Update
     // -------------------------------
     @Override
     public void periodic() {
-        // ------------------------------------------------
-        // 1) Read updated values from the SmartDashboard
-        // ------------------------------------------------
+        // 1) Read updated values from SmartDashboard (PID, feedforward, etc.)
         ArmElevatorConstants.ELEVATOR_kP =
                 SmartDashboard.getNumber("Elevator kP", ArmElevatorConstants.ELEVATOR_kP);
         ArmElevatorConstants.ELEVATOR_kI =
@@ -394,7 +618,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         ArmElevatorConstants.ARM_kD =
                 SmartDashboard.getNumber("Arm kD", ArmElevatorConstants.ARM_kD);
 
-        // Feedforward constants
+        // feedforward
         ArmElevatorConstants.ELEV_kS =
                 SmartDashboard.getNumber("Elev kS", ArmElevatorConstants.ELEV_kS);
         ArmElevatorConstants.ELEV_kG =
@@ -415,9 +639,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         ArmElevatorConstants.ELEV_TICKS_PER_INCH = SmartDashboard.getNumber("Elev Ticks per Inch",
                 ArmElevatorConstants.ELEV_TICKS_PER_INCH);
 
-        // ------------------------------------------------
-        // 2) Apply updated constants to controllers, etc.
-        // ------------------------------------------------
+        // 2) Apply updated constants
         elevatorController.setP(ArmElevatorConstants.ELEVATOR_kP);
         elevatorController.setI(ArmElevatorConstants.ELEVATOR_kI);
         elevatorController.setD(ArmElevatorConstants.ELEVATOR_kD);
@@ -428,6 +650,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         armPID.setI(ArmElevatorConstants.ARM_kI);
         armPID.setD(ArmElevatorConstants.ARM_kD);
 
+
+        // 3) Display sensor + target info
         // ------------------------------------------------
         // 3) Continuously send the updated values back to SmartDashboard
         // ------------------------------------------------
@@ -448,53 +672,68 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
         SmartDashboard.putNumber("Arm Abs Encoder Ratio", ArmElevatorConstants.ARM_ABS_ENC_RATIO);
         SmartDashboard.putNumber("Elev Ticks per Inch", ArmElevatorConstants.ELEV_TICKS_PER_INCH);
-
         SmartDashboard.putNumber("Arm Angle (Deg)", getArmAngleDegrees());
         SmartDashboard.putNumber("Elevator Height (In)", getElevatorHeightInches());
         SmartDashboard.putNumber("Arm Desired Position", desiredArmAngleDeg);
         SmartDashboard.putNumber("Elevator Desired Position", desiredElevInches);
 
+        // 4) Run your PID loops and set motor outputs
         double currentArmDeg = getArmAngleDegrees();
         double currentElevInch = getElevatorHeightInches();
 
-
-        // // Calculate elevator control output (PID + feedforward)
+        // Elevator feedforward & PID
         elevatorController.setGoal(Units.inchesToMeters(desiredElevInches));
         double elevOutput = elevatorController.calculate(Units.inchesToMeters(currentElevInch));
-        double elevFeedforward = elevatorFF.calculate(elevatorController.getSetpoint().velocity);
-        double totalElevVolts = Math.max(-4.0, Math.min(4.0, elevOutput + elevFeedforward));
+        double elevFF = elevatorFF.calculate(elevatorController.getSetpoint().velocity);
+        double totalElevVolts = Math.max(-4.0, Math.min(4.0, elevOutput + elevFF));
 
         SmartDashboard.putNumber("Elevator Ouput", elevOutput);
-        SmartDashboard.putNumber("Elevator FF", elevFeedforward);
+        SmartDashboard.putNumber("Elevator FF", elevFF);
 
-        // // Calculate arm control output
-        // double armOutput = armPID.calculate(currentArmDeg, finalArmDeg);
-        // Clamp speed to [-1,1]
+        // Arm PID
         double armOutput = armPID.calculate(currentArmDeg, desiredArmAngleDeg) / 4;
+        double clampedArmVolts = Math.max(-4.0, Math.min(4.0, armOutput));
 
-        // // Send voltages to the elevator motors
+        // Apply elevator power if not in manual override
         if (!manualElevator) {
             elevatorMotorA.setVoltage(totalElevVolts);
             elevatorMotorB.setVoltage(-totalElevVolts);
         }
 
-        armMotor.set(Math.max(-4.0, Math.min(4.0, armOutput)));
+        // Arm always uses the PID voltage (unless you override with setManualArm)
+        armMotor.set(clampedArmVolts);
 
+        // Intake motor logic
         if (manualIntakeActive) {
-            intakeMotor.set(outtake ? ArmElevatorConstants.INTAKE_SPEED
-                    : -ArmElevatorConstants.INTAKE_SPEED);
+            intakeMotor.set(outtake ? ArmElevatorConstants.INTAKE_SPEED // positive => out
+                    : -ArmElevatorConstants.INTAKE_SPEED // negative => in
+            );
         }
     }
 
-    private double clamp(double val, double min, double max) {
-        return Math.max(min, Math.min(max, val));
-    }
-
+    // -------------------------------
+    // Helper Functions
+    // -------------------------------
     private boolean isArmInTolerance(double targetDeg, double toleranceDeg) {
         return Math.abs(getArmAngleDegrees() - targetDeg) <= toleranceDeg;
     }
 
     private boolean isElevatorInTolerance(double targetIn, double toleranceIn) {
         return Math.abs(getElevatorHeightInches() - targetIn) <= toleranceIn;
+    }
+
+    /** True if the preset is one of the LEVEL or LEVELxSCORE states. */
+    private boolean isLevelOrScorePreset(Preset p) {
+        return (p == Preset.LEVEL1 || p == Preset.LEVEL2 || p == Preset.LEVEL3 || p == Preset.LEVEL4
+                || p == Preset.LEVEL1SCORE || p == Preset.LEVEL2SCORE || p == Preset.LEVEL3SCORE
+                || p == Preset.LEVEL4SCORE);
+    }
+
+    /**
+     * Example “stall” detector: returns a BooleanSupplier that’s true if intake RPM has fallen
+     * below some threshold for more than e.g. 0.25s (You can implement a short filter if needed.)
+     */
+    private BooleanSupplier intakeStallDetector(double stallRpmThreshold) {
+        return () -> (Math.abs(getIntakeRPM()) < Math.abs(stallRpmThreshold));
     }
 }
