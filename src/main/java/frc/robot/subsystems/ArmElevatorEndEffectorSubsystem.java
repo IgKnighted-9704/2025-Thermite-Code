@@ -244,9 +244,13 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     // Commands.waitUntil(() -> isElevatorInTolerance(
                     // ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
                     // Now normal “loading -> level N” move
-                    goToLevelFromLoadingCommand(level));
+                    Commands.runOnce(() -> {
+                        currentPreset = getPresetForLevel(level);
+                    }), goToLevelFromLoadingCommand(level));
         } else {
+            currentPreset = getPresetForLevel(level);
             return goToLevelFromLoadingCommand(level);
+
         }
     }
 
@@ -259,6 +263,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
                 desiredArmAngleDeg = getArmAngleForLevel(level);
             } else {
+                currentPreset = getPresetForLevel(level);
                 desiredElevInches = getElevatorInchesForLevel(level);
             }
         }), Commands.waitUntil(() -> {
@@ -594,7 +599,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     public double getArmAngleDegrees() {
         double sensorDeg = armAbsEnc.getPosition();
         // Adjust by any offset needed for your absolute encoder
-        return (sensorDeg * ArmElevatorConstants.ARM_ABS_ENC_RATIO) - 80.7;
+        return (sensorDeg * ArmElevatorConstants.ARM_ABS_ENC_RATIO) - 64.4;
     }
 
     public double getElevatorHeightInches() {
