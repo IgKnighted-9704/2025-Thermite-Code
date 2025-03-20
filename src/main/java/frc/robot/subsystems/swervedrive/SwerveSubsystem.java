@@ -64,7 +64,7 @@ public class SwerveSubsystem extends SubsystemBase
   /**
    * Enable vision odometry updates while driving.
    */
-  private final boolean     visionDriveTest = true;
+  private final boolean     visionDriveTest = false;
   /**
    * PhotonVision class to keep an accurate odometry.
    */
@@ -204,7 +204,8 @@ public class SwerveSubsystem extends SubsystemBase
             var alliance = DriverStation.getAlliance();
             if (alliance.isPresent())
             {
-              return alliance.get() == DriverStation.Alliance.Red;
+              // return alliance.get() == DriverStation.Alliance.Red;
+              return false;
             }
             return false;
           },
@@ -599,8 +600,9 @@ public class SwerveSubsystem extends SubsystemBase
    */
   private boolean isRedAlliance()
   {
-    var alliance = DriverStation.getAlliance();
-    return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+    // var alliance = DriverStation.getAlliance();
+    // return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
+    return false;
   }
 
   /**

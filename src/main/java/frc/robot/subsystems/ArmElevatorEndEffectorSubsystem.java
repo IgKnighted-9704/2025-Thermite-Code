@@ -212,27 +212,37 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     // 2) Move elevator to loading
                     Commands.runOnce(() -> {
                         desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
-                    }),
+                    }), Commands.race(Commands.waitSeconds(0.5)),
+                    Commands.race(Commands.waitSeconds(1.0)),
                     // 3) Wait for stall or 3 seconds
                     Commands.race(
                             Commands.waitUntil(
                                     intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
-                            Commands.waitSeconds(3.0)),
+                            Commands.waitSeconds(0.5)),
                     // 4) Slow intake
                     Commands.runOnce(() -> slowIntake()),
+                    // Funnel
+                    Commands.runOnce(() -> {
+                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
+                    }), Commands.race(Commands.waitSeconds(1)),
+                    Commands.race(
+                            Commands.waitUntil(() -> isElevatorInTolerance(
+                                    ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2.0)),
+                            Commands.waitSeconds(1)),
+
                     // 5) Move arm first
-                    Commands.runOnce(() -> {
-                        desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
-                    }),
-                    // 6) Wait for arm
-                    Commands.waitUntil(
-                            () -> isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, 2.0)),
-                    // 7) Then elevator to loading again (if needed)
-                    Commands.runOnce(() -> {
-                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
-                    }),
-                    Commands.waitUntil(() -> isElevatorInTolerance(
-                            ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
+                    // Commands.runOnce(() -> {
+                    // desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+                    // }),
+                    // // 6) Wait for arm
+                    // Commands.waitUntil(
+                    // () -> isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, 2.0)),
+                    // // 7) Then elevator to loading again (if needed)
+                    // Commands.runOnce(() -> {
+                    // desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+                    // }),
+                    // Commands.waitUntil(() -> isElevatorInTolerance(
+                    // ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
                     // Now normal “loading -> level N” move
                     goToLevelFromLoadingCommand(level));
         } else {
@@ -278,42 +288,42 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
      * logic as goToLevelCommand(...).
      */
     public Command goToLevelScoreCommand(int level) {
-        // If the currentPreset is FUNNEL, handle funnel->loading first
-        if (currentPreset == Preset.FUNNEL) {
-            return Commands.sequence(
-                    // 1) Start intaking
-                    Commands.runOnce(() -> {
-                        manualIntakeActive = true;
-                        outtake = false;
-                    }),
-                    // 2) Elevator to loading
-                    Commands.runOnce(() -> {
-                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
-                    }),
-                    // 3) Wait for stall or 3s
-                    Commands.race(
-                            Commands.waitUntil(
-                                    intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
-                            Commands.waitSeconds(3.0)),
-                    // 4) Slow intake
-                    Commands.runOnce(() -> slowIntake()),
-                    // 5) Arm first
-                    Commands.runOnce(() -> {
-                        desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
-                    }),
-                    Commands.waitUntil(
-                            () -> isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, 2.0)),
-                    // 6) Elevator to loading again if needed
-                    Commands.runOnce(() -> {
-                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
-                    }),
-                    Commands.waitUntil(() -> isElevatorInTolerance(
-                            ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
-                    // Now do normal "loading -> score"
-                    goToScoreFromLoadingCommand(level));
-        } else {
-            return goToScoreFromLoadingCommand(level);
-        }
+        // // If the currentPreset is FUNNEL, handle funnel->loading first
+        // if (currentPreset == Preset.FUNNEL) {
+        // return Commands.sequence(
+        // // 1) Start intaking
+        // Commands.runOnce(() -> {
+        // manualIntakeActive = true;
+        // outtake = false;
+        // }),
+        // // 2) Elevator to loading
+        // Commands.runOnce(() -> {
+        // desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+        // }),
+        // // 3) Wait for stall or 3s
+        // Commands.race(
+        // Commands.waitUntil(
+        // intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
+        // Commands.waitSeconds(3.0)),
+        // // 4) Slow intake
+        // Commands.runOnce(() -> slowIntake()),
+        // // 5) Arm first
+        // Commands.runOnce(() -> {
+        // desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+        // }),
+        // Commands.waitUntil(
+        // () -> isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, 2.0)),
+        // // 6) Elevator to loading again if needed
+        // Commands.runOnce(() -> {
+        // desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+        // }),
+        // Commands.waitUntil(() -> isElevatorInTolerance(
+        // ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
+        // // Now do normal "loading -> score"
+        // goToScoreFromLoadingCommand(level));
+        // } else {
+        return goToScoreFromLoadingCommand(level);
+        // }
     }
 
     /**
@@ -321,31 +331,33 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
      * collision avoidance (elevator-first or arm-first).
      */
     private Command goToScoreFromLoadingCommand(int level) {
-        return Commands.sequence(Commands.runOnce(() -> {
-            // If leaving funnel/loading => arm first
-            // Otherwise stow/level => elevator first
-            if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
-                desiredArmAngleDeg = getArmAngleForLevel(level);
-            } else {
-                desiredElevInches = getElevatorInchesForScoreLevel(level);
-            }
-        }), Commands.waitUntil(() -> {
-            if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
-                return isArmInTolerance(getArmAngleForLevel(level), 2.0);
-            } else {
-                return isElevatorInTolerance(getElevatorInchesForScoreLevel(level), 2.0);
-            }
-        }), Commands.runOnce(() -> {
-            if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
-                desiredElevInches = getElevatorInchesForScoreLevel(level);
-            } else {
-                desiredArmAngleDeg = getArmAngleForLevel(level);
-            }
-            // If you want to set autoIntakeActive = false or do outtake, you can
-        }), Commands.runOnce(() -> {
-            // Mark ourselves as in the appropriate "score" preset
+        // return Commands.sequence(Commands.runOnce(() -> {
+        // // If leaving funnel/loading => arm first
+        // // Otherwise stow/level => elevator first
+        // if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+        // desiredArmAngleDeg = getArmAngleForLevel(level);
+        // } else {
+        desiredElevInches = getElevatorInchesForScoreLevel(level);
+        // }
+        // }), Commands.waitUntil(() -> {
+        // if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+        // return isArmInTolerance(getArmAngleForLevel(level), 2.0);
+        // } else {
+        // return isElevatorInTolerance(getElevatorInchesForScoreLevel(level), 2.0);
+        // }
+        // }), Commands.runOnce(() -> {
+        // if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+        // desiredElevInches = getElevatorInchesForScoreLevel(level);
+        // } else {
+        // desiredArmAngleDeg = getArmAngleForLevel(level);
+        // }
+        // // If you want to set autoIntakeActive = false or do outtake, you can
+        currentPreset = getScorePresetForLevel(level);
+        return Commands.runOnce(() -> {
+            // // Mark ourselves as in the appropriate "score" preset
+            desiredElevInches = getElevatorInchesForScoreLevel(level);
             currentPreset = getScorePresetForLevel(level);
-        }));
+        });
     }
 
     // --------------------------------------------------------------------------

@@ -60,6 +60,19 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
+                // L2 => pivot intake forward
+                driverPS4.L2().whileTrue(Commands.run(() -> {
+                        algaeIntake.setPivotToIntake();
+                        algaeIntake.intakeForward();
+                }, algaeIntake)).onFalse(Commands.runOnce(algaeIntake::intakeStop, algaeIntake));
+
+                // R2 => pivot intake reverse
+                driverPS4.R2().whileTrue(Commands.run(() -> {
+                        algaeIntake.intakeReverse();
+                }, algaeIntake)).onFalse(Commands.runOnce(() -> {
+                        algaeIntake.stopPivot();
+                        algaeIntake.intakeStop();
+                }, algaeIntake));
                 // -------------------------------------------
                 // Keep existing triggers for intake as-is
                 // -------------------------------------------
@@ -130,7 +143,7 @@ public class RobotContainer {
                 // Left bumper => move elevator to score
                 // for the selected level
                 // -------------------------------------------
-                auxXbox.leftBumper().onTrue(Commands.runOnce(() -> {
+                auxXbox.rightBumper().onTrue(Commands.runOnce(() -> {
                         // Just call the universal "goToLevelScoreCommand"
                         // and schedule it with the currently selectedLevel
                         armElevator.goToLevelScoreCommand(selectedLevel).schedule();

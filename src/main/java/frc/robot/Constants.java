@@ -101,12 +101,12 @@ public final class Constants {
 
     // Funnel or intake positioning
     // all elevator heights are -2
-    public static final double ARM_LOADING_DEG = -42;
-    public static final double ARM_FUNNEL_DEG = -42;
+    public static final double ARM_LOADING_DEG = -38;
+    public static final double ARM_FUNNEL_DEG = -38;
     // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
-    public static final double ELEVATOR_FUNNEL_INCHES = 15.3;
-    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 10.5;
+    public static final double ELEVATOR_FUNNEL_INCHES = 14.5;
+    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 9;
 
     // Stow position constants
     public static final double ARM_STOW_DEG = 0.0;
@@ -133,10 +133,10 @@ public final class Constants {
     public static final double ELEVATOR_LEVEL1_INCHES = 8.25;
     public static final double ELEVATOR_LEVEL2_INCHES = 10.0625;
     public static final double ELEVATOR_LEVEL3_INCHES = 19.5;
-    public static final double ELEVATOR_LEVEL4_INCHES = 22.8125;
+    public static final double ELEVATOR_LEVEL4_INCHES = 33.5;
 
     // Offset used to calculate "score" positions for each level
-    public static final double ELEVATOR_SCORE_OFFSET = 4.0;
+    public static final double ELEVATOR_SCORE_OFFSET = 12.0;
     public static final double ELEVATOR_LEVEL1_SCORE_INCHES = ELEVATOR_LEVEL1_INCHES - ELEVATOR_SCORE_OFFSET;
     public static final double ELEVATOR_LEVEL2_SCORE_INCHES = ELEVATOR_LEVEL2_INCHES - ELEVATOR_SCORE_OFFSET;
     public static final double ELEVATOR_LEVEL3_SCORE_INCHES = ELEVATOR_LEVEL3_INCHES - ELEVATOR_SCORE_OFFSET;
@@ -157,7 +157,7 @@ public final class Constants {
     // public static final double TILT_THRESHOLD_DEG = 10.0;
 
     // Intake constants
-    public static final double INTAKE_SPEED = 0.8;
+    public static final double INTAKE_SPEED = 0.7;
     public static final double INTAKE_STOPPED_RPM = 50.0;
 
     // public static final double ACCEL_LIMIT_SCALE = 0.01;
