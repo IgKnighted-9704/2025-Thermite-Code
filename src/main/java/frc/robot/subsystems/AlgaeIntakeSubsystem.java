@@ -12,47 +12,47 @@ import frc.robot.Constants;
 
 public class AlgaeIntakeSubsystem extends SubsystemBase {
 
-    // This motor controls the pivot using a CIM in brushed mode
+    // This brushed CIM motor adjusts the pivot for the intake mechanism
     private final SparkMax pivotMotor =
             new SparkMax(Constants.AlgaeIntakeConstants.PIVOT_MOTOR_ID, MotorType.kBrushed);
 
     private final SparkMax climbMotor2 =
             new SparkMax(Constants.ClimbConstants.CLIMB_MOTOR_B_ID, MotorType.kBrushed);
 
-    // Absolute encoder for measuring the pivot angle
+    // Using a relative encoder here to measure the pivot's angle
     private final RelativeEncoder pivotEncoder = climbMotor2.getEncoder();
 
-    // PID controller for precise pivot control
+    // PID controller to handle precise pivot angle adjustments
     private final PIDController pivotPID = new PIDController(
             Constants.AlgaeIntakeConstants.PIVOT_kP, Constants.AlgaeIntakeConstants.PIVOT_kI,
             Constants.AlgaeIntakeConstants.PIVOT_kD);
 
-    // Brushless NEO motor that drives the intake
+    // Brushless NEO motor dedicated to running the intake
     private final SparkMax intakeMotor =
             new SparkMax(Constants.AlgaeIntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
 
-    // Holds the target pivot angle and whether PID is active
+    // Variables for the target pivot angle and whether PID is active
     private double desiredPivotAngle = 0.0;
     private boolean pivotPIDEnabled = true;
 
     public AlgaeIntakeSubsystem() {
-        // Configure motor settings here if needed
-        pivotEncoder.setPosition((0));
+        // Set the initial encoder position (change if needed in the future)
+        pivotEncoder.setPosition(0);
     }
 
-    // Moves the pivot to the defined intake angle and turns on the PID
+    // Moves the pivot to our defined intake angle and activates the PID controller
     public void setPivotToIntake() {
         desiredPivotAngle = Constants.AlgaeIntakeConstants.PIVOT_INTAKE_ANGLE;
         pivotPIDEnabled = true;
     }
 
-    // Turns off the PID and stops the pivot motor, letting it fall freely
+    // Stops the pivot by zeroing out the desired angle and leaving PID enabled
     public void stopPivot() {
         desiredPivotAngle = 0.0;
         pivotPIDEnabled = true;
     }
 
-    // Runs the intake forward at the set speed
+    // Spins the intake forward at the configured speed
     public void intakeForward() {
         intakeMotor.set(Constants.AlgaeIntakeConstants.INTAKE_SPEED);
     }
@@ -62,18 +62,19 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
         intakeMotor.set(-Constants.AlgaeIntakeConstants.INTAKE_SPEED);
     }
 
-    // Stops the intake motor
+    // Completely stops the intake mechanism
     public void intakeStop() {
         intakeMotor.set(0.0);
     }
 
-    // Returns the current pivot angle (useful for logging or debugging)
+    // Provides the pivot angle for logging or troubleshooting
     public double getPivotAngle() {
         return pivotEncoder.getPosition() * 360;
     }
 
     @Override
     public void periodic() {
+        // Pull potential new PID values from the SmartDashboard
         Constants.AlgaeIntakeConstants.PIVOT_kP =
                 SmartDashboard.getNumber("Algae Pivot kP", Constants.AlgaeIntakeConstants.PIVOT_kP);
         Constants.AlgaeIntakeConstants.PIVOT_kI =
@@ -81,30 +82,29 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
         Constants.AlgaeIntakeConstants.PIVOT_kD =
                 SmartDashboard.getNumber("Algae Pivot kD", Constants.AlgaeIntakeConstants.PIVOT_kD);
 
+        // Push current PID values back to the dashboard for visibility
         SmartDashboard.putNumber("Algae Pivot kP", Constants.AlgaeIntakeConstants.PIVOT_kP);
         SmartDashboard.putNumber("Algae Pivot kI", Constants.AlgaeIntakeConstants.PIVOT_kI);
         SmartDashboard.putNumber("Algae Pivot kD", Constants.AlgaeIntakeConstants.PIVOT_kD);
 
-        // Update the PID controller with new constants
+        // Update our PID controller with any new constants
         pivotPID.setPID(Constants.AlgaeIntakeConstants.PIVOT_kP,
                 Constants.AlgaeIntakeConstants.PIVOT_kI, Constants.AlgaeIntakeConstants.PIVOT_kD);
 
-        // ----------------------------------------------
-        // 2) Report current and desired pivot angles back to SmartDashboard
-        // ----------------------------------------------
+        // Display the pivot’s current and desired angles on the dashboard
         SmartDashboard.putNumber("Algae Pivot Current Angle", getPivotAngle());
         SmartDashboard.putNumber("Algae Pivot Desired Angle", desiredPivotAngle);
 
-        // If the pivot PID is active, drive the pivot to the target angle
+        // If the pivot PID is active, use it to reach the target angle
         if (pivotPIDEnabled) {
-            // Check if the desired pivot angle is within the allowed range
+            // Make sure the desired angle is within our allowed range
             if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE
                     && desiredPivotAngle <= Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE) {
 
                 double currentAngle = pivotEncoder.getPosition();
                 double power = pivotPID.calculate(currentAngle, desiredPivotAngle);
 
-                // Limit motor power to the range [-1, 1]
+                // Ensure the motor power doesn’t exceed ±1
                 if (power > 1) {
                     power = 1;
                 } else if (power < -1) {
@@ -112,11 +112,10 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
                 }
                 pivotMotor.set(power / 4);
             } else {
-                // If the angle is out of range, stop the motor for safety
+                // Stop the pivot if the desired angle is out of range
                 pivotMotor.stopMotor();
             }
         }
-        // If pivotPIDEnabled is false, we do nothing to control the pivot,
-        // allowing it to move freely.
+        // If pivotPIDEnabled is false, we do nothing here, so the pivot is free-moving.
     }
 }
