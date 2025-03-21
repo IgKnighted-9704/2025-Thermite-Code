@@ -99,7 +99,7 @@ public final class Constants {
     public static final double ARM_FUNNEL_DEG = -40;
     // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
-    public static final double ELEVATOR_FUNNEL_INCHES = 14.5;
+    public static final double ELEVATOR_FUNNEL_INCHES = 15;
     public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 9;
 
     // Stow positioning for the arm.
@@ -156,7 +156,7 @@ public final class Constants {
 
     // Intake constants
     public static final double INTAKE_SPEED = 0.7;
-    public static final double INTAKE_STOPPED_RPM = 50.0;
+    public static final double INTAKE_STOPPED_RPM = 6000.0;
   }
 
   /**
@@ -194,7 +194,7 @@ public final class Constants {
     public static final double PIVOT_INTAKE_ANGLE = 120.0;
 
     // PID constants for pivot control.
-    public static double PIVOT_kP = 0.01;
+    public static double PIVOT_kP = 0.1;
     public static double PIVOT_kI = 0.0;
     public static double PIVOT_kD = 0.0;
 

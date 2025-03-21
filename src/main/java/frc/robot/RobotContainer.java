@@ -77,12 +77,12 @@ public class RobotContainer {
                 // -------------------------------------------
                 // Driver PS4 triggers for intake pivot forward/reverse
                 // -------------------------------------------
-                driverPS4.L2().whileTrue(Commands.run(() -> {
+                driverPS4.R2().whileTrue(Commands.run(() -> {
                         algaeIntake.setPivotToIntake();
                         algaeIntake.intakeForward();
                 }, algaeIntake)).onFalse(Commands.runOnce(algaeIntake::intakeStop, algaeIntake));
 
-                driverPS4.R2().whileTrue(Commands.run(() -> {
+                driverPS4.L2().whileTrue(Commands.run(() -> {
                         algaeIntake.intakeReverse();
                 }, algaeIntake)).onFalse(Commands.runOnce(() -> {
                         algaeIntake.stopPivot();
@@ -147,6 +147,10 @@ public class RobotContainer {
                         armElevator.goToStowCommand().schedule();
                 }, armElevator));
 
+                auxXbox.leftBumper().onTrue(Commands.runOnce(() -> {
+                        armElevator.goToStowCommand().schedule();
+                }, armElevator));
+
                 // -------------------------------------------
                 // Right Bumper => move elevator to "score" position
                 // for the currently selected level
@@ -166,6 +170,13 @@ public class RobotContainer {
                         // so the sign of val raises or lowers the elevator.
                         armElevator.setManualElevatorSpeed(val, 0.0);
                 }, armElevator)).onFalse(Commands.runOnce(() -> armElevator.stopManualElevator(),
+                                armElevator));
+
+                new Trigger(() -> Math.abs(auxXbox.getRightY()) > 0.1).whileTrue(Commands.run(() -> {
+                        double raw = auxXbox.getRightY();
+                        double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
+                        armElevator.setManualArm(val);
+                }, armElevator)).onFalse(Commands.runOnce(() -> armElevator.stopManualArm(),
                                 armElevator));
 
                 // -------------------------------------------

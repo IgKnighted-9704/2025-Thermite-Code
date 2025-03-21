@@ -14,13 +14,13 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
 
     // This brushed CIM motor adjusts the pivot for the intake mechanism
     private final SparkMax pivotMotor =
-            new SparkMax(Constants.AlgaeIntakeConstants.PIVOT_MOTOR_ID, MotorType.kBrushed);
+            new SparkMax(Constants.AlgaeIntakeConstants.PIVOT_MOTOR_ID, MotorType.kBrushless);
 
     private final SparkMax climbMotor2 =
             new SparkMax(Constants.ClimbConstants.CLIMB_MOTOR_B_ID, MotorType.kBrushed);
 
     // Using a relative encoder here to measure the pivot's angle
-    private final RelativeEncoder pivotEncoder = climbMotor2.getEncoder();
+    private final AbsoluteEncoder pivotEncoder = climbMotor2.getAbsoluteEncoder();
 
     // PID controller to handle precise pivot angle adjustments
     private final PIDController pivotPID = new PIDController(
@@ -37,7 +37,7 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
 
     public AlgaeIntakeSubsystem() {
         // Set the initial encoder position (change if needed in the future)
-        pivotEncoder.setPosition(0);
+        // pivotEncoder.setPosition(0);
     }
 
     // Moves the pivot to our defined intake angle and activates the PID controller
@@ -69,7 +69,7 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
 
     // Provides the pivot angle for logging or troubleshooting
     public double getPivotAngle() {
-        return pivotEncoder.getPosition() * 360;
+        return pivotEncoder.getPosition();
     }
 
     @Override
@@ -96,26 +96,26 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Algae Pivot Desired Angle", desiredPivotAngle);
 
         // If the pivot PID is active, use it to reach the target angle
-        if (pivotPIDEnabled) {
-            // Make sure the desired angle is within our allowed range
-            if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE
-                    && desiredPivotAngle <= Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE) {
+        // if (pivotPIDEnabled) {
+        //     // Make sure the desired angle is within our allowed range
+        //     if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE
+        //             && desiredPivotAngle <= Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE) {
 
-                double currentAngle = pivotEncoder.getPosition();
-                double power = pivotPID.calculate(currentAngle, desiredPivotAngle);
+        //         double currentAngle = pivotEncoder.getPosition();
+        //         double power = pivotPID.calculate(currentAngle, desiredPivotAngle);
 
-                // Ensure the motor power doesn’t exceed ±1
-                if (power > 1) {
-                    power = 1;
-                } else if (power < -1) {
-                    power = -1;
-                }
-                pivotMotor.set(power / 4);
-            } else {
-                // Stop the pivot if the desired angle is out of range
-                pivotMotor.stopMotor();
-            }
-        }
+        //         // Ensure the motor power doesn’t exceed ±1
+        //         if (power > 1) {
+        //             power = 1;
+        //         } else if (power < -1) {
+        //             power = -1;
+        //         }
+        //         pivotMotor.set(-power / 4);
+        //     } else {
+        //         // Stop the pivot if the desired angle is out of range
+        //         pivotMotor.stopMotor();
+        //     }
+        // }
         // If pivotPIDEnabled is false, we do nothing here, so the pivot is free-moving.
     }
 }

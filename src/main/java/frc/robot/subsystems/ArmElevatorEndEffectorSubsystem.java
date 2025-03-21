@@ -60,6 +60,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private boolean autoIntakeActive = false;
     private boolean manualIntakeActive = false;
     private boolean manualElevator = false;
+    private boolean manualArm = false;
     private boolean outtake = false;
 
     // We track which preset the mechanism is in (e.g., STOW, FUNNEL, LOADING, or a LEVEL).
@@ -212,9 +213,13 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
      * FUNNEL, we do a special funnel->level logic first; otherwise, we go directly.
      */
     public Command goToLevelCommand(int level) {
+
         if (currentPreset == Preset.FUNNEL) {
             // We do a funnel->loading approach, then normal "loading->level"
-            return Commands.sequence(
+            return Commands.sequence(Commands.runOnce(() -> {
+                // If we are in FUNNEL, adjust the arm angle first
+                desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+            }), Commands.waitSeconds(0.5),
                     // 1) Turn on manual intake
                     Commands.runOnce(() -> {
                         manualIntakeActive = true;
@@ -224,12 +229,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     Commands.runOnce(() -> {
                         desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
                     }), Commands.race(Commands.waitSeconds(0.5)),
-                    Commands.race(Commands.waitSeconds(1.0)),
+                    // Commands.race(Commands.waitSeconds(0.5)),
                     // 3) Wait for an intake stall or 0.5s
                     Commands.race(
-                            Commands.waitUntil(
-                                    intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
-                            Commands.waitSeconds(0.5)),
+                    Commands.waitUntil(
+                    intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
+                    Commands.waitSeconds(0.5)),
                     // 4) Slow intake
                     Commands.runOnce(() -> slowIntake()),
                     // Move elevator to funnel height
@@ -302,8 +307,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // --------------------------------------------------------------------------
 
     /**
-     * Universal method for going to a score position for level N. In principle, it follows the
-     * same collision-avoidance logic used in goToLevelCommand(...), but adapted for scoring
+     * Universal method for going to a score position for level N. In principle, it follows the same
+     * collision-avoidance logic used in goToLevelCommand(...), but adapted for scoring
      * heights/angles.
      */
     public Command goToLevelScoreCommand(int level) {
@@ -312,8 +317,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     /**
-     * Helper for funnel/loading -> score position transitions. Determines which part to move
-     * first, sets the preset, etc.
+     * Helper for funnel/loading -> score position transitions. Determines which part to move first,
+     * sets the preset, etc.
      */
     private Command goToScoreFromLoadingCommand(int level) {
         // return Commands.sequence(Commands.runOnce(() -> {
@@ -347,7 +352,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         return Commands.sequence(Commands.runOnce(() -> {
             desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
             currentPreset = getScorePresetForLevel(level);
-        }), Commands.waitSeconds(1), Commands.runOnce(() -> startManualOuttake()),
+        }), Commands.waitSeconds(1), 
+        // Commands.runOnce(() -> startManualOuttake()),
                 Commands.waitSeconds(1), Commands.runOnce(() -> stopIntake()));
     }
 
@@ -577,9 +583,16 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     public void setManualArm(double speed) {
+        manualArm = true;
         speed = Math.max(-1.0, Math.min(1.0, speed));
-        double volts = 4.0 * speed;
-        armMotor.set(volts);
+        double volts = 0.7 * speed;
+        armMotor.set(-volts);
+    }
+
+    public void stopManualArm() {
+        setManualArm(0);
+        desiredArmAngleDeg = getArmAngleDegrees();
+        manualArm = false;
     }
 
     // -------------------------------
@@ -597,7 +610,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     private double getIntakeRPM() {
-        return intakeEncoder.getVelocity();
+        return -intakeEncoder.getVelocity();
     }
 
     // -------------------------------
@@ -681,6 +694,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Arm Desired Position", desiredArmAngleDeg);
         SmartDashboard.putNumber("Elevator Desired Position", desiredElevInches);
 
+        SmartDashboard.putNumber("Intake RPM", getIntakeRPM());
+
         // 4) Calculate outputs for arm and elevator
         double currentArmDeg = getArmAngleDegrees();
         double currentElevInch = getElevatorHeightInches();
@@ -705,7 +720,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         }
 
         // The arm motor is always under PID unless manually overridden
-        armMotor.set(clampedArmVolts);
+        if (!manualArm) {
+            armMotor.set(clampedArmVolts);
+        }
 
         // Intake logic
         if (manualIntakeActive) {
