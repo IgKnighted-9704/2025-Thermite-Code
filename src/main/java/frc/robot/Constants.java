@@ -132,7 +132,7 @@ public final class Constants {
     public static final double ELEVATOR_LEVEL3_INCHES = 19.5;
     public static final double ELEVATOR_LEVEL4_INCHES = 33.5;
 
-    // Offsets applied for “score” positions at each elevator level.
+    // Offsets applied for score positions at each elevator level.
     public static final double ELEVATOR_SCORE_OFFSET = 12.0;
     public static final double ELEVATOR_LEVEL1_SCORE_INCHES =
         ELEVATOR_LEVEL1_INCHES - ELEVATOR_SCORE_OFFSET;
@@ -203,7 +203,7 @@ public final class Constants {
   }
 
   /**
-   * Constants associated with “Coral” elements on the field or certain scoring areas.
+   * Constants associated with coral elements on the field or certain scoring areas.
    */
   public static final class CoralConstants {
     public static final List<Integer> CORAL_RED_IDS = List.of(1, 2);

@@ -108,7 +108,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // --------------------------------------------------------------------------
 
     /**
-     * Moves from the current preset to the “Funnel” preset, sequencing arm vs. elevator to prevent
+     * Moves from the current preset to the funnel preset, sequencing arm vs. elevator to prevent
      * collisions.
      */
     public Command goToFunnelCommand() {
@@ -144,7 +144,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     /**
-     * Moves from the current preset to the “Loading” preset. Similar to funnel logic, but goes to a
+     * Moves from the current preset to the loading preset. Similar to funnel logic, but goes to a
      * different target.
      */
     public Command goToLoadingCommand() {
@@ -208,7 +208,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     /**
-     * Generic method to move to a “level N” preset from the current preset. If we are currently in
+     * Generic method to move to a level N preset from the current preset. If we are currently in
      * FUNNEL, we do a special funnel->level logic first; otherwise, we go directly.
      */
     public Command goToLevelCommand(int level) {
@@ -256,7 +256,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     // Commands.waitUntil(() -> isElevatorInTolerance(
                     // ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
 
-                    // Finally do the normal “loading->level N” movement
+                    // Finally do the normal loading->level N movement
                     Commands.runOnce(() -> {
                     }), goToLevelFromLoadingCommand(level));
         } else {
@@ -267,7 +267,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     /**
-     * Internal helper that assumes we’re basically in a “loading” style and need to move to a
+     * Internal helper that assumes we’re basically in a loading style and need to move to a
      * specified level. Depending on the current preset, we might move the elevator or the arm
      * first.
      */
@@ -302,7 +302,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // --------------------------------------------------------------------------
 
     /**
-     * Universal method for going to a “score position” for level N. In principle, it follows the
+     * Universal method for going to a score position for level N. In principle, it follows the
      * same collision-avoidance logic used in goToLevelCommand(...), but adapted for scoring
      * heights/angles.
      */
@@ -312,7 +312,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     /**
-     * Helper for funnel/loading -> “score position” transitions. Determines which part to move
+     * Helper for funnel/loading -> score position transitions. Determines which part to move
      * first, sets the preset, etc.
      */
     private Command goToScoreFromLoadingCommand(int level) {
@@ -387,7 +387,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         }
     }
 
-    /** Returns the elevator position used for “score” mode at a given level. */
+    /** Returns the elevator position used for score mode at a given level. */
     private double getElevatorInchesForScoreLevel(int level) {
         switch (level) {
             case 1:
@@ -422,7 +422,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     }
 
     /**
-     * Converts a “score” level number (1-4) into the corresponding scoring preset.
+     * Converts a score level number (1-4) into the corresponding scoring preset.
      */
     private Preset getScorePresetForLevel(int level) {
         switch (level) {
