@@ -117,7 +117,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
                     } else {
                         // If leaving FUNNEL or LOADING: arm first
-                        desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+                        desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
                     }
                 }),
                 // Wait until that first movement is within 2 inches or 2 degrees
@@ -126,13 +126,13 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
                                 2.0);
                     } else {
-                        return isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 2.0);
+                        return isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0);
                     }
                 }),
                 // Now move the second piece
                 Commands.runOnce(() -> {
                     if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
-                        desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+                        desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
                     } else {
                         desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
                     }
@@ -144,29 +144,38 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
     /** Similar command to go to the “Loading” preset. */
     public Command goToLoadingCommand() {
-        return Commands.sequence(Commands.runOnce(() -> {
-            if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
-                // elevator first
-                desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
-            } else {
-                // arm first
-                desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
-            }
-        }), Commands.waitUntil(() -> {
-            if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
-                return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES,
-                        2.0);
-            } else {
-                return isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, 2.0);
-            }
-        }), Commands.runOnce(() -> {
-            if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
-                desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
-            } else {
-                desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
-            }
-            autoIntakeActive = true;
-        }), Commands.runOnce(() -> currentPreset = Preset.LOADING));
+        return Commands.sequence(
+
+                Commands.runOnce(() -> {
+                    // We’ll do funnel-angle first if currentPreset is STOW or FUNNEL
+                    if (currentPreset == Preset.FUNNEL) {
+                        desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+                    }
+                }), Commands.waitSeconds(0.5),
+
+                Commands.runOnce(() -> {
+                    if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
+                        // elevator first
+                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+                    } else {
+                        // arm first
+                        desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+                    }
+                }), Commands.waitUntil(() -> {
+                    if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
+                        return isElevatorInTolerance(
+                                ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0);
+                    } else {
+                        return isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, 2.0);
+                    }
+                }), Commands.runOnce(() -> {
+                    if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
+                        desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
+                    } else {
+                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+                    }
+                    autoIntakeActive = true;
+                }), Commands.runOnce(() -> currentPreset = Preset.LOADING));
     }
 
     /**

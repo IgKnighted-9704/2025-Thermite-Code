@@ -16,8 +16,11 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
     private final SparkMax pivotMotor =
             new SparkMax(Constants.AlgaeIntakeConstants.PIVOT_MOTOR_ID, MotorType.kBrushed);
 
+    private final SparkMax climbMotor2 =
+            new SparkMax(Constants.ClimbConstants.CLIMB_MOTOR_B_ID, MotorType.kBrushed);
+
     // Absolute encoder for measuring the pivot angle
-    private final RelativeEncoder pivotEncoder = pivotMotor.getEncoder();
+    private final RelativeEncoder pivotEncoder = climbMotor2.getEncoder();
 
     // PID controller for precise pivot control
     private final PIDController pivotPID = new PIDController(

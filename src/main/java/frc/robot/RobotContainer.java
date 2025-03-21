@@ -36,7 +36,7 @@ public class RobotContainer {
         private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
         private final ArmElevatorEndEffectorSubsystem armElevator =
                         new ArmElevatorEndEffectorSubsystem(drivebase);
-        private final ClimbSubsystem climbSubsystem = new ClimbSubsystem();
+        // private final ClimbSubsystem climbSubsystem = new ClimbSubsystem();
 
         // Example input streams for controlling the swerve
         SwerveInputStream driveAngularVelocity = SwerveInputStream
