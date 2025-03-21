@@ -245,7 +245,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     // ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
                     // Now normal “loading -> level N” move
                     Commands.runOnce(() -> {
-                        currentPreset = getPresetForLevel(level);
                     }), goToLevelFromLoadingCommand(level));
         } else {
             currentPreset = getPresetForLevel(level);
@@ -261,27 +260,30 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private Command goToLevelFromLoadingCommand(int level) {
         return Commands.sequence(Commands.runOnce(() -> {
             if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                // currentPreset = getPresetForLevel(level);
                 desiredArmAngleDeg = getArmAngleForLevel(level);
             } else {
                 currentPreset = getPresetForLevel(level);
                 desiredElevInches = getElevatorInchesForLevel(level);
             }
-        }), Commands.waitUntil(() -> {
+        }), Commands.race(Commands.waitUntil(() -> {
             if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
                 return isArmInTolerance(getArmAngleForLevel(level), 2.0);
             } else {
                 return isElevatorInTolerance(getElevatorInchesForLevel(level), 2.0);
             }
-        }), Commands.runOnce(() -> {
-            if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
-                desiredElevInches = getElevatorInchesForLevel(level);
-            } else {
-                desiredArmAngleDeg = getArmAngleForLevel(level);
-            }
-            autoIntakeActive = false;
-        }), Commands.runOnce(() -> {
-            currentPreset = getPresetForLevel(level);
-        }));
+        }), Commands.waitSeconds(1)),
+
+                Commands.runOnce(() -> {
+                    if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                        desiredElevInches = getElevatorInchesForLevel(level);
+                    } else {
+                        desiredArmAngleDeg = getArmAngleForLevel(level);
+                    }
+                    autoIntakeActive = false;
+                }), Commands.runOnce(() -> {
+                    currentPreset = getPresetForLevel(level);
+                }));
     }
 
     // --------------------------------------------------------------------------
@@ -342,7 +344,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
         // desiredArmAngleDeg = getArmAngleForLevel(level);
         // } else {
-        desiredElevInches = getElevatorInchesForScoreLevel(level);
+        desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+        // desiredElevInches = getElevatorInchesForScoreLevel(level);
         // }
         // }), Commands.waitUntil(() -> {
         // if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
@@ -358,11 +361,13 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // }
         // // If you want to set autoIntakeActive = false or do outtake, you can
         currentPreset = getScorePresetForLevel(level);
-        return Commands.runOnce(() -> {
+        return Commands.sequence(Commands.runOnce(() -> {
             // // Mark ourselves as in the appropriate "score" preset
-            desiredElevInches = getElevatorInchesForScoreLevel(level);
+            // desiredElevInches = getElevatorInchesForScoreLevel(level);
+            desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
             currentPreset = getScorePresetForLevel(level);
-        });
+        }), Commands.waitSeconds(1), Commands.runOnce(() -> startManualOuttake()),
+                Commands.waitSeconds(1), Commands.runOnce(() -> stopIntake()));
     }
 
     // --------------------------------------------------------------------------
