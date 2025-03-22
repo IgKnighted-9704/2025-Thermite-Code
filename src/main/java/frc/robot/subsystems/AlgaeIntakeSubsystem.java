@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import javax.swing.text.Position;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;
@@ -9,6 +10,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Constants.AlgaeIntakeConstants;
 
 public class AlgaeIntakeSubsystem extends SubsystemBase {
 
@@ -52,6 +54,10 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
         pivotPIDEnabled = true;
     }
 
+    public void disablePID() {
+        pivotPIDEnabled = false;
+    }
+
     // Spins the intake forward at the configured speed
     public void intakeForward() {
         intakeMotor.set(Constants.AlgaeIntakeConstants.INTAKE_SPEED);
@@ -59,7 +65,7 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
 
     // Reverses the intake at the same speed
     public void intakeReverse() {
-        intakeMotor.set(-Constants.AlgaeIntakeConstants.INTAKE_SPEED);
+        intakeMotor.set(-1);
     }
 
     // Completely stops the intake mechanism
@@ -67,9 +73,17 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
         intakeMotor.set(0.0);
     }
 
+    public void intakeSlow() {
+        intakeMotor.set(AlgaeIntakeConstants.INTAKE_SLOW);
+    }
+
     // Provides the pivot angle for logging or troubleshooting
     public double getPivotAngle() {
-        return pivotEncoder.getPosition();
+        double position = pivotEncoder.getPosition();
+        if (position > 330) {
+            return (position - 360);
+        }
+        return position;
     }
 
     @Override
@@ -96,26 +110,29 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Algae Pivot Desired Angle", desiredPivotAngle);
 
         // If the pivot PID is active, use it to reach the target angle
-        // if (pivotPIDEnabled) {
-        //     // Make sure the desired angle is within our allowed range
-        //     if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE
-        //             && desiredPivotAngle <= Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE) {
+        if (pivotPIDEnabled) {
+            // Make sure the desired angle is within our allowed range
+            if (desiredPivotAngle >= Constants.AlgaeIntakeConstants.PIVOT_MIN_ANGLE
+                    && desiredPivotAngle <= Constants.AlgaeIntakeConstants.PIVOT_MAX_ANGLE) {
 
-        //         double currentAngle = pivotEncoder.getPosition();
-        //         double power = pivotPID.calculate(currentAngle, desiredPivotAngle);
+                double currentAngle = getPivotAngle();
+                double power = pivotPID.calculate(currentAngle, desiredPivotAngle);
 
-        //         // Ensure the motor power doesn’t exceed ±1
-        //         if (power > 1) {
-        //             power = 1;
-        //         } else if (power < -1) {
-        //             power = -1;
-        //         }
-        //         pivotMotor.set(-power / 4);
-        //     } else {
-        //         // Stop the pivot if the desired angle is out of range
-        //         pivotMotor.stopMotor();
-        //     }
-        // }
+                // Ensure the motor power doesn’t exceed ±1
+                if (power > 1) {
+                    power = 1;
+                } else if (power < -1) {
+                    power = -1;
+                }
+                pivotMotor.set(-power / 4);
+            } else {
+                // Stop the pivot if the desired angle is out of range
+                pivotMotor.stopMotor();
+            }
+        } else {
+            // Stop the pivot if the desired angle is out of range
+            pivotMotor.stopMotor();
+        }
         // If pivotPIDEnabled is false, we do nothing here, so the pivot is free-moving.
     }
 }

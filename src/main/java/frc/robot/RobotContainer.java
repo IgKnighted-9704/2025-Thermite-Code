@@ -77,12 +77,15 @@ public class RobotContainer {
                 // -------------------------------------------
                 // Driver PS4 triggers for intake pivot forward/reverse
                 // -------------------------------------------
-                driverPS4.R2().whileTrue(Commands.run(() -> {
+                driverPS4.L2().whileTrue(Commands.run(() -> {
                         algaeIntake.setPivotToIntake();
                         algaeIntake.intakeForward();
-                }, algaeIntake)).onFalse(Commands.runOnce(algaeIntake::intakeStop, algaeIntake));
+                }, algaeIntake)).onFalse(Commands.runOnce(() -> {
+                        algaeIntake.disablePID();
+                        algaeIntake.intakeSlow();
+                }, algaeIntake));
 
-                driverPS4.L2().whileTrue(Commands.run(() -> {
+                driverPS4.R2().whileTrue(Commands.run(() -> {
                         algaeIntake.intakeReverse();
                 }, algaeIntake)).onFalse(Commands.runOnce(() -> {
                         algaeIntake.stopPivot();
@@ -172,12 +175,13 @@ public class RobotContainer {
                 }, armElevator)).onFalse(Commands.runOnce(() -> armElevator.stopManualElevator(),
                                 armElevator));
 
-                new Trigger(() -> Math.abs(auxXbox.getRightY()) > 0.1).whileTrue(Commands.run(() -> {
-                        double raw = auxXbox.getRightY();
-                        double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
-                        armElevator.setManualArm(val);
-                }, armElevator)).onFalse(Commands.runOnce(() -> armElevator.stopManualArm(),
-                                armElevator));
+                new Trigger(() -> Math.abs(auxXbox.getRightY()) > 0.1)
+                                .whileTrue(Commands.run(() -> {
+                                        double raw = auxXbox.getRightY();
+                                        double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
+                                        armElevator.setManualArm(val);
+                                }, armElevator)).onFalse(Commands.runOnce(
+                                                () -> armElevator.stopManualArm(), armElevator));
 
                 // -------------------------------------------
                 // Default drive command logic (differing for simulation vs. real)
@@ -197,11 +201,33 @@ public class RobotContainer {
          * Provides the autonomous command to be scheduled in auto mode.
          */
         public Command getAutonomousCommand() {
+                // // A simple drive forward for 2 seconds, then stop.
+                // Command autonomousCommand = new SequentialCommandGroup(new InstantCommand(() -> {
+                // drivebase.driveCommand(() -> -0.5, () -> 0, () -> 0).schedule();
+                // }), new WaitCommand(2), new InstantCommand(() -> {
+                // drivebase.driveCommand(() -> 0, () -> 0, () -> 0).schedule();
+                // }));
                 // A simple drive forward for 2 seconds, then stop.
                 Command autonomousCommand = new SequentialCommandGroup(new InstantCommand(() -> {
-                        drivebase.driveCommand(() -> -0.5, () -> 0, () -> 0).schedule();
+                        //armElevator.goToFunnelCommand().schedule();
+                        armElevator.slowIntake();
+                        selectedLevel = 4;
+                        armElevator.goToLevelCommand(4).schedule();
+                // }), new WaitCommand(2), new InstantCommand(() -> {
+                //         selectedLevel = 4;
+                //         armElevator.goToLevelCommand(4).schedule();
                 }), new WaitCommand(2), new InstantCommand(() -> {
-                        drivebase.driveCommand(() -> 0, () -> 0, () -> 0).schedule();
+                        drivebase.driveToDistanceCommand(2, 2);
+                }), new WaitCommand(3), new InstantCommand(() -> {
+                        armElevator.goToLevelScoreCommand(4).schedule();
+                }), new WaitCommand(2), new InstantCommand(() -> {
+                        selectedLevel = 1;
+                        armElevator.goToLevelCommand(1).schedule();
+                }), new WaitCommand(2), new InstantCommand(() -> {
+                        armElevator.startManualOuttake();
+                }), new WaitCommand(2), new InstantCommand(() -> {
+                        armElevator.stopIntake();
+                        armElevator.goToStowCommand(); 
                 }));
                 return autonomousCommand;
         }

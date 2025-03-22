@@ -186,24 +186,24 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
      */
     public Command goToStowCommand() {
         return Commands.sequence(Commands.runOnce(() -> {
-            if (currentPreset == Preset.FUNNEL || currentPreset == Preset.LOADING) {
-                desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
-            } else {
-                desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
-            }
+            // if (currentPreset == Preset.FUNNEL || currentPreset == Preset.LOADING) {
+            desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+            // } else {
+            // desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
+            // }
         }), Commands.waitUntil(() -> {
-            if (currentPreset == Preset.FUNNEL || currentPreset == Preset.LOADING) {
-                return isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0);
-            } else {
-                return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_STOW_INCHES, 2.0);
-            }
+            // if (currentPreset == Preset.FUNNEL || currentPreset == Preset.LOADING) {
+            return isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0);
+            // } else {
+            // return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_STOW_INCHES, 2.0);
+            // }
         }), Commands.runOnce(() -> {
             // Second stage (arm or elevator)
-            if (currentPreset == Preset.FUNNEL || currentPreset == Preset.LOADING) {
-                desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
-            } else {
-                desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
-            }
+            // if (currentPreset == Preset.FUNNEL || currentPreset == Preset.LOADING) {
+            desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
+            // } else {
+            // desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+            // }
             autoIntakeActive = false;
         }), Commands.runOnce(() -> currentPreset = Preset.STOW));
     }
@@ -232,9 +232,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     // Commands.race(Commands.waitSeconds(0.5)),
                     // 3) Wait for an intake stall or 0.5s
                     Commands.race(
-                    Commands.waitUntil(
-                    intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
-                    Commands.waitSeconds(0.5)),
+                            Commands.waitUntil(
+                                    intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
+                            Commands.waitSeconds(0.5)),
                     // 4) Slow intake
                     Commands.runOnce(() -> slowIntake()),
                     // Move elevator to funnel height
@@ -347,13 +347,16 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // currentPreset = getScorePresetForLevel(level);
         // }));
 
-        desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
-        currentPreset = getScorePresetForLevel(level);
+        // desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+        // currentPreset = getScorePresetForLevel(level);
         return Commands.sequence(Commands.runOnce(() -> {
-            desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+            if (level == 2)
+                desiredArmAngleDeg = ArmElevatorConstants.ARM_SCORE_DEG;
+            else
+                desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
             currentPreset = getScorePresetForLevel(level);
-        }), Commands.waitSeconds(1), 
-        // Commands.runOnce(() -> startManualOuttake()),
+        }), Commands.waitSeconds(1),
+                // Commands.runOnce(() -> startManualOuttake()),
                 Commands.waitSeconds(1), Commands.runOnce(() -> stopIntake()));
     }
 

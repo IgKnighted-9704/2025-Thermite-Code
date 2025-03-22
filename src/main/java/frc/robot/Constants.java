@@ -104,6 +104,7 @@ public final class Constants {
 
     // Stow positioning for the arm.
     public static final double ARM_STOW_DEG = 0.0;
+    public static final double ARM_SCORE_DEG = 25.0;
     // // public static final double ARM_STOW_TOLERANCE_DEG = 4.0;
     // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
@@ -128,7 +129,7 @@ public final class Constants {
     // Specific preset positions for the elevator (inches from zero reference).
     public static final double ELEVATOR_STOW_INCHES = 0.0;
     public static final double ELEVATOR_LEVEL1_INCHES = 8.25;
-    public static final double ELEVATOR_LEVEL2_INCHES = 10.0625;
+    public static final double ELEVATOR_LEVEL2_INCHES = 0;
     public static final double ELEVATOR_LEVEL3_INCHES = 19.5;
     public static final double ELEVATOR_LEVEL4_INCHES = 33.5;
 
@@ -145,7 +146,7 @@ public final class Constants {
 
     // Corresponding arm angles for each level preset.
     public static final double ARM_LEVEL1_DEG = 65.0;
-    public static final double ARM_LEVEL2_DEG = 99.5;
+    public static final double ARM_LEVEL2_DEG = 141;
     public static final double ARM_LEVEL3_DEG = 117;
     public static final double ARM_LEVEL4_DEG = 141;
 
@@ -191,15 +192,17 @@ public final class Constants {
     // Limits and presets for the intake pivot angle.
     public static final double PIVOT_MIN_ANGLE = 0.0;
     public static final double PIVOT_MAX_ANGLE = 300.0;
-    public static final double PIVOT_INTAKE_ANGLE = 120.0;
+    public static final double PIVOT_INTAKE_ANGLE = 75.0;
 
     // PID constants for pivot control.
-    public static double PIVOT_kP = 0.1;
+    public static double PIVOT_kP = 0.05;
     public static double PIVOT_kI = 0.0;
     public static double PIVOT_kD = 0.0;
 
     // Intake speed (fraction of max).
     public static final double INTAKE_SPEED = 0.8;
+
+    public static final double INTAKE_SLOW = 0.1;
   }
 
   /**
