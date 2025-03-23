@@ -119,12 +119,12 @@ public class AlgaeIntakeSubsystem extends SubsystemBase {
                 double power = pivotPID.calculate(currentAngle, desiredPivotAngle);
 
                 // Ensure the motor power doesn’t exceed ±1
-                if (power > 1) {
-                    power = 1;
-                } else if (power < -1) {
-                    power = -1;
-                }
-                pivotMotor.set(-power / 4);
+                // if (power > 1) {
+                //     power = 1;
+                // } else if (power < -1) {
+                //     power = -1;
+                // }
+                // pivotMotor.set(-power / 4);
             } else {
                 // Stop the pivot if the desired angle is out of range
                 pivotMotor.stopMotor();

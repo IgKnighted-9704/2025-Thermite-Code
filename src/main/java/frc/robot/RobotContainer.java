@@ -195,39 +195,41 @@ public class RobotContainer {
 
                 // Map the PS4 D-Pad left to zero the gyro
                 driverPS4.povLeft().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
+
+                driverPS4.cross().onTrue(Commands.runOnce(drivebase::lock, drivebase));
         }
 
         /**
          * Provides the autonomous command to be scheduled in auto mode.
          */
         public Command getAutonomousCommand() {
-                // // A simple drive forward for 2 seconds, then stop.
+                // A simple drive forward for 2 seconds, then stop.
                 // Command autonomousCommand = new SequentialCommandGroup(new InstantCommand(() -> {
                 // drivebase.driveCommand(() -> -0.5, () -> 0, () -> 0).schedule();
                 // }), new WaitCommand(2), new InstantCommand(() -> {
                 // drivebase.driveCommand(() -> 0, () -> 0, () -> 0).schedule();
                 // }));
-                // A simple drive forward for 2 seconds, then stop.
+
                 Command autonomousCommand = new SequentialCommandGroup(new InstantCommand(() -> {
-                        //armElevator.goToFunnelCommand().schedule();
-                        armElevator.slowIntake();
+                        armElevator.goToFunnelCommand().schedule();
+                }), new WaitCommand(2), new InstantCommand(() -> {
                         selectedLevel = 4;
                         armElevator.goToLevelCommand(4).schedule();
-                // }), new WaitCommand(2), new InstantCommand(() -> {
-                //         selectedLevel = 4;
-                //         armElevator.goToLevelCommand(4).schedule();
                 }), new WaitCommand(2), new InstantCommand(() -> {
-                        drivebase.driveToDistanceCommand(2, 2);
+                        drivebase.driveCommand(() -> -0.25, () -> 0, () -> 0).schedule();
+                }), new WaitCommand(2.5), new InstantCommand(() -> {
+                        drivebase.driveCommand(() -> 0, () -> 0, () -> 0).schedule();
                 }), new WaitCommand(3), new InstantCommand(() -> {
                         armElevator.goToLevelScoreCommand(4).schedule();
-                }), new WaitCommand(2), new InstantCommand(() -> {
-                        selectedLevel = 1;
-                        armElevator.goToLevelCommand(1).schedule();
+                //         armElevator.slowIntake();
+                // }), new WaitCommand(1), new InstantCommand(() -> {
+                //         selectedLevel = 1;
+                //         armElevator.goToLevelCommand(1).schedule();
                 }), new WaitCommand(2), new InstantCommand(() -> {
                         armElevator.startManualOuttake();
-                }), new WaitCommand(2), new InstantCommand(() -> {
+                }), new WaitCommand(1), new InstantCommand(() -> {
                         armElevator.stopIntake();
-                        armElevator.goToStowCommand(); 
+                        armElevator.goToStowCommand().schedule();
                 }));
                 return autonomousCommand;
         }

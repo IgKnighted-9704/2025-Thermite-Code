@@ -1109,7 +1109,7 @@ public class SwerveDrive implements AutoCloseable
    * Point all modules toward the robot center, thus making the robot very difficult to move. Forcing the robot to keep
    * the current pose.
    */
-  public void lockPose()
+  public void  lockPose()
   {
     // Sets states
     for (SwerveModule swerveModule : swerveModules)
