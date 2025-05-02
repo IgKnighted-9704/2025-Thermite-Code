@@ -1,0 +1,37 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Auton 1L"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Auton l2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Auton L3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Auton l4"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "auton left",
+  "choreoAuto": false
+}
