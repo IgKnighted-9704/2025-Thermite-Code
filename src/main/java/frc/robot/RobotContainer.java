@@ -166,22 +166,22 @@ public class RobotContainer {
                 // -------------------------------------------
                 // Left Y stick => manual elevator control
                 // -------------------------------------------
-                // new Trigger(() -> Math.abs(auxXbox.getLeftY()) > 0.1).whileTrue(Commands.run(() -> {
-                //         double raw = -auxXbox.getLeftY();
-                //         double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
-                //         // We pass `val` as "leftTrigger" and 0.0 as "rightTrigger"
-                //         // so the sign of val raises or lowers the elevator.
-                //         armElevator.setManualElevatorSpeed(val, 0.0);
-                // }, armElevator)).onFalse(Commands.runOnce(() -> armElevator.stopManualElevator(),
-                //                 armElevator));
+                        // new Trigger(() -> Math.abs(auxXbox.getLeftY()) > 0.1).whileTrue(Commands.run(() -> {
+                        //         double raw = -auxXbox.getLeftY();
+                        //         double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
+                        //         // We pass `val` as "leftTrigger" and 0.0 as "rightTrigger"
+                        //         // so the sign of val raises or lowers the elevator.
+                        //         armElevator.setManualElevatorSpeed(val, 0.0);
+                        // }, armElevator)).onFalse(Commands.runOnce(() -> armElevator.stopManualElevator(),
+                        //                 armElevator));
 
-                // new Trigger(() -> Math.abs(auxXbox.getRightY()) > 0.1)
-                //                 .whileTrue(Commands.run(() -> {
-                //                         double raw = auxXbox.getRightY();
-                //                         double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
-                //                         armElevator.setManualArm(val);
-                //                 }, armElevator)).onFalse(Commands.runOnce(
-                //                                 () -> armElevator.stopManualArm(), armElevator));
+                        // new Trigger(() -> Math.abs(auxXbox.getRightY()) > 0.1)
+                        //                 .whileTrue(Commands.run(() -> {
+                        //                         double raw = auxXbox.getRightY();
+                        //                         double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
+                        //                         armElevator.setManualArm(val);
+                        //                 }, armElevator)).onFalse(Commands.runOnce(
+                        //                                 () -> armElevator.stopManualArm(), armElevator));
 
                 // -------------------------------------------
                 // Default drive command logic (differing for simulation vs. real)
@@ -232,8 +232,11 @@ public class RobotContainer {
                         armElevator.goToStowCommand().schedule();
                 }));
 
-                Command autonTuneCommand = new InstantCommand(() -> drivebase.driveToDistanceCommand(10, 1));
-                return autonTuneCommand;
+                Command testAuton = new SequentialCommandGroup(new InstantCommand(() -> {
+                        drivebase.driveToDistanceCommand(5, 1);
+                }));
+        
+                return testAuton;
         }
 
         /** Sets the drive motors to brake or coast mode. */
