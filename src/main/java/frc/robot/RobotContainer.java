@@ -231,7 +231,12 @@ public class RobotContainer {
                         armElevator.stopIntake();
                         armElevator.goToStowCommand().schedule();
                 }));
-
+                //tuning code for turn go to 3rd value before  with timeout
+               // return drivebase.driveCommand(() -> 0.5, () -> 0, () -> 0)
+                //.withTimeout(2)
+                //set bot to off due to t
+                //.andThen(drivebase.driveCommand(() -> 0, () -> 0, () -> 0));
+                        // instant command don't will fail in our current set up would need to seperate it out in  new get autonomus 
                 Command testAuton = new SequentialCommandGroup(new InstantCommand(() -> {
                         drivebase.driveToDistanceCommand(5, 1);
                 }));
