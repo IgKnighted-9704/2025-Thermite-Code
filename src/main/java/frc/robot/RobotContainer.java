@@ -231,6 +231,11 @@ public class RobotContainer {
                         armElevator.stopIntake();
                         armElevator.goToStowCommand().schedule();
                 }));
+                //tuning code for turn go to 3rd value before  with timeout
+               // return drivebase.driveCommand(() -> 0.5, () -> 0, () -> 0)
+                //.withTimeout(2)
+                //set bot to off due to t
+                //.andThen(drivebase.driveCommand(() -> 0, () -> 0, () -> 0));
                 return autonomousCommand;
         }
 
