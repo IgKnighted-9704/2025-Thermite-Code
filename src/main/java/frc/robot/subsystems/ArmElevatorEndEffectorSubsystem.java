@@ -264,6 +264,11 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     // Finally do the normal loading->level N movement
                     Commands.runOnce(() -> {
                     }), goToLevelFromLoadingCommand(level));
+        } else if(level == 2){
+            currentPreset = getPresetForLevel(level);
+            return Commands.sequence(goToLevelFromLoadingCommand(3),
+            Commands.waitSeconds(0.5),
+            goToLevelFromLoadingCommand(2));
         } else {
             // If not in FUNNEL, just do the normal approach
             currentPreset = getPresetForLevel(level);
@@ -604,7 +609,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     public double getArmAngleDegrees() {
         double sensorDeg = armAbsEnc.getPosition();
         // Apply any offset needed for the absolute encoder
-        return (sensorDeg * ArmElevatorConstants.ARM_ABS_ENC_RATIO) - 64.4;
+        return (sensorDeg * ArmElevatorConstants.ARM_ABS_ENC_RATIO) - 72.75;//64.4
     }
 
     public double getElevatorHeightInches() {

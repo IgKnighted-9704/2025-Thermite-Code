@@ -237,12 +237,8 @@ public class RobotContainer {
                 //set bot to off due to t
                 //.andThen(drivebase.driveCommand(() -> 0, () -> 0, () -> 0));
                         // instant command don't will fail in our current set up would need to seperate it out in  new get autonomus 
-                Command testAuton = new SequentialCommandGroup(new InstantCommand(() -> {
-                        drivebase.driveToDistanceCommand(5, 1);
-                }));
-        
-                return testAuton;
-        }
+                return drivebase.driveToPose(new Pose2d(new Translation2d(0, 0), new Rotation2d(45)));
+        }       
 
         /** Sets the drive motors to brake or coast mode. */
         public void setMotorBrake(boolean brake) {
