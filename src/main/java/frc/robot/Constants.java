@@ -99,16 +99,16 @@ public final class Constants {
     // // public static final double ELEVATOR_MAX_INCHES = 84.0;
 
     // Angles and positions for funnel/loading presets.
-    public static final double ARM_LOADING_DEG = -40;
-    public static final double ARM_FUNNEL_DEG = -40;
+    public static final double ARM_LOADING_DEG = -40; //TODO : Measure Again
+    public static final double ARM_FUNNEL_DEG = -40; //TODO : Measure Again
     // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
     public static final double ELEVATOR_FUNNEL_INCHES = 15;
     public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 9;
 
     // Stow positioning for the arm.
-    public static final double ARM_STOW_DEG = 0.0;
-    public static final double ARM_SCORE_DEG = 25.0;
+    public static final double ARM_STOW_DEG = 0.0; 
+    public static final double ARM_SCORE_DEG = 25.0; //TODO : Measure Again
     // // public static final double ARM_STOW_TOLERANCE_DEG = 4.0;
     // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
@@ -149,10 +149,10 @@ public final class Constants {
         ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
 
     // Corresponding arm angles for each level preset.
-    public static final double ARM_LEVEL1_DEG = 65.0;
-    public static final double ARM_LEVEL2_DEG = 141;
-    public static final double ARM_LEVEL3_DEG = 117;
-    public static final double ARM_LEVEL4_DEG = 141;
+    public static final double ARM_LEVEL1_DEG = 65.0; //TODO : Measure Again
+    public static final double ARM_LEVEL2_DEG = 141; //TODO : Measure Again
+    public static final double ARM_LEVEL3_DEG = 117; //TODO : Measure Again
+    public static final double ARM_LEVEL4_DEG = 141; //TODO : Measure Again
 
     // // public static final double ARM_TOLERANCE_DEG = 2.0;
     // // public static final double ELEVATOR_TOLERANCE_INCH = 1.0;
