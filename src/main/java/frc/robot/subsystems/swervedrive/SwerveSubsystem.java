@@ -146,7 +146,7 @@ public class SwerveSubsystem extends SubsystemBase {
       swerveDrive.updateOdometry();
       vision.updatePoseEstimation(swerveDrive);
     }
-    SmartDashboard.putNumber("Velocity", this.getRobotVelocity().vxMetersPerSecond);
+    
   }
 
   @Override
@@ -184,7 +184,7 @@ public class SwerveSubsystem extends SubsystemBase {
           new PPHolonomicDriveController(
               // PPHolonomicController is the built in path following controller for holonomic drive
               // trains
-              new PIDConstants(2.7, 0.0, 0.0), //TODO : TUNE DRIVE PID
+              new PIDConstants(0.1, 0.0, 0.0), //TODO : TUNE DRIVE PID
               // Translation PID constants
               new PIDConstants(0.0, 0.0, 0.0) //TODO : TUNE ANGULAR PID
           // Rotation PID constants

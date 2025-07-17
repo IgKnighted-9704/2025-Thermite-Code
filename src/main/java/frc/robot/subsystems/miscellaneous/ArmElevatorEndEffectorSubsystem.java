@@ -42,7 +42,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // End Effector
         private final SparkMax intakeMotor;
         private final RelativeEncoder intakeEncoder;
-        private final SparkAbsoluteEncoder armAbsEnc;
+        // private final SparkAbsoluteEncoder armAbsEnc;
     
     // Periodic Tracker
         private double desiredArmAngleDeg;
@@ -91,19 +91,16 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // EndEffector mechanism
         intakeMotor = new SparkMax(ArmElevatorConstants.ARM_MOTOR_ID, MotorType.kBrushless);
         intakeEncoder = intakeMotor.getEncoder();
-        armAbsEnc = intakeMotor.getAbsoluteEncoder();
     
     // Reset Motor Positions
         elevatorMotorA.setPosition(0);
         elevatorMotorB.setPosition(0);
-        armMotor.setPosition(armAbsEnc.getPosition());
+        armMotor.setPosition(0);
     }
 
     //Sensor Readouts
         public double getArmAngleDegrees() {
-            double sensorDeg = armAbsEnc.getPosition();
-            // Apply any offset needed for the absolute encoder
-            return (sensorDeg * ArmElevatorConstants.ARM_ABS_ENC_RATIO) - ArmElevatorConstants.ARM_ABS_ENC_OFFSET;
+            return armMotor.getPosition().getValueAsDouble();
         }
 
         public double getElevatorHeightInches() {
@@ -271,7 +268,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // Command -> Move from (STOW OR LEVEL) to FUNNEL
         public Command goToFunnelCommand() {
             return Commands.sequence(
-                    goToStowCommand(),
                     // DECIDE WHICH PART MOVES FIRST BASED ON THE CURRENT PRESET
                     Commands.runOnce(() -> {
                         if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
@@ -304,7 +300,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
         //Command -> Move from (STOW OR LEVEL) to LOADING
         public Command goToLoadingCommand() {
-            return Commands.sequence(Commands.runOnce(() -> {
+            return Commands.sequence(
+                goToFunnelCommand(),
+            Commands.runOnce(() -> {
                 // IF WE ARE IN FUNNEL, ADJUST ARM ANGLE FIRST
                 if (currentPreset == Preset.FUNNEL) {
                     desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
@@ -335,57 +333,39 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 } else {
                     desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
                 }
-                autoIntakeActive = true;
+                
             }), 
-            Commands.runOnce(() -> currentPreset = Preset.LOADING));
+            CoralIntakeCommand(),
+            Commands.runOnce(() -> currentPreset = Preset.LOADING)
+            );
         }    
 
         // Command -> Move from (STOW OR LEVEL) to (LOADING or FUNNEL)
         private Command goToLevelFromLoadingCommand(int level){
             return Commands.sequence(
-                Commands.runOnce(()-> {
-                    //IF WE ARE IN THE LOADING OR FUNNEL...
-                    if(currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL){
-                        //Set the desired angle position for the level
-                        desiredArmAngleDeg = getArmAngleForLevel(level);
-                    //IF WE ARE NOT IN THE LOADING OR FUNNEL...
-                    } else {
-                        currentPreset = getPresetForLevel(level);
-                        //Set the desired elevator position for the level
-                        desiredElevInches = getElevatorInchesForLevel(level);
-                    }
-                }),
-                // Wait until the arm or elevator is in tolerance for the desired level
-                Commands.race(
-                    Commands.waitUntil( () -> {
-                        if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
-                            return isArmInTolerance(getArmAngleForLevel(level), 2.0);
-                        } else {
-                            return isElevatorInTolerance(getElevatorInchesForLevel(level), 2.0);
-                        }      
-                    }),
-                    Commands.waitSeconds(1),
-                    Commands.runOnce(() -> {
-                        currentPreset = getPresetForLevel(level);
-                    })
-                ), 
-                // Set the desired arm angle or elevator position based on the current preset
-                Commands.runOnce(() ->{
-                    //IF WE ARE IN THE LOADING OR FUNNEL...
-                    if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
-                        //Set the desired elevator position for the level
-                        desiredElevInches = getElevatorInchesForLevel(level);
-                    //IF WE ARE NOT IN THE LOADING OR FUNNEL...
-                    } else {
-                        //Set the desired arm angle for the level
-                        desiredArmAngleDeg = getArmAngleForLevel(level);
-                    }
-                    autoIntakeActive = false;
-                }),
                 Commands.runOnce(() -> {
+                if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                    desiredArmAngleDeg = getArmAngleForLevel(level);
+                } else {
                     currentPreset = getPresetForLevel(level);
-                })
-            );
+                    desiredElevInches = getElevatorInchesForLevel(level);
+                }
+            }), Commands.race(Commands.waitUntil(() -> {
+                if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                    return isArmInTolerance(getArmAngleForLevel(level), 2.0);
+                } else {
+                    return isElevatorInTolerance(getElevatorInchesForLevel(level), 2.0);
+                }
+            }), Commands.waitSeconds(1)), Commands.runOnce(() -> {
+                if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
+                    desiredElevInches = getElevatorInchesForLevel(level);
+                } else {
+                    desiredArmAngleDeg = getArmAngleForLevel(level);
+                }
+                autoIntakeActive = false;
+            }), Commands.runOnce(() -> {
+                currentPreset = getPresetForLevel(level);
+            }));
         } 
 
         // Command -> Move from (STOW to LOADING to LEVEL) OR (LOADING TO LEVEL)
@@ -467,9 +447,11 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     Commands.runOnce(() -> {
                     desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
                 }), 
+                Commands.race(
+                    Commands.waitSeconds(1),
                     Commands.waitUntil(() -> {
                     return isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0);
-                }), 
+                })),
                     Commands.runOnce(() -> {
                     desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
                     autoIntakeActive = false;
@@ -478,12 +460,11 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                                         
                 //Decision Matrix
                     if(currentPreset == Preset.LEVEL2 || 
-                    currentPreset == Preset.LEVEL2SCORE || 
-                    currentPreset == Preset.LEVEL4 || 
-                    currentPreset == Preset.LEVEL4SCORE){
+                    currentPreset == Preset.LEVEL2SCORE||
+                    currentPreset == Preset.LOADING){
                         return Commands.sequence(
-                            goToLevelCommand(3),
-                            DefaultStowPos
+                            goToFunnelCommand(),
+                            DefaultStowPos   
                         );
                     }
                 return DefaultStowPos;
@@ -579,7 +560,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             private Command goToScoreFromLoadingCommand(int level){
             
             if(level == 2 || currentPreset == Preset.LEVEL2){
-                startManualIntake();
+            currentPreset = getPresetForLevel(2);
+               return CoralIntakeCommand();
             }
                 return Commands.sequence(
                     Commands.runOnce(() -> {

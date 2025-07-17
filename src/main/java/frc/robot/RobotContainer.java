@@ -1,3 +1,4 @@
+
 package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
@@ -42,7 +43,7 @@ public class RobotContainer {
         // Controller Initialization
                 // Primary Driver (Drive Train) -> driverPS4
                         private final CommandPS4Controller driverPS4 = new CommandPS4Controller(0);
-                // Secondary Operator (Arm/Intake) -> auxPS4
+                // Secondary Driver (Arm/Intake) -> auxPS4
                         private final CommandPS4Controller auxPS4 = new CommandPS4Controller(1);
 
         // Subsystem Initialization
@@ -178,7 +179,7 @@ public class RobotContainer {
                 AutonChooser = new SendableChooser<>();
                         AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight());
                         AutonChooser.addOption("L4 Score", L4AutonomousCommand);
-                        AutonChooser.addOption("Blue-Left-Auton", drivebase.getAutonomousCommand("B - Auton")); //TODO : Test The Auton
+                        AutonChooser.addOption("New Auto", drivebase.getAutonomousCommand("New Auto")); //TODO : Test The Auton
                 SmartDashboard.putData("Drive Auton", AutonChooser);
 
         }
@@ -233,6 +234,7 @@ public class RobotContainer {
                                         .onFalse(Commands.runOnce(armElevator::stopIntake, armElevator));
                                 }
 
+                                
                 //Elevator + Arm Control (AUX)
                         // -------------------------------------------
                         // Aux PS4 controller button mappings for arm/elevator presets and special positions:
@@ -294,7 +296,7 @@ public class RobotContainer {
                                 if(ENABLE_ARM_ELEVATOR_SUBSYSTEM){
                                         auxPS4.R1().onTrue(Commands.runOnce(() -> {
                                                 // Universal method that transitions to the appropriate "score" preset
-                                                // armElevator.goToLevelScoreCommand(selectedLevel).schedule();
+                                                armElevator.goToLevelScoreCommand(selectedLevel).schedule();
                                         }, armElevator));
                                 }
 
