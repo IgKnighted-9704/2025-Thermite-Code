@@ -68,9 +68,9 @@ public final class Constants {
     public static final List<Integer> REEF_BLUE_IDS = List.of(17, 18, 19, 20, 21, 22);
 
     // Offsets in meters used when approaching or retreating from reef locations.
-    public static final double BRANCH_OFFSET_METERS = 0.5; //TODO : adjust based on field measurements
-    public static final double APPROACH_X_OFFSET_METERS = 0.0;  //TODO : adjust based on field measurements
-    public static final double RETREAT_DISTANCE_METERS = 1.0; // TODO : adjust based on field measurements
+    public static final double BRANCH_OFFSET_METERS = 0.5; 
+    public static final double APPROACH_X_OFFSET_METERS = 0.0;  
+    public static final double RETREAT_DISTANCE_METERS = 1.0; 
   }
 
   /**
