@@ -97,12 +97,15 @@ public final class Constants {
     // // public static final double ELEVATOR_MAX_INCHES = 84.0;
 
     // Angles and positions for funnel/loading presets.
-    public static final double ARM_LOADING_DEG = -5; //TODO : Measure Again
-    public static final double ARM_FUNNEL_DEG = -5; //TODO : Measure Again
+    public static final double ARM_LOADING_DEG = 72.7; //TODO : Measure Again
+    public static final double ARM_FUNNEL_DEG = 66;
+    ;
+    ; //TODO : Measure Again
+    
     // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
-    public static final double ELEVATOR_FUNNEL_INCHES = 15;
-    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12;
+    public static final double ELEVATOR_FUNNEL_INCHES = 14.790200;
+    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.174137;
 
     // Stow positioning for the arm.
     public static final double ARM_STOW_DEG = 0.0; 
@@ -111,7 +114,7 @@ public final class Constants {
     // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
     // PID and feedforward parameters for both the arm and the elevator.
-    public static double ARM_kP = 0.02;
+    public static double ARM_kP = 0.3;
     public static double ARM_kI = 0.0;
     public static double ARM_kD = 0.0;
 
@@ -124,7 +127,7 @@ public final class Constants {
     public static double ELEV_kV = 4.2;
     public static double ELEV_kA = 0.5;
 
-    // Constraints for the elevator’s maximum velocity and acceleration (m/s and m/s^2).
+    // Constraints for the elevator’s maximum velocity and acceleration (m/s an d m/s^2).
     public static double ELEVATOR_MAX_VEL = 1.5;
     public static double ELEVATOR_MAX_ACC = 1;
 
@@ -148,17 +151,17 @@ public final class Constants {
 
     // Corresponding arm angles for each level preset.
     public static final double ARM_LEVEL1_DEG = 0; //TODO : Measure Again
-    public static final double ARM_LEVEL2_DEG = 20; //TODO : Measure Again
-    public static final double ARM_LEVEL3_DEG = 20; //TODO : Measure Again
-    public static final double ARM_LEVEL4_DEG = 20; //TODO : Measure Again
-
+    public static final double ARM_LEVEL2_DEG = -150; //TODO : Measure Again
+    public static final double ARM_LEVEL3_DEG = -158; //TODO : Measure Again
+    public static final double ARM_LEVEL4_DEG = -144; //TODO : Measure Again
+    
     // // public static final double ARM_TOLERANCE_DEG = 2.0;
     // // public static final double ELEVATOR_TOLERANCE_INCH = 1.0;
     // // public static final double TILT_THRESHOLD_DEG = 10.0;
-    // // public static final double ACCEL_LIMIT_SCALE = 0.01;
+    // // public static final double ACCEL_LIMIT_S  CALE = 0.01;
 
     // Intake constants
-    public static final double INTAKE_SPEED = 0.7;
+    public static final double INTAKE_SPEED = 0.6;
     public static final double INTAKE_STOPPED_RPM = 6000.0;
   }
 

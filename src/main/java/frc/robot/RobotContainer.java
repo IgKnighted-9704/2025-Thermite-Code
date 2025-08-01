@@ -42,9 +42,9 @@ public class RobotContainer {
 
         // Controller Initialization
                 // Primary Driver (Drive Train) -> driverPS4
-                        private final CommandPS4Controller driverPS4 = new CommandPS4Controller(0);
+                        private final CommandPS4Controller driverPS4 = new CommandPS4Controller(1);
                 // Secondary Driver (Arm/Intake) -> auxPS4
-                        private final CommandPS4Controller auxPS4 = new CommandPS4Controller(1);
+                        private final CommandPS4Controller auxPS4 = new CommandPS4Controller(0);
 
         // Subsystem Initialization
                 //Drive Base
@@ -68,7 +68,7 @@ public class RobotContainer {
                                         .of(drivebase.getSwerveDrive(), () -> -driverPS4.getLeftY(),
                                                         () -> -driverPS4.getLeftX())
                                         .withControllerRotationAxis(() -> -driverPS4.getRightX())
-                                        .deadband(OperatorConstants.DEADBAND).scaleTranslation(0.7)
+                                        .deadband(OperatorConstants.DEADBAND).scaleTranslation(0.8)
                                         .allianceRelativeControl(true);
         //Simulation Drive
                 // -------------------------------------------
@@ -94,9 +94,12 @@ public class RobotContainer {
                         private int selectedLevel = 1;
         
         //Subsystem Disable/Enable
-                boolean ENABLE_ARM_ELEVATOR_SUBSYSTEM = false; // Set to false to disable the Arm Elevator subsystem
+                boolean ENABLE_ARM_ELEVATOR_SUBSYSTEM = true; // Set to false to disable the Arm Elevator subsystem
                 boolean ENABLE_ALGAE_INTAKE_SUBSYSTEM = false; // Set to false to disable the Algae Intake subsystem
                 boolean ENABLE_DRIVEBASE_SUBSYSTEM = true; // Set to false to disable the Drivebase subsystem
+                boolean ENABLE_MANUAL_CONTROL = true; // Set to false to disable manual control of the Arm Elevator subsystem
+
+        //Autonomous
 
         //Path Chooser
         SendableChooser<Command> AutonChooser;
@@ -113,9 +116,9 @@ public class RobotContainer {
                                 }),                                                             // goes to level 4
                                         new WaitCommand(2),                             // waits 2 seconds
                                         new InstantCommand(() -> {
-                                        drivebase.driveCommand(() -> 0.5, () -> 0, () -> 0).schedule(); // drives with a velocity of 0.5 m/s 
+                                        drivebase.driveCommand(() -> 0.25/Constants.DrivebaseConstants.VELOCITY_DRIVE_RATIO, () -> 0, () -> 0).schedule(); // drives with a velocity of 0.5 m/s 
                                 }),             
-                                        new WaitCommand(1),                                     // waits 1 second
+                                        new WaitCommand(5),                                     // waits 1 second
                                         new InstantCommand(() -> {
                                         drivebase.driveCommand(() -> 0, () -> 0, () -> 0).schedule();   // stops the drivebase
                                 }),     
@@ -177,11 +180,11 @@ public class RobotContainer {
 
                 //Path Planner Chooser
                 AutonChooser = new SendableChooser<>();
-                        AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight());
-                        AutonChooser.addOption("L4 Score", L4AutonomousCommand);
-                        AutonChooser.addOption("New Auto", drivebase.getAutonomousCommand("New Auto")); //TODO : Test The Auton
+                        AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight(1.0,0.5));
+                        AutonChooser.addOption("Straight Auton-Pathplanner", drivebase.getAutonomousCommand("Straight Auton"));
+                        AutonChooser.addOption("Rotate Auton-Pathplanner", drivebase.getAutonomousCommand("Rotate Auton"));
+                        AutonChooser.addOption("Coral L4 Score", L4AutonomousCommand);
                 SmartDashboard.putData("Drive Auton", AutonChooser);
-
         }
 
         /**
@@ -276,6 +279,12 @@ public class RobotContainer {
                                                 armElevator.goToStowCommand().schedule();
                                         }, armElevator));
                                 }
+
+                //CORALIN INTAKE
+                                if(ENABLE_ARM_ELEVATOR_SUBSYSTEM){
+                                        auxPS4.L2().whileTrue(armElevator.CoralIntakeCommand());
+                                }
+
                 //Vision Based Drive
                         //
                                 if(ENABLE_DRIVEBASE_SUBSYSTEM){
@@ -316,7 +325,7 @@ public class RobotContainer {
                         //
                         // Releasing either stick will stop the respective motor.
                         // -------------------------------------------
-                                if(ENABLE_ARM_ELEVATOR_SUBSYSTEM){
+                                if(ENABLE_MANUAL_CONTROL){
                                         new Trigger(() -> Math.abs(auxPS4.getLeftY()) > 0.1).whileTrue(Commands.run(() -> {
                                                 double raw = -auxPS4.getLeftY();
                                                 double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;

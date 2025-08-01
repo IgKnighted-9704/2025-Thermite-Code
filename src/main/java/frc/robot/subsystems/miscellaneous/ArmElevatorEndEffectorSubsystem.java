@@ -40,9 +40,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         private final TalonFX armMotor;
         private final PIDController armPID;
     // End Effector
-        // private final SparkMax intakeMotor;
-        // private final RelativeEncoder intakeEncoder;
-        private final TalonFX intakeMotor;
+        private final SparkMax intakeMotor;
+        private final RelativeEncoder intakeEncoder;
     
     // Periodic Tracker
         private double desiredArmAngleDeg;
@@ -88,9 +87,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         armPID = new PIDController(ArmElevatorConstants.ARM_kP, ArmElevatorConstants.ARM_kI, ArmElevatorConstants.ARM_kD);
     
     // EndEffector mechanism
-        // intakeMotor = new SparkMax(ArmElevatorConstants.ARM_MOTOR_ID, MotorType.kBrushless);
-        // intakeEncoder = intakeMotor.getEncoder();
-        intakeMotor = new TalonFX(ArmElevatorConstants.INTAKE_MOTOR_ID);
+        intakeMotor = new SparkMax(ArmElevatorConstants.ARM_MOTOR_ID, MotorType.kBrushless);
+        intakeEncoder = intakeMotor.getEncoder();
     
     // Reset Motor Positions
         elevatorMotorA.setPosition(0);
@@ -100,7 +98,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
     //Sensor Readouts
         public double getArmAngleDegrees() {
-            return armMotor.getPosition().getValueAsDouble();
+            return intakeEncoder.getPosition();
         }
 
         public double getElevatorHeightInches() {
@@ -109,7 +107,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         }
 
         private double getIntakeRPM() {
-            return -intakeMotor.getVelocity().getValueAsDouble();
+            return -intakeEncoder.getVelocity();
         }
 
     //Utility Helpers
@@ -167,10 +165,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             return Commands.sequence(
                     Commands.run(()->{
                         startManualIntake();
-                    }), 
-                    Commands.waitSeconds(0.5),
-                    Commands.run(()->{
-                        stopIntake();
                     })
                 );
         }
@@ -314,7 +308,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     Commands.runOnce(() -> {
                         // IF WE ARE IN A STOW OR LEVEL PRESET, MOVE THE ELEVATOR FIRST
                         if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
-                            desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+                            desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
                         } else {
                         //OTHERWISE, MOVE THE ARM FIRST 
                             desiredArmAngleDeg = ArmElevatorConstants.ARM_LOADING_DEG;
@@ -412,11 +406,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                             desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
                         }), 
                         // WAIT UNTIL THE ARM IS IN TOLERANCE
-                        Commands.race(                      
-                            Commands.waitSeconds(0.5),
-                            Commands.waitUntil(() -> {
-                                return isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 2.0);
-                            })),
+                            Commands.waitUntil(() -> 
+                                isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 1)
+                            ),
                         Commands.runOnce(() -> {
                             manualIntakeActive = true;
                             outtake = false;
@@ -425,28 +417,24 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         Commands.runOnce(() -> {
                             desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
                         }),
+                        Commands.waitUntil(()->isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
                         // WAIT UNTIL THE INTAKE STALLS
-                        Commands.race(
-                            Commands.waitUntil(
-                                intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
-                            Commands.waitSeconds(0.5)
-                        ),
-                        // SLOW INTAKE TO AVOID BREAKING THE MOTOR
-                        Commands.runOnce(() -> slowIntake()),
+                        Commands.waitUntil(()-> intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM).getAsBoolean()),
+                        // STOP INTAKE
+                        Commands.runOnce(() -> {
+                            manualIntakeActive = false;
+                            outtake = false;
+                            intakeMotor.set(0);
+                        }),                        
                         // MOVE ELEVATOR TO FUNNEL POSITION
                         Commands.runOnce(() -> {
                         desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
                         }),
+                        Commands.print("Reached Funnel Inches"),
                         // WAIT UNTIL THE ELEVATOR IS IN TOLERANCE
-                        Commands.race(
-                            Commands.waitSeconds(0.5),
                             Commands.waitUntil(() -> {
-                                return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2.0);
-                            })),
-                        // MOVE ARM TO LEVEL 1 ANGLE
-                        Commands.runOnce(() -> {
-                            desiredArmAngleDeg = ArmElevatorConstants.ARM_LEVEL1_DEG;
-                        }),
+                                return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 0.25);
+                            }),
                         Commands.runOnce(() -> {
                             //IF LEVEL 2 IS DESIRED STATE...
                             if(level == 2){
@@ -455,17 +443,18 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                                     goToLevelFromLoadingCommand(3),
                                     //WAIT FOR ARM TO BE IN TOLERANCE
                                     Commands.waitUntil(() -> {
-                                        return isArmInTolerance(ArmElevatorConstants.ARM_LEVEL2_DEG, 2.0);
+                                        return isArmInTolerance(ArmElevatorConstants.ARM_LEVEL2_DEG, 0.25);
                                     }),
                                     //GO TO LEVEL 2
                                     goToLevelFromLoadingCommand(2)
                                 );
                                 //ELSE...
                             } else {
+                                
                                     goToLevelFromLoadingCommand(level);
                             }
                         })
-                    );   
+                    );
                 } else {
                 //IF WE ARE NOT IN FUNNEL...
                     currentPreset = getPresetForLevel(level);
@@ -517,26 +506,13 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                                 DefaultStowPos
                             );
                     } else if(currentPreset == Preset.LOADING){
-                        Commands.sequence(
-                            //SET DESIRED ELEVATOR POSITION TO FUNNEL LOADING HEIGHT
-                            Commands.runOnce(() -> {
-                                desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
-                            }),
-                            //WAIT UNTIL THE ELEVATOR IS IN TOLERANCE
-                            Commands.waitUntil(() -> {
-                                return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0);
-                            }),
-                            //SET DESIRED ARM ANGLE TO STOW POSITION
-                            Commands.runOnce(() -> {
-                                desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
-                            }),
-                            //WAIT UNTIL THE ARM IS IN TOLERANCE
-                            Commands.waitUntil(() -> {
-                                return isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0);
-                            }),
-                            //RETURN TO DEFAULT STOW POSITION
-                            DefaultStowPos
-                        );
+                        return Commands.sequence(
+                                Commands.runOnce(() ->{
+                                    desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+                                }),
+                                goToFunnelCommand(),
+                                DefaultStowPos  
+                            );
                     }
                 return DefaultStowPos;
             }
@@ -632,7 +608,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     if(level == 2){
                         return Commands.sequence(
                             Commands.runOnce(() -> {
-                               startManualIntake();
+                               startManualOuttake();
                             }),
                             Commands.waitSeconds(0.5),
                             Commands.runOnce(() -> {
@@ -652,15 +628,15 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // --------------------------------------------------------------------------
     // Manual Elevator Controls
     // --------------------------------------------------------------------------
-        // SETS MANUAL ELEVATOR SPEED BASED ON RIGHT TRIGGER INPUT & DEAD BAND
-         public void setManualElevatorSpeed(double rightTrigger, double deadBand){
+        // SETS MANUAL ELEVATOR SPEED BASED ON LEFT TRIGGER INPUT & DEAD BAND
+         public void setManualElevatorSpeed(double leftTrigger, double deadBand){
             manualElevator = true;
-            double speed = rightTrigger * deadBand;
+            double speed = 0 - (leftTrigger * deadBand);
             speed = Math.max(-1.0, Math.min(1, speed));
             double volts = 6.0*speed;
             if(getElevatorHeightInches() > 75){
-                elevatorMotorA.setVoltage(volts);
-                elevatorMotorB.setVoltage(volts);
+                elevatorMotorA.setVoltage(0);
+                elevatorMotorB.setVoltage(0);
             } else {
                 elevatorMotorA.setVoltage(-volts);
                 elevatorMotorB.setVoltage(volts);

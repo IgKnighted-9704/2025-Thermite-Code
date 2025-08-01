@@ -146,7 +146,7 @@ public class SwerveSubsystem extends SubsystemBase {
       swerveDrive.updateOdometry();
       vision.updatePoseEstimation(swerveDrive);
     }
-    
+    getPoseCommand();
   }
 
   @Override
@@ -184,7 +184,7 @@ public class SwerveSubsystem extends SubsystemBase {
           new PPHolonomicDriveController(
               // PPHolonomicController is the built in path following controller for holonomic drive
               // trains
-              new PIDConstants(0.1, 0.0, 0.0), //TODO : TUNE DRIVE PID
+              new PIDConstants(0.0, 0.0, 0.0), //TODO : TUNE DRIVE PID
               // Translation PID constants
               new PIDConstants(0.0, 0.0, 0.0) //TODO : TUNE ANGULAR PID
           // Rotation PID constants
@@ -715,12 +715,12 @@ public class SwerveSubsystem extends SubsystemBase {
   * Useful for testing straight-line movement of the swerve drivetrain.
   * @return A Command that drives the robot forward.
   */
-  public Command getTestDriveStraight() {
+  public Command getTestDriveStraight(double distance, double velocity) {
     Command autonomousCommand = Commands.sequence(
       new InstantCommand(() ->{
-        this.driveCommand(() -> 0.25/Constants.DrivebaseConstants.VELOCITY_DRIVE_RATIO, () -> 0.0, () -> 0.0).schedule();
+        this.driveCommand(() -> velocity/Constants.DrivebaseConstants.VELOCITY_DRIVE_RATIO, () -> 0.0, () -> 0.0).schedule();
       }),
-      Commands.waitSeconds(4),
+      Commands.waitSeconds(distance/ velocity),
             new InstantCommand(() ->{
         this.driveCommand(() -> 0, () -> 0.0, () -> 0.0).schedule();
       })
@@ -728,4 +728,12 @@ public class SwerveSubsystem extends SubsystemBase {
     return autonomousCommand;
   }
 
+  public Command getPoseCommand() {
+    return new RunCommand(() -> {
+      Pose2d pose = swerveDrive.getPose();
+      SmartDashboard.putNumber("Pose X", pose.getX());
+      SmartDashboard.putNumber("Pose Y", pose.getY());
+      SmartDashboard.putNumber("Pose Heading", pose.getRotation().getDegrees());
+    }, this);
+  }
 }
