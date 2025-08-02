@@ -41,7 +41,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         private final PIDController armPID;
     // End Effector
         private final SparkMax intakeMotor;
-        private final RelativeEncoder intakeEncoder;
+        private final SparkAbsoluteEncoder intakeEncoder;
     
     // Periodic Tracker
         private double desiredArmAngleDeg;
@@ -88,7 +88,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     
     // EndEffector mechanism
         intakeMotor = new SparkMax(ArmElevatorConstants.ARM_MOTOR_ID, MotorType.kBrushless);
-        intakeEncoder = intakeMotor.getEncoder();
+        intakeEncoder = intakeMotor.getAbsoluteEncoder();
     
     // Reset Motor Positions
         elevatorMotorA.setPosition(0);
@@ -98,7 +98,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
     //Sensor Readouts
         public double getArmAngleDegrees() {
-            return intakeEncoder.getPosition();
+            return intakeEncoder.getPosition()-ArmElevatorConstants.ARM_ABS_ENC_OFFSET;
         }
 
         public double getElevatorHeightInches() {
@@ -631,15 +631,18 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // SETS MANUAL ELEVATOR SPEED BASED ON LEFT TRIGGER INPUT & DEAD BAND
          public void setManualElevatorSpeed(double leftTrigger, double deadBand){
             manualElevator = true;
-            double speed = 0 - (leftTrigger * deadBand);
+            double speed = 0 - leftTrigger;
             speed = Math.max(-1.0, Math.min(1, speed));
-            double volts = 6.0*speed;
-            if(getElevatorHeightInches() > 75){
+            double volts = 6.0*speed * 0.;
+            if(getElevatorHeightInches() > 75 ){
                 elevatorMotorA.setVoltage(0);
                 elevatorMotorB.setVoltage(0);
-            } else {
+            } else if (getElevatorHeightInches() > 5) {
                 elevatorMotorA.setVoltage(-volts);
                 elevatorMotorB.setVoltage(volts);
+            } else {
+                elevatorMotorA.setVoltage(-volts*deadBand);
+                elevatorMotorB.setVoltage(-volts*deadBand);
             }
          }
          

@@ -82,6 +82,9 @@ public final class Constants {
     // Ratio used by the arm’s absolute encoder. If 1 sensor rotation = 360°, set to 1.0, etc.
     public static double ARM_ABS_ENC_RATIO = 0.611111;
 
+    // Offset applied to the arm’s absolute encoder reading to align it with the robot's zero.
+    public static double ARM_ABS_ENC_OFFSET = 57.076;
+
     // CAN IDs for the elevator and arm motors (Falcons or Spark MAX, as appropriate).
     public static final int ELEVATOR_MOTOR_A_ID = 11;
     public static final int ELEVATOR_MOTOR_B_ID = 12;

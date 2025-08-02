@@ -329,13 +329,10 @@ public class RobotContainer {
                                         new Trigger(() -> Math.abs(auxPS4.getLeftY()) > 0.1).whileTrue(Commands.run(() -> {
                                                 double raw = -auxPS4.getLeftY();
                                                 double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
-                                                // We pass `val` as "leftTrigger" and 0.0 as "rightTrigger"
-                                                // so the sign of val raises or lowers the elevator.
                                                 armElevator.setManualElevatorSpeed(val, 0.0);
                                         }, armElevator)).onFalse(Commands.runOnce(() -> armElevator.stopManualElevator(),
                                                         armElevator));
-        
-                                        new Trigger(() -> Math.abs(auxPS4.getRightY()) > 0.1)
+     new Trigger(() -> Math.abs(auxPS4.getRightY()) > 0.1)
                                                         .whileTrue(Commands.run(() -> {
                                                                 double raw = auxPS4.getRightY();
                                                                 double val = (Math.abs(raw) < 0.05) ? 0.0 : raw;
