@@ -39,9 +39,11 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
      // Arm 
         private final TalonFX armMotor;
         private final PIDController armPID;
+        private final SparkMax armEncoderSetup;
+        private final SparkAbsoluteEncoder armEncoder;
     // End Effector
         private final SparkMax intakeMotor;
-        private final SparkAbsoluteEncoder intakeEncoder;
+        private final RelativeEncoder intakeEncoder;
     
     // Periodic Tracker
         private double desiredArmAngleDeg;
@@ -85,10 +87,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Arm Components
         armMotor = new TalonFX(ArmElevatorConstants.ARM_MOTOR_ID);
         armPID = new PIDController(ArmElevatorConstants.ARM_kP, ArmElevatorConstants.ARM_kI, ArmElevatorConstants.ARM_kD);
+            armEncoderSetup = new SparkMax(Constants.ArmElevatorConstants.ARM_ENCODER_ID, MotorType.kBrushless);
+            armEncoder = armEncoderSetup.getAbsoluteEncoder();
     
     // EndEffector mechanism
-        intakeMotor = new SparkMax(ArmElevatorConstants.ARM_MOTOR_ID, MotorType.kBrushless);
-        intakeEncoder = intakeMotor.getAbsoluteEncoder();
+        intakeMotor = new SparkMax(ArmElevatorConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
+        intakeEncoder = intakeMotor.getEncoder();
     
     // Reset Motor Positions
         elevatorMotorA.setPosition(0);
@@ -98,7 +102,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
     //Sensor Readouts
         public double getArmAngleDegrees() {
-            return intakeEncoder.getPosition()-ArmElevatorConstants.ARM_ABS_ENC_OFFSET;
+            return armEncoder.getPosition()-ArmElevatorConstants.ARM_ABS_ENC_OFFSET;
         }
 
         public double getElevatorHeightInches() {
@@ -400,7 +404,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             }
                 if(currentPreset == Preset.FUNNEL){
                 //IF WE ARE IN FUNNEL...
-                    //ADJUST ARM ANGLE FIRST
+                    //ADJUST ARM ANGLE TO FUNNEL ANGLE
                     return Commands.sequence(
                         Commands.runOnce(() ->{
                             desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
@@ -413,7 +417,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                             manualIntakeActive = true;
                             outtake = false;
                         }),
-                        //  MOVE ELEVATOR TO FUNNEL LOADING POSITION
+                        // MOVE ELEVATOR TO FUNNEL LOADING POSITION
                         Commands.runOnce(() -> {
                             desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
                         }),

@@ -10,19 +10,22 @@ import java.util.List;
 import swervelib.math.Matter;
 
 /**
- * The Constants class provides a single location for storing numeric and boolean constants used
- * throughout the robot code. This class should not include any functional logic—only public static
+ * The Constants class provides a single location for storing numeric and
+ * boolean constants used
+ * throughout the robot code. This class should not include any functional
+ * logic—only public static
  * declarations for constants.
  */
 public final class Constants {
 
-  // Overall robot mass settings (in kilograms). Subtract manipulator weight if needed.
+  // Overall robot mass settings (in kilograms). Subtract manipulator weight if
+  // needed.
   public static final double ROBOT_MASS = (148 - 20.3) * 0.453592;
   // We define our chassis as a "Matter" object, specifying the center of mass.
-  public static final Matter CHASSIS =
-      new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
+  public static final Matter CHASSIS = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
 
-  // Estimated loop time in seconds. Example: 20 ms plus some measured delay for Spark MAX.
+  // Estimated loop time in seconds. Example: 20 ms plus some measured delay for
+  // Spark MAX.
   public static final double LOOP_TIME = 0.13;
 
   // Maximum robot speed in meters per second, used to constrain acceleration.
@@ -30,8 +33,9 @@ public final class Constants {
 
   // If you wanted an AutonConstants block, you could define it here:
   // public static final class AutonConstants {
-    // public static final PIDConstants TRANSLATION_PID = new PIDConstants(0.7, 0, 0);
-    // public static final PIDConstants ANGLE_PID = new PIDConstants(0.4, 0, 0.01);
+  // public static final PIDConstants TRANSLATION_PID = new PIDConstants(0.7, 0,
+  // 0);
+  // public static final PIDConstants ANGLE_PID = new PIDConstants(0.4, 0, 0.01);
   // }
 
   /**
@@ -68,28 +72,33 @@ public final class Constants {
     public static final List<Integer> REEF_BLUE_IDS = List.of(17, 18, 19, 20, 21, 22);
 
     // Offsets in meters used when approaching or retreating from reef locations.
-    public static final double BRANCH_OFFSET_METERS = 0.5; 
-    public static final double APPROACH_X_OFFSET_METERS = 0.0;  
-    public static final double RETREAT_DISTANCE_METERS = 1.0; 
+    public static final double BRANCH_OFFSET_METERS = 0.5;
+    public static final double APPROACH_X_OFFSET_METERS = 0.0;
+    public static final double RETREAT_DISTANCE_METERS = 1.0;
   }
 
   /**
-   * Constants for the Arm and Elevator subsystems, including motors, encoders, feedforward/PID
+   * Constants for the Arm and Elevator subsystems, including motors, encoders,
+   * feedforward/PID
    * values, and preset positions.
    */
   public static final class ArmElevatorConstants {
 
-    // Ratio used by the arm’s absolute encoder. If 1 sensor rotation = 360°, set to 1.0, etc.
+    // Ratio used by the arm’s absolute encoder. If 1 sensor rotation = 360°, set to
+    // 1.0, etc.
     public static double ARM_ABS_ENC_RATIO = 0.611111;
 
-    // Offset applied to the arm’s absolute encoder reading to align it with the robot's zero.
-    public static double ARM_ABS_ENC_OFFSET = 57.076;
+    // Offset applied to the arm’s absolute encoder reading to align it with the
+    // robot's zero.
+    public static double ARM_ABS_ENC_OFFSET = 56.833;
 
-    // CAN IDs for the elevator and arm motors (Falcons or Spark MAX, as appropriate).
+    // CAN IDs for the elevator and arm motors (Falcons or Spark MAX, as
+    // appropriate).
     public static final int ELEVATOR_MOTOR_A_ID = 11;
     public static final int ELEVATOR_MOTOR_B_ID = 12;
     public static final int ARM_MOTOR_ID = 13;
     public static final int INTAKE_MOTOR_ID = 10; // The end effector motor.
+    public static final int ARM_ENCODER_ID = 17;
 
     // Conversion factor from sensor ticks to elevator inches.
     public static double ELEV_TICKS_PER_INCH = 0.7290445833333333;
@@ -100,25 +109,23 @@ public final class Constants {
     // // public static final double ELEVATOR_MAX_INCHES = 84.0;
 
     // Angles and positions for funnel/loading presets.
-    public static final double ARM_LOADING_DEG = 72.7; //TODO : Measure Again
-    public static final double ARM_FUNNEL_DEG = 66;
-    ;
-    ; //TODO : Measure Again
-    
+    public static final double ARM_LOADING_DEG = 72.7; // TODO : Measure Again
+    public static final double ARM_FUNNEL_DEG = 66;;; // TODO : Measure Again
+
     // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
     public static final double ELEVATOR_FUNNEL_INCHES = 14.790200;
     public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.174137;
 
     // Stow positioning for the arm.
-    public static final double ARM_STOW_DEG = 0.0; 
-    public static final double ARM_SCORE_DEG = 0; //TODO : Measure Again
+    public static final double ARM_STOW_DEG = 0.0;
+    public static final double ARM_SCORE_DEG = 0; // TODO : Measure Again
     // // public static final double ARM_STOW_TOLERANCE_DEG = 4.0;
     // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
     // PID and feedforward parameters for both the arm and the elevator.
-    public static double ARM_kP = 0.3;
-    public static double ARM_kI = 0.0;
+    public static double ARM_kP = 0.06;
+    public static double ARM_kI = 0.1;
     public static double ARM_kD = 0.0;
 
     public static double ELEVATOR_kP = 3.0;
@@ -130,7 +137,8 @@ public final class Constants {
     public static double ELEV_kV = 4.2;
     public static double ELEV_kA = 0.5;
 
-    // Constraints for the elevator’s maximum velocity and acceleration (m/s an d m/s^2).
+    // Constraints for the elevator’s maximum velocity and acceleration (m/s an d
+    // m/s^2).
     public static double ELEVATOR_MAX_VEL = 1.5;
     public static double ELEVATOR_MAX_ACC = 1;
 
@@ -143,25 +151,21 @@ public final class Constants {
 
     // Offsets applied for score positions at each elevator level.
     public static final double ELEVATOR_SCORE_OFFSET = 12.0;
-    public static final double ELEVATOR_LEVEL1_SCORE_INCHES =
-        ELEVATOR_LEVEL1_INCHES - ELEVATOR_SCORE_OFFSET;
-    public static final double ELEVATOR_LEVEL2_SCORE_INCHES =
-        ELEVATOR_LEVEL2_INCHES - ELEVATOR_SCORE_OFFSET;
-    public static final double ELEVATOR_LEVEL3_SCORE_INCHES =
-        ELEVATOR_LEVEL3_INCHES - ELEVATOR_SCORE_OFFSET;
-    public static final double ELEVATOR_LEVEL4_SCORE_INCHES =
-        ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL1_SCORE_INCHES = ELEVATOR_LEVEL1_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL2_SCORE_INCHES = ELEVATOR_LEVEL2_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL3_SCORE_INCHES = ELEVATOR_LEVEL3_INCHES - ELEVATOR_SCORE_OFFSET;
+    public static final double ELEVATOR_LEVEL4_SCORE_INCHES = ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
 
     // Corresponding arm angles for each level preset.
-    public static final double ARM_LEVEL1_DEG = 0; //TODO : Measure Again
-    public static final double ARM_LEVEL2_DEG = -150; //TODO : Measure Again
-    public static final double ARM_LEVEL3_DEG = -158; //TODO : Measure Again
-    public static final double ARM_LEVEL4_DEG = -144; //TODO : Measure Again
-    
+    public static final double ARM_LEVEL1_DEG = 0; // TODO : Measure Again
+    public static final double ARM_LEVEL2_DEG = 200; // TODO : Measure Again
+    public static final double ARM_LEVEL3_DEG =100; // TODO : Measure Again
+    public static final double ARM_LEVEL4_DEG = 241; // TODO : Measure Again
+
     // // public static final double ARM_TOLERANCE_DEG = 2.0;
     // // public static final double ELEVATOR_TOLERANCE_INCH = 1.0;
     // // public static final double TILT_THRESHOLD_DEG = 10.0;
-    // // public static final double ACCEL_LIMIT_S  CALE = 0.01;
+    // // public static final double ACCEL_LIMIT_S CALE = 0.01;
 
     // Intake constants
     public static final double INTAKE_SPEED = 0.6;
@@ -203,7 +207,7 @@ public final class Constants {
     public static final double PIVOT_INTAKE_ANGLE = 75.0;
 
     // PID constants for pivot control.
-    public static double PIVOT_kP = 0.05;
+    public static double PIVOT_kP = 0.0;
     public static double PIVOT_kI = 0.0;
     public static double PIVOT_kD = 0.0;
 
@@ -214,7 +218,8 @@ public final class Constants {
   }
 
   /**
-   * Constants associated with coral elements on the field or certain scoring areas.
+   * Constants associated with coral elements on the field or certain scoring
+   * areas.
    */
   public static final class CoralConstants {
     public static final List<Integer> CORAL_RED_IDS = List.of(1, 2);
