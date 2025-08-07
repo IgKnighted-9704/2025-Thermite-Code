@@ -42,8 +42,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         private final SparkMax armEncoderSetup;
         private final SparkAbsoluteEncoder armEncoder;
     // End Effector
-        private final SparkMax intakeMotor;
-        private final RelativeEncoder intakeEncoder;
+        private final TalonFX intakeMotor;
     
     // Periodic Tracker
         private double desiredArmAngleDeg;
@@ -91,8 +90,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             armEncoder = armEncoderSetup.getAbsoluteEncoder();
     
     // EndEffector mechanism
-        intakeMotor = new SparkMax(ArmElevatorConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
-        intakeEncoder = intakeMotor.getEncoder();
+        intakeMotor = new TalonFX(Constants.ArmElevatorConstants.INTAKE_MOTOR_ID);
     
     // Reset Motor Positions
         elevatorMotorA.setPosition(0);
@@ -111,7 +109,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         }
 
         private double getIntakeRPM() {
-            return -intakeEncoder.getVelocity();
+            return -intakeMotor.getVelocity().getValueAsDouble();
         }
 
     //Utility Helpers
@@ -143,6 +141,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             manualIntakeActive = true;
             autoIntakeActive = false;
             outtake = false;
+            Commands.print("Reached Intake Command");
         }
 
         public void startManualOuttake() {
@@ -396,7 +395,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     goToLevelFromLoadingCommand(3),
                     //Wait for arm to be in tolerance
                     Commands.waitUntil(() -> {
-                        return isArmInTolerance(ArmElevatorConstants.ARM_LEVEL2_DEG, 2.0);
+                        return isArmInTolerance(ArmElevatorConstants.ARM_LEVEL3_DEG, 2.0);
                     }),
                     //Go to level 2
                     goToLevelFromLoadingCommand(2)
@@ -505,7 +504,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                                     desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
                                 }),
                                 //WAIT UNTIL THE ARM IS IN TOLERANCE
-                                Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0)),
+                                Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 10)),
                                 //RETURN TO DEFAULT STOW POSITION
                                 DefaultStowPos
                             );
@@ -609,7 +608,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         //  Command -> Move from LOADING to LEVEL-SCORE
         //  This command is used to transition from the loading position to a specific level score position.
             private Command goToScoreFromLoadingCommand(int level){
-                    if(level == 2){
+                    if(level == 2 || currentPreset == Preset.LEVEL2){
                         return Commands.sequence(
                             Commands.runOnce(() -> {
                                startManualOuttake();
@@ -617,6 +616,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                             Commands.waitSeconds(0.5),
                             Commands.runOnce(() -> {
                                 stopIntake();
+                             }),
+                             Commands.runOnce(()->{
+                                currentPreset = getScorePresetForLevel(level);
                              })
                         );
                     } else {

@@ -727,6 +727,19 @@ public class SwerveSubsystem extends SubsystemBase {
     );
     return autonomousCommand;
   }
+  /**
+  * Returns a command that tests the 'twoStepApproach' method of the SwerveSubsytem.
+  * @return A Command that drives the robot forward a translation X & Y and a rotation 2D.
+  */
+  public Command getTestTwoStepApproach(double X, double Y, double angle, double slowDistance){
+    Command autonomousCommand = Commands.sequence(
+      new InstantCommand(()->{
+        Pose2d finalPos = new Pose2d(new Translation2d(X,Y), new Rotation2d(angle * (Math.PI/180)));
+        this.twoStepApproach(finalPos,slowDistance).schedule();
+      })
+    );
+    return autonomousCommand;
+  }
 
   public Command getPoseCommand() {
     return new RunCommand(() -> {

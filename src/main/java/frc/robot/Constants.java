@@ -109,8 +109,8 @@ public final class Constants {
     // // public static final double ELEVATOR_MAX_INCHES = 84.0;
 
     // Angles and positions for funnel/loading presets.
-    public static final double ARM_LOADING_DEG = 72.7; // TODO : Measure Again
-    public static final double ARM_FUNNEL_DEG = 66;;; // TODO : Measure Again
+    public static final double ARM_LOADING_DEG = -50.2; // TODO : Measure Again
+    public static final double ARM_FUNNEL_DEG = -50.2; // TODO : Measure Again
 
     // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
@@ -124,8 +124,8 @@ public final class Constants {
     // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
     // PID and feedforward parameters for both the arm and the elevator.
-    public static double ARM_kP = 0.06;
-    public static double ARM_kI = 0.1;
+    public static double ARM_kP = 0.04;
+    public static double ARM_kI = 0.0;
     public static double ARM_kD = 0.0;
 
     public static double ELEVATOR_kP = 3.0;
@@ -168,7 +168,7 @@ public final class Constants {
     // // public static final double ACCEL_LIMIT_S CALE = 0.01;
 
     // Intake constants
-    public static final double INTAKE_SPEED = 0.6;
+    public static final double INTAKE_SPEED = 1;
     public static final double INTAKE_STOPPED_RPM = 6000.0;
   }
 

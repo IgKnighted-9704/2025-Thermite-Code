@@ -183,6 +183,7 @@ public class RobotContainer {
                         AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight(1.0,0.5));
                         AutonChooser.addOption("Straight Auton-Pathplanner", drivebase.getAutonomousCommand("Straight Auton"));
                         AutonChooser.addOption("Rotate Auton-Pathplanner", drivebase.getAutonomousCommand("Rotate Auton"));
+                        AutonChooser.addOption("Two Step Approach", drivebase.getTestTwoStepApproach(2, 0, 0, 0));
                         AutonChooser.addOption("Coral L4 Score", L4AutonomousCommand);
                 SmartDashboard.putData("Drive Auton", AutonChooser);
         }
@@ -346,7 +347,7 @@ public class RobotContainer {
                         // Set the default drive command based on environment:
                         // - If running in Simulation, use direct angle control (driveDirectAngle)
                         // - If on a physical robot, use angular velocity control (driveAngularVelocity)
-                        // This ensures more predictable heading control during simulation testing.
+                        // This ensures more predictable heading control during simulation testing.drivebase
                         // -------------------------------------------
                                 if(ENABLE_DRIVEBASE_SUBSYSTEM){
                                         if (RobotBase.isSimulation()) {
