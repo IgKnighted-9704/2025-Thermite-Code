@@ -63,6 +63,15 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         STOW, FUNNEL, LOADING, LEVEL1, LEVEL2, LEVEL3, LEVEL4, LEVEL1SCORE, LEVEL2SCORE,LEVEL3SCORE,LEVEL4SCORE
     }
 
+    private String PresetToString(Preset preset){
+        if(preset == Preset.LOADING){
+            return "LOADING";
+        } else if (preset == Preset.LEVEL4){
+            return "LEVEL4";
+        }
+        return "N/A";
+    }
+
     public ArmElevatorEndEffectorSubsystem(SwerveSubsystem driveBase) {
 
     //Periodic Tracking Initialization
@@ -410,7 +419,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         }), 
                         // WAIT UNTIL THE ARM IS IN TOLERANCE
                             Commands.waitUntil(() -> 
-                                isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 1)
+                                isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 2.0)
                             ),
                         Commands.runOnce(() -> {
                             manualIntakeActive = true;
@@ -422,7 +431,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         }),
                         Commands.waitUntil(()->isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
                         // WAIT UNTIL THE INTAKE STALLS
-                        Commands.waitUntil(()-> intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM).getAsBoolean()),
+                        // Commands.waitUntil(()-> intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM).getAsBoolean()),
+                        Commands.waitSeconds(1),
                         // STOP INTAKE
                         Commands.runOnce(() -> {
                             manualIntakeActive = false;
@@ -436,7 +446,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         Commands.print("Reached Funnel Inches"),
                         // WAIT UNTIL THE ELEVATOR IS IN TOLERANCE
                             Commands.waitUntil(() -> {
-                                return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 0.25);
+                                return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2);
                             }),
                         Commands.runOnce(() -> {
                             //IF LEVEL 2 IS DESIRED STATE...
@@ -446,7 +456,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                                     goToLevelFromLoadingCommand(3),
                                     //WAIT FOR ARM TO BE IN TOLERANCE
                                     Commands.waitUntil(() -> {
-                                        return isArmInTolerance(ArmElevatorConstants.ARM_LEVEL2_DEG, 0.25);
+                                        return isArmInTolerance(ArmElevatorConstants.ARM_LEVEL2_DEG, 2);
                                     }),
                                     //GO TO LEVEL 2
                                     goToLevelFromLoadingCommand(2)
@@ -751,6 +761,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Elevator Height (In)", getElevatorHeightInches());
             SmartDashboard.putNumber("Arm Desired Position", desiredArmAngleDeg);
             SmartDashboard.putNumber("Elevator Desired Position", desiredElevInches);
+            SmartDashboard.putString("Elevator Preset", PresetToString(currentPreset));
 
             SmartDashboard.putNumber("Intake RPM", getIntakeRPM());
         
@@ -770,6 +781,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 SmartDashboard.putNumber("Elevator Ouput", elevOutput);
                 SmartDashboard.putNumber("Elevator FF", elevFFVal);
             //ARM PID MANAGEMENT
+                // desiredArmAngleDeg = (desiredArmAngleDeg > 254) ? desiredArmAngleDeg : 200;
                 double armOutput = armPID.calculate(currentArmDeg, desiredArmAngleDeg) / 4;
                 double clampedArmVolts = Math.max(-4.0, Math.min(4.0, armOutput));
 

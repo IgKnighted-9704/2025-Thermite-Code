@@ -90,7 +90,8 @@ public final class Constants {
 
     // Offset applied to the arm’s absolute encoder reading to align it with the
     // robot's zero.
-    public static double ARM_ABS_ENC_OFFSET = 56.833;
+    public static double ARM_ABS_ENC_OFFSET = 86.456
+    ;
 
     // CAN IDs for the elevator and arm motors (Falcons or Spark MAX, as
     // appropriate).
@@ -109,8 +110,9 @@ public final class Constants {
     // // public static final double ELEVATOR_MAX_INCHES = 84.0;
 
     // Angles and positions for funnel/loading presets.
-    public static final double ARM_LOADING_DEG = -50.2; // TODO : Measure Again
-    public static final double ARM_FUNNEL_DEG = -50.2; // TODO : Measure Again
+    public static final double ARM_LOADING_DEG = -63.2; // TODO : Measure Again
+    public static final double ARM_FUNNEL_DEG = -60.01;
+    ; // TODO : Measure Again
 
     // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
@@ -157,10 +159,11 @@ public final class Constants {
     public static final double ELEVATOR_LEVEL4_SCORE_INCHES = ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
 
     // Corresponding arm angles for each level preset.
-    public static final double ARM_LEVEL1_DEG = 0; // TODO : Measure Again
-    public static final double ARM_LEVEL2_DEG = 200; // TODO : Measure Again
-    public static final double ARM_LEVEL3_DEG =100; // TODO : Measure Again
-    public static final double ARM_LEVEL4_DEG = 241; // TODO : Measure Again
+    public static final double ARM_LEVEL1_DEG = 0.; // TODO : Measure Again
+    public static final double ARM_LEVEL2_DEG = 190; // TODO : Measure Again
+    public static final double ARM_LEVEL3_DEG = 190; // TODO : Measure Again
+    public static final double ARM_LEVEL4_DEG = 227.88; // TODO : Measure Again
+
 
     // // public static final double ARM_TOLERANCE_DEG = 2.0;
     // // public static final double ELEVATOR_TOLERANCE_INCH = 1.0;
@@ -169,7 +172,7 @@ public final class Constants {
 
     // Intake constants
     public static final double INTAKE_SPEED = 1;
-    public static final double INTAKE_STOPPED_RPM = 6000.0;
+    public static final double INTAKE_STOPPED_RPM = 1.2;
   }
 
   /**
@@ -214,7 +217,7 @@ public final class Constants {
     // Intake speed (fraction of max).
     public static final double INTAKE_SPEED = 0.8;
 
-    public static final double INTAKE_SLOW = 0.1;
+    public static final double INTAKE_SLOW = 0.05;
   }
 
   /**
