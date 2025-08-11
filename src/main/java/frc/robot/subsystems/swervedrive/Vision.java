@@ -307,14 +307,14 @@ public class Vision {
      */
     LEFT_CAM("LEFT_CAMERA", new Rotation3d(Math.toRadians(0), Math.toRadians(25), Math.toRadians(0)),
         new Translation3d(Units.inchesToMeters(27), Units.inchesToMeters(-23),
-            Units.inchesToMeters(8.75)), //TODO : Left - CAMERA Translation
+            Units.inchesToMeters(8.75)), 
         VecBuilder.fill(4, 4, 8), VecBuilder.fill(0.5, 0.5, 1)),
     /**
      * Right Camera
      */
     RIGHT_CAM("RIGHT_CAMERA", new Rotation3d(Math.toRadians(0), Math.toRadians(155), Math.toRadians(0)),
         new Translation3d(Units.inchesToMeters(27), Units.inchesToMeters(23),
-            Units.inchesToMeters(8.75)), //TODO : Right - CAMERA Translation
+            Units.inchesToMeters(8.75)),
         VecBuilder.fill(4, 4, 8), VecBuilder.fill(0.5, 0.5, 1));
 
     /**

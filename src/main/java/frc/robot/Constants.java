@@ -49,6 +49,16 @@ public final class Constants {
     public static final double VELOCITY_DRIVE_RATIO = 3.73;
   }
 
+  public static final class PathplannerConstants{
+    public static final double PATH_PLANNER_TRANSLATION_KP = 0.0;
+    public static final double PATH_PLANNER_TRANSLATION_KD = 0.0;
+    public static final double PATH_PLANNER_TRANSLATION_KI = 0.0;
+
+    public static final double PATH_PLANNER_ROTATION_KP = 0.0;
+    public static final double PATH_PLANNER_ROTATION_KD = 0.0;
+    public static final double PATH_PLANNER_ROTATION_KI = 0.0;
+  }
+
   /**
    * Constants for operator controls (joysticks, deadbands, etc.).
    */
@@ -110,8 +120,8 @@ public final class Constants {
     // // public static final double ELEVATOR_MAX_INCHES = 84.0;
 
     // Angles and positions for funnel/loading presets.
-    public static final double ARM_LOADING_DEG = -51.674; // TODO : Measure Again
-    public static final double ARM_FUNNEL_DEG = -51.674; // TODO : Measure Again
+    public static final double ARM_LOADING_DEG = -51.674;
+    public static final double ARM_FUNNEL_DEG = -51.674; 
 
     // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
@@ -120,7 +130,7 @@ public final class Constants {
 
     // Stow positioning for the arm.
     public static final double ARM_STOW_DEG = 2.42;
-    public static final double ARM_SCORE_DEG = 0; // TODO : Measure Again
+    public static final double ARM_SCORE_DEG = 2.42;
     // // public static final double ARM_STOW_TOLERANCE_DEG = 4.0;
     // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
@@ -158,10 +168,10 @@ public final class Constants {
     public static final double ELEVATOR_LEVEL4_SCORE_INCHES = ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
 
     // Corresponding arm angles for each level preset.
-    public static final double ARM_LEVEL1_DEG = 0.; // TODO : Measure Again
-    public static final double ARM_LEVEL2_DEG = 190; // TODO : Measure Again
-    public static final double ARM_LEVEL3_DEG = 190; // TODO : Measure Again
-    public static final double ARM_LEVEL4_DEG = 227.88; // TODO : Measure Again
+    public static final double ARM_LEVEL1_DEG = 0.; 
+    public static final double ARM_LEVEL2_DEG = 190; 
+    public static final double ARM_LEVEL3_DEG = 190; 
+    public static final double ARM_LEVEL4_DEG = 227.88; 
 
 
     // // public static final double ARM_TOLERANCE_DEG = 2.0;
