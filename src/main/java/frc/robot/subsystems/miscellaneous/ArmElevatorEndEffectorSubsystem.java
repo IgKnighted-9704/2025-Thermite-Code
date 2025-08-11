@@ -68,6 +68,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             return "LOADING";
         } else if (preset == Preset.LEVEL4){
             return "LEVEL4";
+        } else if (preset == Preset.FUNNEL){
+            return "FUNNEL";
         }
         return "N/A";
     }
@@ -392,24 +394,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
         // Command -> Move from (STOW to LOADING to LEVEL) OR (LOADING TO LEVEL)
             public Command goToLevelCommand(int level){
-            /*
-             *The goToLevelFromLoading command first moves to Level 3 to avoid Collision 2 when raising the arm to Level 2. 
-             *By going to Level 3, the arm passes the collision point safely, then transitions to the stow position and finally to Level 2, effectively avoiding the collision.
-            */
-            if(level == 2){
-                // IF LEVEL2 IS DESIRED STATE...
-                currentPreset = Preset.LEVEL2;
-                return Commands.sequence( 
-                    //Go to level 3
-                    goToLevelFromLoadingCommand(3),
-                    //Wait for arm to be in tolerance
-                    Commands.waitUntil(() -> {
-                        return isArmInTolerance(ArmElevatorConstants.ARM_LEVEL3_DEG, 2.0);
-                    }),
-                    //Go to level 2
-                    goToLevelFromLoadingCommand(2)
-                );
-            }
                 if(currentPreset == Preset.FUNNEL){
                 //IF WE ARE IN FUNNEL...
                     //ADJUST ARM ANGLE TO FUNNEL ANGLE
@@ -432,7 +416,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         Commands.waitUntil(()->isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
                         // WAIT UNTIL THE INTAKE STALLS
                         // Commands.waitUntil(()-> intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM).getAsBoolean()),
-                        Commands.waitSeconds(1),
+                        Commands.waitSeconds(0.5),
                         // STOP INTAKE
                         Commands.runOnce(() -> {
                             manualIntakeActive = false;
@@ -443,30 +427,17 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         Commands.runOnce(() -> {
                         desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
                         }),
-                        Commands.print("Reached Funnel Inches"),
                         // WAIT UNTIL THE ELEVATOR IS IN TOLERANCE
-                            Commands.waitUntil(() -> {
-                                return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2);
-                            }),
-                        Commands.runOnce(() -> {
-                            //IF LEVEL 2 IS DESIRED STATE...
-                            if(level == 2){
-                                Commands.sequence( 
-                                    //GO TO LEVEL 3 FIRST TO AVOID COLLISION
-                                    goToLevelFromLoadingCommand(3),
-                                    //WAIT FOR ARM TO BE IN TOLERANCE
-                                    Commands.waitUntil(() -> {
-                                        return isArmInTolerance(ArmElevatorConstants.ARM_LEVEL2_DEG, 2);
-                                    }),
-                                    //GO TO LEVEL 2
-                                    goToLevelFromLoadingCommand(2)
-                                );
-                                //ELSE...
-                            } else {
-                                
-                                    goToLevelFromLoadingCommand(level);
-                            }
-                        })
+                        Commands.waitUntil(() -> {
+                            return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2);
+                        }),
+                        Commands.waitSeconds(0.5),
+                        goToLevelFromLoadingCommand(level)
+                    );
+                } else if (level == 2){
+                    return Commands.sequence(
+                        goToLevelFromLoadingCommand(3),
+                        goToLevelFromLoadingCommand(2)
                     );
                 } else {
                 //IF WE ARE NOT IN FUNNEL...
@@ -762,6 +733,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Arm Desired Position", desiredArmAngleDeg);
             SmartDashboard.putNumber("Elevator Desired Position", desiredElevInches);
             SmartDashboard.putString("Elevator Preset", PresetToString(currentPreset));
+            SmartDashboard.putBoolean("TOLERANCE REACHED", isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2));
 
             SmartDashboard.putNumber("Intake RPM", getIntakeRPM());
         

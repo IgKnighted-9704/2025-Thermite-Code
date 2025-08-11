@@ -110,9 +110,8 @@ public final class Constants {
     // // public static final double ELEVATOR_MAX_INCHES = 84.0;
 
     // Angles and positions for funnel/loading presets.
-    public static final double ARM_LOADING_DEG = -63.2; // TODO : Measure Again
-    public static final double ARM_FUNNEL_DEG = -60.01;
-    ; // TODO : Measure Again
+    public static final double ARM_LOADING_DEG = -51.674; // TODO : Measure Again
+    public static final double ARM_FUNNEL_DEG = -51.674; // TODO : Measure Again
 
     // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
@@ -120,7 +119,7 @@ public final class Constants {
     public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.174137;
 
     // Stow positioning for the arm.
-    public static final double ARM_STOW_DEG = 0.0;
+    public static final double ARM_STOW_DEG = 2.42;
     public static final double ARM_SCORE_DEG = 0; // TODO : Measure Again
     // // public static final double ARM_STOW_TOLERANCE_DEG = 4.0;
     // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
@@ -171,8 +170,8 @@ public final class Constants {
     // // public static final double ACCEL_LIMIT_S CALE = 0.01;
 
     // Intake constants
-    public static final double INTAKE_SPEED = 1;
-    public static final double INTAKE_STOPPED_RPM = 1.2;
+    public static final double INTAKE_SPEED = 0.5;
+    public static final double INTAKE_STOPPED_RPM = 2.1;
   }
 
   /**
