@@ -42,9 +42,9 @@ public class RobotContainer {
 
         // Controller Initialization
                 // Primary Driver (Drive Train) -> driverPS4
-                        private final CommandPS4Controller driverPS4 = new CommandPS4Controller(1);
+                        private final CommandPS4Controller driverPS4 = new CommandPS4Controller(0);
                 // Secondary Driver (Arm/Intake) -> auxPS4
-                        private final CommandPS4Controller auxPS4 = new CommandPS4Controller(0);
+                        private final CommandPS4Controller auxPS4 = new CommandPS4Controller(1);
 
         // Subsystem Initialization
                 //Drive Base
@@ -180,7 +180,7 @@ public class RobotContainer {
 
                 //Path Planner Chooser
                 AutonChooser = new SendableChooser<>();
-                        AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight(1.0,0.5));
+                        AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight(10,0.5));
                         AutonChooser.addOption("Straight Auton-Pathplanner", drivebase.getAutonomousCommand("Straight Auton"));
                         AutonChooser.addOption("Rotate Auton-Pathplanner", drivebase.getAutonomousCommand("Rotate Auton"));
                         AutonChooser.addOption("Two Step Approach", drivebase.getTestTwoStepApproach(2, 0, 0, 0));

@@ -732,8 +732,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Elevator Height (In)", getElevatorHeightInches());
             SmartDashboard.putNumber("Arm Desired Position", desiredArmAngleDeg);
             SmartDashboard.putNumber("Elevator Desired Position", desiredElevInches);
-            SmartDashboard.putString("Elevator Preset", PresetToString(currentPreset));
-            SmartDashboard.putBoolean("TOLERANCE REACHED", isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2));
 
             SmartDashboard.putNumber("Intake RPM", getIntakeRPM());
         
