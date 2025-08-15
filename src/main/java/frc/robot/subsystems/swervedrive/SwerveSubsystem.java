@@ -80,6 +80,18 @@ public class SwerveSubsystem extends SubsystemBase {
    *
    * @param directory Directory of swerve drive config files.
    */
+
+    /**
+      *PATHPLANNER PID TUNE
+   */
+    double TRANSLATION_P_PID = 0.0;
+    double TRANSLATION_I_PID = 0.0;
+    double TRANSLAITON_D_PID = 0.0;
+
+    double ROTATION_P_PID = 0.0;
+    double ROTATION_I_PID = 0.0;
+    double ROTATION_D_PID = 0.0;
+
   public SwerveSubsystem(File directory) {
     boolean blueAlliance = false;
     Pose2d startingPose = blueAlliance
@@ -97,7 +109,7 @@ public class SwerveSubsystem extends SubsystemBase {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    swerveDrive.setHeadingCorrection(false); // Heading correction should only be used while
+    swerveDrive.setHeadingCorrection(true); // Heading correction should only be used while
                                              // controlling the robot via angle.
     swerveDrive.setCosineCompensator(false);// !SwerveDriveTelemetry.isSimulation); // Disables
                                             // cosine compensation for simulations since it causes
@@ -147,6 +159,17 @@ public class SwerveSubsystem extends SubsystemBase {
       vision.updatePoseEstimation(swerveDrive);
     }
     getPoseCommand();
+
+
+    ROTATION_P_PID = SmartDashboard.getNumber("ROTATION P", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KP);
+    ROTATION_I_PID = SmartDashboard.getNumber("ROTATION I", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KI);
+    ROTATION_D_PID = SmartDashboard.getNumber("ROTATION D", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KD);
+
+    TRANSLATION_P_PID = SmartDashboard.getNumber("ROTATION P", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP);
+    TRANSLATION_I_PID = SmartDashboard.getNumber("ROTATION I", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI);
+    TRANSLAITON_D_PID = SmartDashboard.getNumber("ROTATION D", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD);
+
+
   }
 
   @Override
@@ -186,8 +209,8 @@ public class SwerveSubsystem extends SubsystemBase {
               // trains
               new PIDConstants(Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI), //TODO : TUNE DRIVE PID
               // Translation PID constants
-              new PIDConstants(Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP, Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KD) //TODO : TUNE ANGULAR PID
-          // Rotation PID constants
+              new PIDConstants(ROTATION_P_PID, ROTATION_I_PID, ROTATION_D_PID) //TODO : TUNE ANGULAR PID
+             // Rotation PID constants
           ), config,
           // The robot configuration
           () -> {
