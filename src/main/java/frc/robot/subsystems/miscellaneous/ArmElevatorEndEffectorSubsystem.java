@@ -497,12 +497,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 continue;
             }
             var bestTarget = bestResult.get().getBestTarget();
-            if (bestTarget != null) {
+            // if (bestTarget != null) {
                 int fid = bestTarget.getFiducialId();
                 // if (visibleTags.contains(fid)) {
                     return fid; // Return the first visible tag ID found
                 // }
-            }
+            // }
         }
         return -1;
     }
