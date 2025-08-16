@@ -49,7 +49,7 @@ public class RobotContainer {
 
         // Subsystem Initialization
         // Drive Base
-        private final SwerveSubsystem drivebase = new SwerveSubsystem(
+        public final SwerveSubsystem drivebase = new SwerveSubsystem(
                         new File(Filesystem.getDeployDirectory(), "swerve/maxSwerve"));
         // Algae Intake
         private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
@@ -70,7 +70,8 @@ public class RobotContainer {
                                         () -> -driverPS4.getLeftX())
                         .withControllerRotationAxis(() -> -driverPS4.getRightX())
                         .deadband(OperatorConstants.DEADBAND).scaleTranslation(0.8)
-                        .allianceRelativeControl(true);
+                        .allianceRelativeControl(true)
+                        .headingWhile(false);
         // Simulation Drive
         // -------------------------------------------
         // This second input stream uses direct angle control for robot heading:
@@ -231,12 +232,12 @@ public class RobotContainer {
                 // → On release, stops the intake completely
                 // -------------------------------------------
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
-                        auxPS4.R2()
+                        driverPS4.R2()
                                         .whileTrue(Commands.run(() -> armElevator.startManualIntake(),
                                                         armElevator))
                                         .onFalse(Commands.runOnce(armElevator::slowIntake, armElevator));
 
-                        auxPS4.L2()
+                        driverPS4.L2()
                                         .whileTrue(Commands.run(() -> armElevator.startManualOuttake(),
                                                         armElevator))
                                         .onFalse(Commands.runOnce(armElevator::stopIntake, armElevator));
@@ -257,29 +258,29 @@ public class RobotContainer {
                 // - Up => Funnel position (e.g., for scoring/drop-in zone)
                 // - Down => Stow everything (safe driving configuration)
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
-                        auxPS4.triangle().onTrue(Commands.runOnce(() -> {
+                        driverPS4.triangle().onTrue(Commands.runOnce(() -> {
                                 selectedLevel = 4;
                                 armElevator.goToLevelCommand(4).schedule();
                         }, armElevator));
 
-                        auxPS4.circle().onTrue(Commands.runOnce(() -> {
+                        driverPS4.circle().onTrue(Commands.runOnce(() -> {
                                 selectedLevel = 3;
                                 armElevator.goToLevelCommand(3).schedule();
                         }, armElevator));
-                        auxPS4.cross().onTrue(Commands.runOnce(() -> {
+                        driverPS4.cross().onTrue(Commands.runOnce(() -> {
                                 selectedLevel = 2;
                                 armElevator.goToLevelCommand(2).schedule();
                         }, armElevator));
 
-                        auxPS4.povUp().onTrue(Commands.runOnce(() -> {
+                        driverPS4.povUp().onTrue(Commands.runOnce(() -> {
                                 armElevator.goToFunnelCommand().schedule();
                         }, armElevator));
 
-                        auxPS4.square().onTrue(Commands.runOnce(() -> {
+                        driverPS4.square().onTrue(Commands.runOnce(() -> {
                                 armElevator.goToLoadingCommand().schedule();
                         }, armElevator));
 
-                        auxPS4.povDown().onTrue(Commands.runOnce(() -> {
+                        driverPS4.povDown().onTrue(Commands.runOnce(() -> {
                                 selectedLevel = 0;
                                 armElevator.goToStowCommand().schedule();
                         }, armElevator));
@@ -287,7 +288,7 @@ public class RobotContainer {
 
                 // CORALIN INTAKE
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
-                        auxPS4.L2().whileTrue(armElevator.CoralIntakeCommand());
+                        driverPS4.L2().whileTrue(armElevator.CoralIntakeCommand());
                 }
 
                 // Vision Based Drive
@@ -308,7 +309,7 @@ public class RobotContainer {
                 // Triggers the preset scoring height based on operator selection.
                 // -------------------------------------------
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
-                        auxPS4.R1().onTrue(Commands.runOnce(() -> {
+                        driverPS4.R1().onTrue(Commands.runOnce(() -> {
                                 // Universal method that transitions to the appropriate "score" preset
                                 armElevator.goToLevelScoreCommand(selectedLevel).schedule();
                         }, armElevator));
@@ -369,7 +370,7 @@ public class RobotContainer {
                 // - Useful for re-aligning field-relative driving during a match
                 // -------------------------------------------
                 if (ENABLE_DRIVEBASE_SUBSYSTEM) {
-                        driverPS4.triangle().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
+                        driverPS4.().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
                 }
 
         }

@@ -751,12 +751,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
                 // IF WE ARE IN NOT MANUAL ELEVATOR MODE...
                     if (!manualElevator) {
-                        elevatorMotorA.setVoltage(0);
-                        elevatorMotorB.setVoltage(0);
+                        elevatorMotorA.setVoltage(totalElevVolts);
+                        elevatorMotorB.setVoltage(-totalElevVolts);
                     }
                 //IF WE ARE NOT IN MANUAL ARM MODE...
                     if (!manualArm) {
-                        armMotor.set(0);
+                        armMotor.set(clampedArmVolts);
                     }
                 //INTAKE LOGIC FOR RESPECTIVE STATES : Manual & Auto
                     if (manualIntakeActive) {
