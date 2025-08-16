@@ -66,9 +66,9 @@ public class RobotContainer {
         // the field you're on.
         // -------------------------------------------
         SwerveInputStream driveAngularVelocity = SwerveInputStream
-                        .of(drivebase.getSwerveDrive(), () -> -driverPS4.getLeftY(),
-                                        () -> -driverPS4.getLeftX())
-                        .withControllerRotationAxis(() -> -driverPS4.getRightX())
+                        .of(drivebase.getSwerveDrive(), () -> -auxPS4.getLeftY(),
+                                        () -> -auxPS4.getLeftX())
+                        .withControllerRotationAxis(() -> -auxPS4.getRightX())
                         .deadband(OperatorConstants.DEADBAND).scaleTranslation(0.8)
                         .allianceRelativeControl(true);
         // Simulation Drive
@@ -100,7 +100,7 @@ public class RobotContainer {
         boolean ENABLE_ARM_ELEVATOR_SUBSYSTEM = true; // Set to false to disable the Arm Elevator subsystem
         boolean ENABLE_ALGAE_INTAKE_SUBSYSTEM = false; // Set to false to disable the Algae Intake subsystem
         boolean ENABLE_DRIVEBASE_SUBSYSTEM = true; // Set to false to disable the Drivebase subsystem
-        boolean ENABLE_MANUAL_CONTROL = true; // Set to false to disable manual control of the Arm Elevator subsystem
+        boolean ENABLE_MANUAL_CONTROL = false; // Set to false to disable manual control of the Arm Elevator subsystem
 
         // Autonomous
 
@@ -262,21 +262,17 @@ public class RobotContainer {
                                 armElevator.goToLevelCommand(4).schedule();
                         }, armElevator));
 
-                        auxPS4.circle().onTrue(Commands.runOnce(() -> {
+                        auxPS4.square().onTrue(Commands.runOnce(() -> {
                                 selectedLevel = 3;
                                 armElevator.goToLevelCommand(3).schedule();
                         }, armElevator));
-                        auxPS4.cross().onTrue(Commands.runOnce(() -> {
+                        auxPS4.circle().onTrue(Commands.runOnce(() -> {
                                 selectedLevel = 2;
                                 armElevator.goToLevelCommand(2).schedule();
                         }, armElevator));
 
-                        auxPS4.povUp().onTrue(Commands.runOnce(() -> {
+                        auxPS4.cross().onTrue(Commands.runOnce(() -> {
                                 armElevator.goToFunnelCommand().schedule();
-                        }, armElevator));
-
-                        auxPS4.square().onTrue(Commands.runOnce(() -> {
-                                armElevator.goToLoadingCommand().schedule();
                         }, armElevator));
 
                         auxPS4.povDown().onTrue(Commands.runOnce(() -> {
@@ -285,18 +281,13 @@ public class RobotContainer {
                         }, armElevator));
                 }
 
-                // CORALIN INTAKE
-                if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
-                        auxPS4.L2().whileTrue(armElevator.CoralIntakeCommand());
-                }
-
                 // Vision Based Drive
                 //
                 if (ENABLE_DRIVEBASE_SUBSYSTEM) {
-                        driverPS4.povLeft().onTrue(Commands.run(() -> {
+                        auxPS4.povLeft().onTrue(Commands.run(() -> {
                                 armElevator.createReefScoreCommand(true).schedule();
                         }));
-                        driverPS4.povRight().onTrue(Commands.run(() -> {
+                        auxPS4.povRight().onTrue(Commands.run(() -> {
                                 armElevator.createReefScoreCommand(false).schedule();
                         }));
                 }
@@ -369,7 +360,7 @@ public class RobotContainer {
                 // - Useful for re-aligning field-relative driving during a match
                 // -------------------------------------------
                 if (ENABLE_DRIVEBASE_SUBSYSTEM) {
-                        driverPS4.triangle().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
+                        auxPS4.options().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
                 }
 
         }

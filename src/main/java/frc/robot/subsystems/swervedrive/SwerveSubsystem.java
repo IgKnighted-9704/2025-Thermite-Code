@@ -161,13 +161,13 @@ public class SwerveSubsystem extends SubsystemBase {
     getPoseCommand();
 
 
-    ROTATION_P_PID = SmartDashboard.getNumber("ROTATION P", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KP);
-    ROTATION_I_PID = SmartDashboard.getNumber("ROTATION I", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KI);
-    ROTATION_D_PID = SmartDashboard.getNumber("ROTATION D", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KD);
+    Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KP = SmartDashboard.getNumber("ROTATION P", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KP);
+    Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KI = SmartDashboard.getNumber("ROTATION I", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KI);
+    Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KD = SmartDashboard.getNumber("ROTATION D", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KD);
 
-    TRANSLATION_P_PID = SmartDashboard.getNumber("ROTATION P", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP);
-    TRANSLATION_I_PID = SmartDashboard.getNumber("ROTATION I", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI);
-    TRANSLAITON_D_PID = SmartDashboard.getNumber("ROTATION D", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD);
+    Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP = SmartDashboard.getNumber("TRANSLATION P", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP);
+    Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI = SmartDashboard.getNumber("TRANSLATION I", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI);
+    Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD = SmartDashboard.getNumber("TRANSLATION D", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD);
 
 
   }
@@ -207,9 +207,9 @@ public class SwerveSubsystem extends SubsystemBase {
           new PPHolonomicDriveController(
               // PPHolonomicController is the built in path following controller for holonomic drive
               // trains
-              new PIDConstants(Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI), //TODO : TUNE DRIVE PID
+              new PIDConstants(Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD), //TODO : TUNE DRIVE PID
               // Translation PID constants
-              new PIDConstants(ROTATION_P_PID, ROTATION_I_PID, ROTATION_D_PID) //TODO : TUNE ANGULAR PID
+              new PIDConstants(Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KP, Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KI, Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KD) //TODO : TUNE ANGULAR PID
              // Rotation PID constants
           ), config,
           // The robot configuration

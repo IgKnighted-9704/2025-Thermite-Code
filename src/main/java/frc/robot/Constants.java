@@ -50,13 +50,13 @@ public final class Constants {
   }
 
   public static final class PathplannerConstants {
-    public static final double PATH_PLANNER_TRANSLATION_KP = 5.0;
-    public static final double PATH_PLANNER_TRANSLATION_KD = 0;
-    public static final double PATH_PLANNER_TRANSLATION_KI = 0.0;
+    public static  double PATH_PLANNER_TRANSLATION_KP = 5.0;
+    public static  double PATH_PLANNER_TRANSLATION_KD = 0;
+    public static  double PATH_PLANNER_TRANSLATION_KI = 0.0;
 
-    public static final double PATH_PLANNER_ROTATION_KP = 60;
-    public static final double PATH_PLANNER_ROTATION_KD = 0.0;
-    public static final double PATH_PLANNER_ROTATION_KI = 0.0;
+    public static  double PATH_PLANNER_ROTATION_KP = 60;
+    public static  double PATH_PLANNER_ROTATION_KD = 0.0;
+    public static  double PATH_PLANNER_ROTATION_KI = 0.0;
   }
 
   /**
@@ -232,8 +232,8 @@ public final class Constants {
    * areas.
    */
   public static final class CoralConstants {
-    public static final List<Integer> CORAL_RED_IDS = List.of(1, 2);
-    public static final List<Integer> CORAL_BLUE_IDS = List.of(12, 13);
+    public static final List<Integer> CORAL_RED_IDS = List.of(1,2,3,4,5,6,7,8,9,10,11);
+    public static final List<Integer> CORAL_BLUE_IDS = List.of(12,13,14,15,16,17,18,19,20,21,22);
     public static final double APPROACH_OFFSET_METERS = 0.3;
   }
 }
