@@ -81,17 +81,6 @@ public class SwerveSubsystem extends SubsystemBase {
    * @param directory Directory of swerve drive config files.
    */
 
-    /**
-      *PATHPLANNER PID TUNE
-   */
-    double TRANSLATION_P_PID = 0.0;
-    double TRANSLATION_I_PID = 0.0;
-    double TRANSLAITON_D_PID = 0.0;
-
-    double ROTATION_P_PID = 0.0;
-    double ROTATION_I_PID = 0.0;
-    double ROTATION_D_PID = 0.0;
-
   public SwerveSubsystem(File directory) {
     boolean blueAlliance = false;
     Pose2d startingPose = blueAlliance
