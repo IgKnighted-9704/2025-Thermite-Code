@@ -491,19 +491,17 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Find's Visible Reef's April Tag.
     // Returns Tag Id as an int if found, otherwise returns -1.
     private int findVisibleReefTag(List<Integer> visibleTags) {
-        if(true){
-            for (Vision.Cameras cam : Vision.Cameras.values()) {
-                var bestResult = cam.getBestResult();
-                if (bestResult.isEmpty()) {
-                    continue;
-                }
-                var bestTarget = bestResult.get().getBestTarget();
-                if (bestTarget != null) {
-                    int fid = bestTarget.getFiducialId();
-                    if (visibleTags.contains(fid)) {
-                        return fid; // Return the first visible tag ID found
-                    }
-                }
+        for (Vision.Cameras cam : Vision.Cameras.values()) {
+            var bestResult = cam.getBestResult();
+            if (bestResult.isEmpty()) {
+                continue;
+            }
+            var bestTarget = bestResult.get().getBestTarget();
+            if (bestTarget != null) {
+                int fid = bestTarget.getFiducialId();
+                // if (visibleTags.contains(fid)) {
+                    return fid; // Return the first visible tag ID found
+                // }
             }
         }
         return -1;
