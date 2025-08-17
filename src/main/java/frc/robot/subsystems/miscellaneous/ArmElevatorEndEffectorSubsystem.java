@@ -494,15 +494,18 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         for (Vision.Cameras cam : Vision.Cameras.values()) {
             var bestResult = cam.getBestResult();
             if (bestResult.isEmpty()) {
+                Commands.runOnce(() -> {
+                    System.out.println(bestResult.isEmpty());
+                });
                 continue;
             }
             var bestTarget = bestResult.get().getBestTarget();
-            // if (bestTarget != null) {
+            if (bestTarget != null) {
                 int fid = bestTarget.getFiducialId();
-                // if (visibleTags.contains(fid)) {
+                if (visibleTags.contains(fid)) {
                     return fid; // Return the first visible tag ID found
-                // }
-            // }
+                }
+            }
         }
         return -1;
     }
