@@ -493,10 +493,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private int findVisibleReefTag(List<Integer> visibleTags) {
         for (Vision.Cameras cam : Vision.Cameras.values()) {
             var bestResult = cam.getBestResult();
+            Commands.runOnce(() -> {
+                System.out.println(bestResult.isEmpty());
+            });
             if (bestResult.isEmpty()) {
-                Commands.runOnce(() -> {
-                    System.out.println(bestResult.isEmpty());
-                });
                 continue;
             }
             var bestTarget = bestResult.get().getBestTarget();
@@ -529,12 +529,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // Find the visible reef tag ID
         // If no tag is found, return a command that prints an error message
         int targetId = findVisibleReefTag(TagColors);
-        // if (targetId == -1) {
-        //     Command errorCommand = Commands.runOnce(() -> {
-        //         System.out.println("No visible reef tag found." + targetId);
-        //     });
-        //     return errorCommand;
-        // }
+        if (targetId == -1) {
+            Command errorCommand = Commands.none();
+            return errorCommand;
+        }
         // If left branch, sets the y offset to a positive value
         // If right branch, sets the y offset to a negative value
         // This is used to offset the robot's position when approaching the reef
