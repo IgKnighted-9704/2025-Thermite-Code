@@ -170,7 +170,7 @@ public final class Constants {
     public static final double ARM_LEVEL1_DEG = 0.;
     public static final double ARM_LEVEL2_DEG = 190;
     public static final double ARM_LEVEL3_DEG = 190;
-    public static final double ARM_LEVEL4_DEG = 227.88;
+    public static final double ARM_LEVEL4_DEG = 215;
 
     // // public static final double ARM_TOLERANCE_DEG = 2.0;
     // // public static final double ELEVATOR_TOLERANCE_INCH = 1.0;

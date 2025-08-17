@@ -534,7 +534,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         int targetId = findVisibleReefTag(TagColors);
         if (targetId == -1) {
             Command errorCommand = Commands.runOnce(() -> {
-                System.out.println( bestResult.isEmpty());
+                System.out.println(bestResult.isEmpty());
                 }
             );
             return errorCommand;
