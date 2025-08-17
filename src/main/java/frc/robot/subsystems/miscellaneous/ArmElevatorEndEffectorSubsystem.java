@@ -529,12 +529,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         // Find the visible reef tag ID
         // If no tag is found, return a command that prints an error message
         int targetId = findVisibleReefTag(TagColors);
-        if (targetId == -1) {
-            Command errorCommand = Commands.runOnce(() -> {
-                System.out.println("No visible reef tag found." + targetId);
-            });
-            return errorCommand;
-        }
+        // if (targetId == -1) {
+        //     Command errorCommand = Commands.runOnce(() -> {
+        //         System.out.println("No visible reef tag found." + targetId);
+        //     });
+        //     return errorCommand;
+        // }
         // If left branch, sets the y offset to a positive value
         // If right branch, sets the y offset to a negative value
         // This is used to offset the robot's position when approaching the reef
