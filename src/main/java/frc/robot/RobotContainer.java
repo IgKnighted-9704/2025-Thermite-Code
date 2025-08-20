@@ -33,6 +33,7 @@ import java.io.File;
 import swervelib.SwerveDrive;
 import swervelib.SwerveInputStream;
 import com.pathplanner.lib.auto.NamedCommands;
+import frc.robot.subsystems.swervedrive.CustomVision;
 
 /**
  * RobotContainer sets up the operator interface, button bindings, and default
@@ -42,19 +43,21 @@ import com.pathplanner.lib.auto.NamedCommands;
 public class RobotContainer {
 
         // Controller Initialization
-        // Primary Driver (Drive Train) -> driverPS4
-        private final CommandPS4Controller driverPS4 = new CommandPS4Controller(0);
-        // Secondary Driver (Arm/Intake) -> auxPS4
-        private final CommandPS4Controller auxPS4 = new CommandPS4Controller(1);
+                // Primary Driver (Drive Train) -> driverPS4
+                private final CommandPS4Controller driverPS4 = new CommandPS4Controller(0);
+                // Secondary Driver (Arm/Intake) -> auxPS4
+                private final CommandPS4Controller auxPS4 = new CommandPS4Controller(1);
 
         // Subsystem Initialization
-        // Drive Base
-        private final SwerveSubsystem drivebase = new SwerveSubsystem(
-                        new File(Filesystem.getDeployDirectory(), "swerve/maxSwerve"));
-        // Algae Intake
-        private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
-        // Arm Elevator End Effector
-        private final ArmElevatorEndEffectorSubsystem armElevator = new ArmElevatorEndEffectorSubsystem(drivebase);
+                // Drive Base
+                private final SwerveSubsystem drivebase = new SwerveSubsystem(
+                                new File(Filesystem.getDeployDirectory(), "swerve/maxSwerve"));
+                // Algae Intake
+                private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
+                // Arm Elevator End Effector
+                private final ArmElevatorEndEffectorSubsystem armElevator = new ArmElevatorEndEffectorSubsystem(drivebase);
+                //Vision Subsystem
+                private final CustomVision vision = new CustomVision(drivebase, "LEFT_CAMERA", "RIGHT_CAMERA");
 
         // Default Drive
         // -------------------------------------------
@@ -170,12 +173,6 @@ public class RobotContainer {
         }, armElevator);
 
         public RobotContainer() {
-                // Named command registration for path planner usage.
-                NamedCommands.registerCommand("goToLevel4Score", scoreLevel4Command);
-                NamedCommands.registerCommand("goToLevel3Score", scoreLevel3Command);
-                NamedCommands.registerCommand("goToLevel2Score", scoreLevel2Command);
-                NamedCommands.registerCommand("goToFunnel", goToFunnelCommand);
-                NamedCommands.registerCommand("goToStow", goToStowCommand);
 
                 configureBindings();
 
@@ -184,11 +181,11 @@ public class RobotContainer {
 
                 // Path Planner Chooser
                 AutonChooser = new SendableChooser<>();
-                AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight(1.0, 0.5));
-                AutonChooser.addOption("Straight Auton-Pathplanner", drivebase.getAutonomousCommand("Straight Auton"));
-                AutonChooser.addOption("Rotate Auton-Pathplanner", drivebase.getAutonomousCommand("Rotate Auton"));
-                AutonChooser.addOption("Two Step Approach", drivebase.getTestTwoStepApproach(2, 0, 0, 0));
-                AutonChooser.addOption("Coral L4 Score", L4AutonomousCommand);
+                        AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight(1.0, 0.5));
+                        AutonChooser.addOption("Straight Auton-Pathplanner", drivebase.getAutonomousCommand("Straight Auton"));
+                        AutonChooser.addOption("Rotate Auton-Pathplanner", drivebase.getAutonomousCommand("Rotate Auton"));
+                        AutonChooser.addOption("Two Step Approach", drivebase.getTestTwoStepApproach(2, 0, 0, 0));
+                        AutonChooser.addOption("Coral L4 Score", L4AutonomousCommand);
                 SmartDashboard.putData("Drive Auton", AutonChooser);
         }
 
@@ -282,13 +279,12 @@ public class RobotContainer {
                 }
 
                 // Vision Based Drive
-                //
                 if (ENABLE_DRIVEBASE_SUBSYSTEM) {
                         auxPS4.povLeft().onTrue(Commands.run(() -> {
-                                armElevator.createReefScoreCommand(true).schedule();
+                                vision.createReefScoreCommand(true).schedule();
                         }));
                         auxPS4.povRight().onTrue(Commands.run(() -> {
-                                armElevator.createReefScoreCommand(false).schedule();
+                                vision.createReefScoreCommand(false).schedule();
                         }));
                 }
 

@@ -113,7 +113,6 @@ public class Vision {
       throw new RuntimeException(
           "Cannot get AprilTag " + aprilTag + " from field " + fieldLayout.toString());
     }
-
   }
 
   /**
@@ -324,7 +323,8 @@ public class Vision {
     /**
      * Camera instance for comms.
      */
-    public final PhotonCamera camera;
+    public final PhotonCamera cameraOne;
+    public final PhotonCamera cameraTwo;
     /**
      * Pose estimator for camera.
      */
@@ -380,7 +380,8 @@ public class Vision {
       latencyAlert =
           new Alert("'" + name + "' Camera is experiencing high latency.", AlertType.kWarning);
 
-      camera = new PhotonCamera(name);
+      cameraOne = new PhotonCamera("CAMERA_LEFT");
+      cameraTwo = new PhotonCamera("CAMERA_RIGHT");
 
       // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
       robotToCamTransform = new Transform3d(robotToCamTranslation, robotToCamRotation);
@@ -404,7 +405,7 @@ public class Vision {
         cameraProp.setAvgLatencyMs(35);
         cameraProp.setLatencyStdDevMs(5);
 
-        cameraSim = new PhotonCameraSim(camera, cameraProp);
+        cameraSim = new PhotonCameraSim(cameraOne, cameraProp);
         cameraSim.enableDrawWireframe(true);
       }
     }
@@ -479,7 +480,7 @@ public class Vision {
       }
       if ((resultsList.isEmpty() || (currentTimestamp - mostRecentTimestamp >= debounceTime))
           && (currentTimestamp - lastReadTimestamp) >= debounceTime) {
-        resultsList = Robot.isReal() ? camera.getAllUnreadResults()
+        resultsList = Robot.isReal() ? cameraOne.getAllUnreadResults()
             : cameraSim.getCamera().getAllUnreadResults();
         lastReadTimestamp = currentTimestamp;
         resultsList.sort((PhotonPipelineResult a, PhotonPipelineResult b) -> {

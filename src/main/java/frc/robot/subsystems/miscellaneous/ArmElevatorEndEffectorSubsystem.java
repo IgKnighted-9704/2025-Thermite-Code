@@ -62,8 +62,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private boolean manualArm = false;
     private boolean outtake = false;
 
-    Optional<PhotonPipelineResult> bestResult;
-
     private enum Preset {
         STOW, FUNNEL, LOADING, LEVEL1, LEVEL2, LEVEL3, LEVEL4, LEVEL1SCORE, LEVEL2SCORE, LEVEL3SCORE, LEVEL4SCORE
     }
@@ -498,7 +496,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Returns Tag Id as an int if found, otherwise returns -1.
     private int findVisibleReefTag(List<Integer> visibleTags) {
         for (Vision.Cameras cam : Vision.Cameras.values()) {
-            bestResult = cam.getBestResult();
+            var bestResult = cam.getBestResult();
             if (bestResult.isEmpty()) {
                 continue;
             }
@@ -534,7 +532,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         int targetId = findVisibleReefTag(TagColors);
         if (targetId == -1) {
             Command errorCommand = Commands.runOnce(() -> {
-                System.out.println(bestResult.isEmpty());
+                System.out.println("No Visible Reef Tag");
                 }
             );
             return errorCommand;
