@@ -281,10 +281,10 @@ public class RobotContainer {
                 // Vision Based Drive
                 if (ENABLE_DRIVEBASE_SUBSYSTEM) {
                         auxPS4.povLeft().onTrue(Commands.run(() -> {
-                                vision.createReefScoreCommand(true).schedule();
+                                armElevator.createReefScoreCommand(true).schedule();
                         }));
                         auxPS4.povRight().onTrue(Commands.run(() -> {
-                                vision.createReefScoreCommand(false).schedule();
+                                armElevator.createReefScoreCommand(false).schedule();
                         }));
                 }
 
