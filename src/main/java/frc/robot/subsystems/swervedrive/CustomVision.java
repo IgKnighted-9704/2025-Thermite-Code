@@ -70,22 +70,31 @@ public class CustomVision extends SubsystemBase {
         CAMERA_RIGHT = cameras.get(1);
     }
 
-    // Returns the Pose2d of a given AprilTag, applying a Transform2d offset for robot approach
+    // Returns the 3D pose of a specific AprilTag, applying a 3D transform offset (e.g., robot approach)
     public Pose3d getAprilTagPose(int aprilTag, Transform3d robotOffset) {
+        // Look up the AprilTag pose from the field layout
         Optional<Pose3d> aprilTagPose3d = fieldLayout.getTagPose(aprilTag);
+
+        // If the tag exists, apply the given offset and return the transformed pose
         if (aprilTagPose3d.isPresent()) {
             return aprilTagPose3d.get().transformBy(robotOffset);
         } else {
+            // Throw an exception if the tag cannot be found in the field layout
             throw new RuntimeException(
                 "Cannot get AprilTag " + aprilTag + " from field " + fieldLayout.toString());
         }
     }
 
+    // Returns the 2D pose of a specific AprilTag, applying a 2D transform offset (for planar movement)
     public Pose2d getAprilTagPose(int aprilTag, Transform2d robotOffset) {
+        // Look up the AprilTag pose from the field layout
         Optional<Pose3d> aprilTagPose3d = fieldLayout.getTagPose(aprilTag);
+
+        // If the tag exists, convert it to 2D and apply the given 2D offset
         if (aprilTagPose3d.isPresent()) {
             return aprilTagPose3d.get().toPose2d().transformBy(robotOffset);
         } else {
+            // Throw an exception if the tag cannot be found in the field layout
             throw new RuntimeException(
                 "Cannot get AprilTag " + aprilTag + " from field " + fieldLayout.toString());
         }
@@ -154,47 +163,84 @@ public class CustomVision extends SubsystemBase {
     }
 
 
-    private Pose3d getTagRelativePose(){
+    // Returns the robot's pose relative to the field based on the best-seen AprilTag
+    private Pose3d getTagRelativePose() {
+        // Start with the first camera in the list as the default active camera
         PhotonCamera ActiveCamera = cameras.get(0);
-        double lowestAmbiguity = Double.MAX_VALUE;
-        int fid = -1;
-        PhotonTrackedTarget bestTarget = null;
-            for(PhotonCamera cam : cameras){
-                var currentAmbiguity = cam.getAllUnreadResults().get(cam.getAllUnreadResults().size()-1).getBestTarget().getPoseAmbiguity();
-                if( currentAmbiguity < lowestAmbiguity && currentAmbiguity < MAX_AMBIGUITY){ 
-                    ActiveCamera = cam;
-                    lowestAmbiguity = currentAmbiguity;
-                    fid = cam.getAllUnreadResults().get(cam.getAllUnreadResults().size()-1).getBestTarget().getFiducialId();
-                    bestTarget = cam.getAllUnreadResults().get(cam.getAllUnreadResults().size()-1).getBestTarget();
-            }
 
+        // Initialize variables to track the best target seen
+        double lowestAmbiguity = Double.MAX_VALUE; // Track the lowest pose ambiguity seen
+        int fid = -1; // Fiducial ID of the best target
+        PhotonTrackedTarget bestTarget = null; // The best target object
+
+        // Loop through all cameras to find the target with the lowest ambiguity
+        for (PhotonCamera cam : cameras) {
+            // Only process cameras with new (unread) results
+            if (!cam.getAllUnreadResults().isEmpty()) {
+                // Get the pose ambiguity of the latest target for this camera
+                var currentAmbiguity = cam.getAllUnreadResults().get(cam.getAllUnreadResults().size() - 1)
+                                        .getBestTarget().getPoseAmbiguity();
+
+                // Update best target if this one has lower ambiguity and is below a threshold
+                if (currentAmbiguity < lowestAmbiguity && currentAmbiguity < MAX_AMBIGUITY) { 
+                    ActiveCamera = cam; // Use this camera as the active camera
+                    lowestAmbiguity = currentAmbiguity; // Update lowest ambiguity
+                    fid = cam.getAllUnreadResults().get(cam.getAllUnreadResults().size() - 1)
+                            .getBestTarget().getFiducialId(); // Store fiducial ID
+                    bestTarget = cam.getAllUnreadResults().get(cam.getAllUnreadResults().size() - 1)
+                                    .getBestTarget(); // Store target
+                }
+            }
         }
 
-        Transform3d cameraToTarget = new Transform3d(
-            new Translation3d(
-                bestTarget.getBestCameraToTarget().getTranslation().getX(), 
-                bestTarget.getBestCameraToTarget().getTranslation().getY(),
-                bestTarget.getBestCameraToTarget().getTranslation().getZ()), 
-            new Rotation3d(
-                bestTarget.getBestCameraToTarget().getRotation().getX(),
-                bestTarget.getBestCameraToTarget().getRotation().getY(), 
-                bestTarget.getBestCameraToTarget().getRotation().getZ())
-                );
+        // Default robot pose if no valid target is found
+        Pose3d robotPose3d = new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0));
 
-        Pose3d fieldToTarget = getAprilTagPose(fid, new Transform3d());
-        Transform3d cameraToRobot = new Transform3d(
-            new Translation3d(Units.inchesToMeters(27), Units.inchesToMeters(-23), Units.inchesToMeters(8.75)),
-            ActiveCamera == CAMERA_LEFT ? new Rotation3d(0, Math.toRadians(25), 0) : new Rotation3d(0, Math.toRadians(155),0)
-             );
-            
-        Pose3d robotPose3d = PhotonUtils.estimateFieldToRobotAprilTag(cameraToTarget, fieldToTarget, cameraToRobot);
+        // Only calculate the robot pose if a target was found
+        if (fid != -1 && bestTarget != null) {
+            // Transform from camera to target
+            Transform3d cameraToTarget = new Transform3d(
+                new Translation3d(
+                    bestTarget.getBestCameraToTarget().getTranslation().getX(), 
+                    bestTarget.getBestCameraToTarget().getTranslation().getY(),
+                    bestTarget.getBestCameraToTarget().getTranslation().getZ()
+                ), 
+                new Rotation3d(
+                    bestTarget.getBestCameraToTarget().getRotation().getX(),
+                    bestTarget.getBestCameraToTarget().getRotation().getY(), 
+                    bestTarget.getBestCameraToTarget().getRotation().getZ()
+                )
+            );
 
+            // Get the known field pose of the AprilTag
+            Pose3d fieldToTarget = getAprilTagPose(fid, new Transform3d());
+
+            // Transform from camera to robot (camera offset from robot center)
+            Transform3d cameraToRobot = new Transform3d(
+                new Translation3d(
+                    Units.inchesToMeters(27), // x offset
+                    Units.inchesToMeters(-23), // y offset
+                    Units.inchesToMeters(8.75) // z offset
+                ),
+                ActiveCamera == CAMERA_LEFT ? 
+                    new Rotation3d(0, Math.toRadians(25), 0) : // Rotation if left camera
+                    new Rotation3d(0, Math.toRadians(155), 0)   // Rotation if right camera
+            );
+
+            // Estimate robot's pose on the field using the camera-to-target and camera-to-robot transforms
+            robotPose3d = PhotonUtils.estimateFieldToRobotAprilTag(cameraToTarget, fieldToTarget, cameraToRobot);
+        }
+
+        // Return the calculated or default robot pose
         return robotPose3d;
     }
 
     // Returns the fiducial ID of the visible reef tag, or -1 if none found
     public int findVisibleReefTag(List<Integer> tagColors) {
         var bestResult = getBestResult();
+        if (bestResult.isEmpty()) {
+            return -1;
+        }
         var bestTarget = bestResult.get().getBestTarget();
         if (bestTarget != null) {
             for(Integer match : tagColors) {
