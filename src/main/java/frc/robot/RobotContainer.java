@@ -33,7 +33,6 @@ import java.io.File;
 import swervelib.SwerveDrive;
 import swervelib.SwerveInputStream;
 import com.pathplanner.lib.auto.NamedCommands;
-import frc.robot.subsystems.swervedrive.CustomVision;
 
 /**
  * RobotContainer sets up the operator interface, button bindings, and default
@@ -56,8 +55,6 @@ public class RobotContainer {
                 private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
                 // Arm Elevator End Effector
                 private final ArmElevatorEndEffectorSubsystem armElevator = new ArmElevatorEndEffectorSubsystem(drivebase);
-                //Vision Subsystem
-                private final CustomVision vision = new CustomVision(drivebase, "LEFT_CAMERA", "RIGHT_CAMERA");
 
         // Default Drive
         // -------------------------------------------
