@@ -25,6 +25,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 
 import static edu.wpi.first.units.Units.Rotation;
 
@@ -194,9 +195,9 @@ public class CustomVision {
 
     public Command autoAlign(boolean isLeft) {
         PhotonTrackedTarget bestPhotonTrackedTarget = getLatestTarget();
-        double distanceToTarget = isLeft ?
-            PhotonUtils.getDistanceToPose(getRobotPose(), getAprilTagPose(bestPhotonTrackedTarget.getFiducialId(), new Transform2d(0,0.5, Rotation2d.fromDegrees(0)))) :
-            PhotonUtils.getDistanceToPose(getRobotPose(), getAprilTagPose(bestPhotonTrackedTarget.getFiducialId(), new Transform2d(0,-0.5, Rotation2d.fromDegrees(0)))) ;
+        double distanceToTarget = (isLeft ?
+        PhotonUtils.getDistanceToPose(getRobotPose(), getAprilTagPose(bestPhotonTrackedTarget.getFiducialId(), new Transform2d(0,0.5, Rotation2d.fromDegrees(0)))) :
+        PhotonUtils.getDistanceToPose(getRobotPose(), getAprilTagPose(bestPhotonTrackedTarget.getFiducialId(), new Transform2d(0,-0.5, Rotation2d.fromDegrees(0)))) )/Constants.DrivebaseConstants.VELOCITY_DRIVE_RATIO;
 
         Translation2d autoAlignTranslation = PhotonUtils.estimateCameraToTargetTranslation(distanceToTarget, Rotation2d.fromDegrees(-bestPhotonTrackedTarget.getYaw()));
         Rotation2d autoAlignRotation = PhotonUtils.getYawToPose(getRobotPose(), getAprilTagPose(bestPhotonTrackedTarget.getFiducialId(), new Transform2d(0,0, Rotation2d.fromDegrees(0))));
