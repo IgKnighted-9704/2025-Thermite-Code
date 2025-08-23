@@ -391,7 +391,12 @@ public class RobotContainer {
          * Provides the autonomous command to be scheduled in auto mode.
          */
         public Command getAutonomousCommand() {
-                return AutonChooser.getSelected();
+                return Commands.sequence(
+                        AutonChooser.getSelected(),
+                        Commands.runOnce(() ->{
+                                drivebase.zeroGyro();
+                        })
+                );
         }
 
         /** Sets the drive motors to brake or coast mode. */
