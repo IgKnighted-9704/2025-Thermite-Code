@@ -251,6 +251,7 @@ public class RobotContainer {
                 // - Up => Funnel position (e.g., for scoring/drop-in zone)
                 // - Down => Stow everything (safe driving configuration)
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
+                        //AUX PS4 Controls
                         auxPS4.triangle().onTrue(Commands.runOnce(() -> {
                                 selectedLevel = 4;
                                 armElevator.goToLevelCommand(4).schedule();
@@ -269,21 +270,45 @@ public class RobotContainer {
                                 armElevator.goToFunnelCommand().schedule();
                         }, armElevator));
 
-                        auxPS4.povDown().onTrue(Commands.runOnce(() -> {
+                        auxPS4.L1().onTrue(Commands.runOnce(() -> {
+                                selectedLevel = 0;
+                                armElevator.goToStowCommand().schedule();
+                        }, armElevator));
+
+                        //Drive Ps4 Controls
+                        driverPS4.triangle().onTrue(Commands.runOnce(() -> {
+                                selectedLevel = 4;
+                                armElevator.goToLevelCommand(4).schedule();
+                        }, armElevator));
+
+                        driverPS4.square().onTrue(Commands.runOnce(() -> {
+                                selectedLevel = 3;
+                                armElevator.goToLevelCommand(3).schedule();
+                        }, armElevator));
+                        driverPS4.circle().onTrue(Commands.runOnce(() -> {
+                                selectedLevel = 2;
+                                armElevator.goToLevelCommand(2).schedule();
+                        }, armElevator));
+
+                        driverPS4.cross().onTrue(Commands.runOnce(() -> {
+                                armElevator.goToFunnelCommand().schedule();
+                        }, armElevator));
+
+                        driverPS4.L1().onTrue(Commands.runOnce(() -> {
                                 selectedLevel = 0;
                                 armElevator.goToStowCommand().schedule();
                         }, armElevator));
                 }
 
                 // Vision Based Drive
-                if (ENABLE_DRIVEBASE_SUBSYSTEM) {
-                        auxPS4.povLeft().onTrue(Commands.run(() -> {
-                                armElevator.createReefScoreCommand(true).schedule();
-                        }));
-                        auxPS4.povRight().onTrue(Commands.run(() -> {
-                                armElevator.createReefScoreCommand(false).schedule();
-                        }));
-                }
+                        // if (ENABLE_DRIVEBASE_SUBSYSTEM) {
+                        //         auxPS4.povLeft().onTrue(Commands.run(() -> {
+                        //                 armElevator.createReefScoreCommand(true).schedule();
+                        //         }));
+                        //         auxPS4.povRight().onTrue(Commands.run(() -> {
+                        //                 armElevator.createReefScoreCommand(false).schedule();
+                        //         }));
+                        // }
 
                 // Score Command (AUX)
                 // -------------------------------------------
@@ -293,6 +318,10 @@ public class RobotContainer {
                 // -------------------------------------------
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
                         auxPS4.R1().onTrue(Commands.runOnce(() -> {
+                                // Universal method that transitions to the appropriate "score" preset
+                                armElevator.goToLevelScoreCommand(selectedLevel).schedule();
+                        }, armElevator));
+                        driverPS4.R1().onTrue(Commands.runOnce(() -> {
                                 // Universal method that transitions to the appropriate "score" preset
                                 armElevator.goToLevelScoreCommand(selectedLevel).schedule();
                         }, armElevator));

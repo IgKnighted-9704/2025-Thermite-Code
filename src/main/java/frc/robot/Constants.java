@@ -128,8 +128,8 @@ public final class Constants {
     public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.174137;
 
     // Stow positioning for the arm.
-    public static final double ARM_STOW_DEG = 2.42;
-    public static final double ARM_SCORE_DEG = 2.42;
+    public static final double ARM_STOW_DEG = 12;
+    public static final double ARM_SCORE_DEG = ARM_STOW_DEG;
     // // public static final double ARM_STOW_TOLERANCE_DEG = 4.0;
     // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
@@ -170,7 +170,7 @@ public final class Constants {
     public static final double ARM_LEVEL1_DEG = 0.;
     public static final double ARM_LEVEL2_DEG = 190;
     public static final double ARM_LEVEL3_DEG = 190;
-    public static final double ARM_LEVEL4_DEG = 215;
+    public static final double ARM_LEVEL4_DEG = 217;
 
     // // public static final double ARM_TOLERANCE_DEG = 2.0;
     // // public static final double ELEVATOR_TOLERANCE_INCH = 1.0;
