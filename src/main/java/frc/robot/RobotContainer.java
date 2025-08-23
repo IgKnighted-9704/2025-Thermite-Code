@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.swervedrive.CustomVision;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.miscellaneous.ArmElevatorEndEffectorSubsystem;
 import frc.robot.subsystems.miscellaneous.AlgaeIntakeSubsystem;
@@ -55,6 +56,8 @@ public class RobotContainer {
                 private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
                 // Arm Elevator End Effector
                 private final ArmElevatorEndEffectorSubsystem armElevator = new ArmElevatorEndEffectorSubsystem(drivebase);
+                //Vision Subsystem
+                private final CustomVision vision = new CustomVision("LEFT_CAMERA","RIGHT_CAMERA",drivebase);
 
         // Default Drive
         // -------------------------------------------
@@ -66,9 +69,9 @@ public class RobotContainer {
         // the field you're on.
         // -------------------------------------------
         SwerveInputStream driveAngularVelocity = SwerveInputStream
-                        .of(drivebase.getSwerveDrive(), () -> -auxPS4.getLeftY(),
-                                        () -> -auxPS4.getLeftX())
-                        .withControllerRotationAxis(() -> -auxPS4.getRightX())
+                        .of(drivebase.getSwerveDrive(), () -> -driverPS4.getLeftY(),
+                                        () -> -driverPS4.getLeftX())
+                        .withControllerRotationAxis(() -> -driverPS4.getRightX())
                         .deadband(OperatorConstants.DEADBAND).scaleTranslation(0.8)
                         .allianceRelativeControl(true);
         // Simulation Drive
@@ -100,74 +103,89 @@ public class RobotContainer {
         boolean ENABLE_ARM_ELEVATOR_SUBSYSTEM = true; // Set to false to disable the Arm Elevator subsystem
         boolean ENABLE_ALGAE_INTAKE_SUBSYSTEM = false; // Set to false to disable the Algae Intake subsystem
         boolean ENABLE_DRIVEBASE_SUBSYSTEM = true; // Set to false to disable the Drivebase subsystem
-        boolean ENABLE_MANUAL_CONTROL = false; // Set to false to disable manual control of the Arm Elevator subsystem
+        boolean ENABLE_MANUAL_CONTROL = true; // Set to false to disable manual control of the Arm Elevator subsystem
+        boolean ENABLE_VISION_SUBSYSTEM = true; // Set to false to disable the Vision subsystem
+
+        //Driver Disable/Enable
+        boolean varunMain = true; 
+        boolean jakeMain = false; 
 
         // Autonomous
 
         // Path Chooser
         SendableChooser<Command> AutonChooser;
+        SendableChooser<Command> DriverChooser;
         // AUTONOMOUS COMMANDS
-        // PATH - 1
-        private Command L4AutonomousCommand = new SequentialCommandGroup(
-                        new InstantCommand(() -> {
-                                armElevator.goToFunnelCommand().schedule();
-                        }), // goes to funnel position
-                        new WaitCommand(2), // waits 2 seconds
-                        new InstantCommand(() -> {
-                                selectedLevel = 4;
-                                armElevator.goToLevelCommand(4).schedule();
-                        }), // goes to level 4
-                        new WaitCommand(2), // waits 2 seconds
-                        new InstantCommand(() -> {
-                                drivebase.driveCommand(() -> 0.25 / Constants.DrivebaseConstants.VELOCITY_DRIVE_RATIO,
-                                                () -> 0, () -> 0).schedule(); // drives with a velocity of 0.5 m/s
-                        }),
-                        new WaitCommand(5), // waits 1 second
-                        new InstantCommand(() -> {
-                                drivebase.driveCommand(() -> 0, () -> 0, () -> 0).schedule(); // stops the drivebase
-                        }),
-                        new WaitCommand(1.5), // wait 1.5 seconds
-                        new InstantCommand(() -> {
-                                armElevator.goToLevelScoreCommand(4).schedule(); // score L4
-                        }),
-                        new WaitCommand(1.5), // waits 1.5 seconds
-                        new InstantCommand(() -> {
-                                armElevator.goToLevelCommand(4).schedule();
-                        }), // goes back to level 4
-                        new WaitCommand(1),
-                        new InstantCommand(() -> {
-                                armElevator.startManualOuttake(); // starts manual outtake
-                        }),
-                        new WaitCommand(2), // waits 2 seconds
-                        new InstantCommand(() -> {
-                                armElevator.stopIntake(); // stops the intake
-                        }), new InstantCommand(() -> {
-                                armElevator.goToStowCommand().schedule(); // goes to stow position
-                        }));;
+                // PATH - 1
+                private Command L4AutonomousCommand = new SequentialCommandGroup(
+                                new InstantCommand(() -> {
+                                        armElevator.goToFunnelCommand().schedule();
+                                }), // goes to funnel position
+                                new WaitCommand(2), // waits 2 seconds
+                                new InstantCommand(() -> {
+                                        selectedLevel = 4;
+                                        armElevator.goToLevelCommand(4).schedule();
+                                }), // goes to level 4
+                                new WaitCommand(2), // waits 2 seconds
+                                new InstantCommand(() -> {
+                                        drivebase.driveCommand(() -> 0.25 / Constants.DrivebaseConstants.VELOCITY_DRIVE_RATIO,
+                                                        () -> 0, () -> 0).schedule(); // drives with a velocity of 0.5 m/s
+                                }),
+                                new WaitCommand(5), // waits 1 second
+                                new InstantCommand(() -> {
+                                        drivebase.driveCommand(() -> 0, () -> 0, () -> 0).schedule(); // stops the drivebase
+                                }),
+                                new WaitCommand(1.5), // wait 1.5 seconds
+                                new InstantCommand(() -> {
+                                        armElevator.goToLevelScoreCommand(4).schedule(); // score L4
+                                }),
+                                new WaitCommand(1.5), // waits 1.5 seconds
+                                new InstantCommand(() -> {
+                                        armElevator.goToLevelCommand(4).schedule();
+                                }), // goes back to level 4
+                                new WaitCommand(1),
+                                new InstantCommand(() -> {
+                                        armElevator.startManualOuttake(); // starts manual outtake
+                                }),
+                                new WaitCommand(2), // waits 2 seconds
+                                new InstantCommand(() -> {
+                                        armElevator.stopIntake(); // stops the intake
+                                }), new InstantCommand(() -> {
+                                        armElevator.goToStowCommand().schedule(); // goes to stow position
+                                }));
         // SCORE COMMANDS
-        // SCORE L4
-        private Command scoreLevel4Command = new InstantCommand(() -> {
-                selectedLevel = 4;
-                armElevator.goToLevelCommand(4).schedule();
-        }, armElevator);
-        // SCORE L3
-        private Command scoreLevel3Command = new InstantCommand(() -> {
-                selectedLevel = 3;
-                armElevator.goToLevelCommand(3).schedule();
-        }, armElevator);
-        // SCORE L2
-        private Command scoreLevel2Command = new InstantCommand(() -> {
-                selectedLevel = 2;
-                armElevator.goToLevelCommand(2).schedule();
-        }, armElevator);
-        // GO TO FUNNEL
-        private Command goToFunnelCommand = new InstantCommand(() -> {
-                armElevator.goToFunnelCommand().schedule();
-        }, armElevator);
-        // GO TO STOW
-        private Command goToStowCommand = new InstantCommand(() -> {
-                armElevator.goToStowCommand().schedule();
-        }, armElevator);
+                // SCORE L4
+                private Command scoreLevel4Command = new InstantCommand(() -> {
+                        selectedLevel = 4;
+                        armElevator.goToLevelCommand(4).schedule();
+                }, armElevator);
+                // SCORE L3
+                private Command scoreLevel3Command = new InstantCommand(() -> {
+                        selectedLevel = 3;
+                        armElevator.goToLevelCommand(3).schedule();
+                }, armElevator);
+                // SCORE L2
+                private Command scoreLevel2Command = new InstantCommand(() -> {
+                        selectedLevel = 2;
+                        armElevator.goToLevelCommand(2).schedule();
+                }, armElevator);
+                // GO TO FUNNEL
+                private Command goToFunnelCommand = new InstantCommand(() -> {
+                        armElevator.goToFunnelCommand().schedule();
+                }, armElevator);
+                // GO TO STOW
+                private Command goToStowCommand = new InstantCommand(() -> {
+                        armElevator.goToStowCommand().schedule();
+                }, armElevator);
+         // Driver Switch Commands
+                private Command Varun = Commands.runOnce(()->{
+                        varunMain = true;
+                        jakeMain = false;
+                });
+                private Command Jake = Commands.runOnce(()->{
+                        varunMain = false;
+                        jakeMain = true;
+                });
 
         public RobotContainer() {
 
@@ -184,6 +202,11 @@ public class RobotContainer {
                         AutonChooser.addOption("Two Step Approach", drivebase.getTestTwoStepApproach(2, 0, 0, 0));
                         AutonChooser.addOption("Coral L4 Score", L4AutonomousCommand);
                 SmartDashboard.putData("Drive Auton", AutonChooser);
+
+                DriverChooser = new SendableChooser<>();
+                        DriverChooser.addOption("Varun", Varun);
+                        DriverChooser.addOption("Jake", Jake);
+                SmartDashboard.putData("Driver Switch", AutonChooser);
         }
 
         /**
@@ -251,64 +274,89 @@ public class RobotContainer {
                 // - Up => Funnel position (e.g., for scoring/drop-in zone)
                 // - Down => Stow everything (safe driving configuration)
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
-                        //AUX PS4 Controls
-                        auxPS4.triangle().onTrue(Commands.runOnce(() -> {
-                                selectedLevel = 4;
-                                armElevator.goToLevelCommand(4).schedule();
-                        }, armElevator));
+                        //Driver PS4 Controls
+                                if(varunMain){
+                                        driverPS4.triangle().onTrue(Commands.runOnce(() -> {
+                                                selectedLevel = 4;
+                                                armElevator.goToLevelCommand(4).schedule();
+                                        }, armElevator));
+                
+                                        driverPS4.square().onTrue(Commands.runOnce(() -> {
+                                                selectedLevel = 3;
+                                                armElevator.goToLevelCommand(3).schedule();
+                                        }, armElevator));
+                                        driverPS4.circle().onTrue(Commands.runOnce(() -> {
+                                                selectedLevel = 2;
+                                                armElevator.goToLevelCommand(2).schedule();
+                                        }, armElevator));
+                
+                                        driverPS4.R2().onTrue(Commands.runOnce(() -> {
+                                                armElevator.goToFunnelCommand().schedule();
+                                        }, armElevator));
+                
+                                        driverPS4.L1().onTrue(Commands.runOnce(() -> {
+                                                selectedLevel = 0;
+                                                armElevator.goToStowCommand().schedule();
+                                        }, armElevator));
+                                } else {
+                                        driverPS4.triangle().onTrue(Commands.runOnce(() -> {
+                                                selectedLevel = 4;
+                                                armElevator.goToLevelCommand(4).schedule();
+                                        }, armElevator));
+                
+                                        driverPS4.square().onTrue(Commands.runOnce(() -> {
+                                                selectedLevel = 3;
+                                                armElevator.goToLevelCommand(3).schedule();
+                                        }, armElevator));
+                                        driverPS4.circle().onTrue(Commands.runOnce(() -> {
+                                                selectedLevel = 2;
+                                                armElevator.goToLevelCommand(2).schedule();
+                                        }, armElevator));
+                
+                                        driverPS4.cross().onTrue(Commands.runOnce(() -> {
+                                                armElevator.goToFunnelCommand().schedule();
+                                        }, armElevator));
+                
+                                        driverPS4.L1().onTrue(Commands.runOnce(() -> {
+                                                selectedLevel = 0;
+                                                armElevator.goToStowCommand().schedule();
+                                        }, armElevator));
+                                }
 
-                        auxPS4.square().onTrue(Commands.runOnce(() -> {
-                                selectedLevel = 3;
-                                armElevator.goToLevelCommand(3).schedule();
-                        }, armElevator));
-                        auxPS4.circle().onTrue(Commands.runOnce(() -> {
-                                selectedLevel = 2;
-                                armElevator.goToLevelCommand(2).schedule();
-                        }, armElevator));
+                        //Aux PS4 Controls
+                                auxPS4.triangle().onTrue(Commands.runOnce(() -> {
+                                        selectedLevel = 4;
+                                        armElevator.goToLevelCommand(4).schedule();
+                                }, armElevator));
 
-                        auxPS4.cross().onTrue(Commands.runOnce(() -> {
-                                armElevator.goToFunnelCommand().schedule();
-                        }, armElevator));
+                                auxPS4.square().onTrue(Commands.runOnce(() -> {
+                                        selectedLevel = 3;
+                                        armElevator.goToLevelCommand(3).schedule();
+                                }, armElevator));
+                                auxPS4.circle().onTrue(Commands.runOnce(() -> {
+                                        selectedLevel = 2;
+                                        armElevator.goToLevelCommand(2).schedule();
+                                }, armElevator));
 
-                        auxPS4.L1().onTrue(Commands.runOnce(() -> {
-                                selectedLevel = 0;
-                                armElevator.goToStowCommand().schedule();
-                        }, armElevator));
+                                auxPS4.cross().onTrue(Commands.runOnce(() -> {
+                                        armElevator.goToFunnelCommand().schedule();
+                                }, armElevator));
 
-                        //Drive Ps4 Controls
-                        driverPS4.triangle().onTrue(Commands.runOnce(() -> {
-                                selectedLevel = 4;
-                                armElevator.goToLevelCommand(4).schedule();
-                        }, armElevator));
-
-                        driverPS4.square().onTrue(Commands.runOnce(() -> {
-                                selectedLevel = 3;
-                                armElevator.goToLevelCommand(3).schedule();
-                        }, armElevator));
-                        driverPS4.circle().onTrue(Commands.runOnce(() -> {
-                                selectedLevel = 2;
-                                armElevator.goToLevelCommand(2).schedule();
-                        }, armElevator));
-
-                        driverPS4.cross().onTrue(Commands.runOnce(() -> {
-                                armElevator.goToFunnelCommand().schedule();
-                        }, armElevator));
-
-                        driverPS4.L1().onTrue(Commands.runOnce(() -> {
-                                selectedLevel = 0;
-                                armElevator.goToStowCommand().schedule();
-                        }, armElevator));
+                                auxPS4.L1().onTrue(Commands.runOnce(() -> {
+                                        selectedLevel = 0;
+                                        armElevator.goToStowCommand().schedule();
+                                }, armElevator));
                 }
 
                 // Vision Based Drive
-                        // if (ENABLE_DRIVEBASE_SUBSYSTEM) {
-                        //         auxPS4.povLeft().onTrue(Commands.run(() -> {
-                        //                 armElevator.createReefScoreCommand(true).schedule();
-                        //         }));
-                        //         auxPS4.povRight().onTrue(Commands.run(() -> {
-                        //                 armElevator.createReefScoreCommand(false).schedule();
-                        //         }));
-                        // }
+                        if (ENABLE_DRIVEBASE_SUBSYSTEM) {
+                                driverPS4.povLeft().onTrue(Commands.run(() -> {
+                                        vision.autoAlign(true).schedule();
+                                }));
+                                driverPS4.povRight().onTrue(Commands.run(() -> {
+                                        vision.autoAlign(false).schedule();
+                                }));
+                        }
 
                 // Score Command (AUX)
                 // -------------------------------------------
@@ -317,11 +365,11 @@ public class RobotContainer {
                 // Triggers the preset scoring height based on operator selection.
                 // -------------------------------------------
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
-                        auxPS4.R1().onTrue(Commands.runOnce(() -> {
+                        driverPS4.R1().onTrue(Commands.runOnce(() -> {
                                 // Universal method that transitions to the appropriate "score" preset
                                 armElevator.goToLevelScoreCommand(selectedLevel).schedule();
                         }, armElevator));
-                        driverPS4.R1().onTrue(Commands.runOnce(() -> {
+                        auxPS4.R1().onTrue(Commands.runOnce(() -> {
                                 // Universal method that transitions to the appropriate "score" preset
                                 armElevator.goToLevelScoreCommand(selectedLevel).schedule();
                         }, armElevator));
@@ -382,7 +430,10 @@ public class RobotContainer {
                 // - Useful for re-aligning field-relative driving during a match
                 // -------------------------------------------
                 if (ENABLE_DRIVEBASE_SUBSYSTEM) {
-                        auxPS4.options().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
+                        driverPS4.options().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
+                        if(varunMain){
+                                driverPS4.R3().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
+                        }
                 }
 
         }
