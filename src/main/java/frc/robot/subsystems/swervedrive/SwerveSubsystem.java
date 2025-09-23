@@ -44,6 +44,7 @@ import frc.robot.subsystems.swervedrive.Vision.Cameras;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
@@ -98,7 +99,7 @@ public class SwerveSubsystem extends SubsystemBase {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    swerveDrive.setHeadingCorrection(true); // Heading correction should only be used while
+    swerveDrive.setHeadingCorrection(false); // Heading correction should only be used while
                                              // controlling the robot via angle.
     swerveDrive.setCosineCompensator(false);// !SwerveDriveTelemetry.isSimulation); // Disables
                                             // cosine compensation for simulations since it causes
@@ -728,6 +729,8 @@ public class SwerveSubsystem extends SubsystemBase {
   * Useful for testing straight-line movement of the swerve drivetrain.
   * @return A Command that drives the robot forward.
   */
+
+  //PATH 1 - (Lineup With Red & Blue Markers to the Corners and the black marker to the center.) (Distance = 78-80 Inches)
   public Command getTestDriveStraight(double distance, double velocity) {
     Command autonomousCommand = Commands.sequence(
       new InstantCommand(() ->{

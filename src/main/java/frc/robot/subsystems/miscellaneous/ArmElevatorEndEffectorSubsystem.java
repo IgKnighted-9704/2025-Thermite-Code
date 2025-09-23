@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.swervedrive.Vision;
 import frc.robot.Constants;
 import frc.robot.Constants.ArmElevatorConstants;
@@ -61,9 +62,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private boolean manualElevator = false;
     private boolean manualArm = false;
     private boolean outtake = false;
+    private boolean dealgaeState = false;
 
     private enum Preset {
-        STOW, FUNNEL, LOADING, LEVEL1, LEVEL2, LEVEL3, LEVEL4, LEVEL1SCORE, LEVEL2SCORE, LEVEL3SCORE, LEVEL4SCORE
+        STOW, FUNNEL, LOADING, LEVEL1, LEVEL2, LEVEL3, LEVEL4, LEVEL1SCORE, LEVEL2SCORE, LEVEL3SCORE, LEVEL4SCORE, LEVEL2DEALGAE, LEVEL3DEALGAE
     }
 
     public ArmElevatorEndEffectorSubsystem(SwerveSubsystem driveBase) {
@@ -189,6 +191,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 return Preset.LEVEL3;
             case 4:
                 return Preset.LEVEL4;
+            case -2:
+                return Preset.LEVEL2DEALGAE;
+            case -3 : 
+                return Preset.LEVEL3DEALGAE;
             default:
                 return Preset.LEVEL1;
         }
@@ -224,6 +230,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 return ArmElevatorConstants.ARM_LEVEL3_DEG;
             case 4:
                 return ArmElevatorConstants.ARM_LEVEL4_DEG;
+            case -2:
+                return ArmElevatorConstants.ARM_DEALGAELEVEL2_DEG;
+            case -3:
+                return ArmElevatorConstants.ARM_DEALGAELEVEL3_DEG;
             default:
                 return ArmElevatorConstants.ARM_LEVEL1_DEG;
         }
@@ -240,6 +250,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 return ArmElevatorConstants.ELEVATOR_LEVEL3_INCHES;
             case 4:
                 return ArmElevatorConstants.ELEVATOR_LEVEL4_INCHES;
+            case -2:
+                return ArmElevatorConstants.ELEVATOR_DEALGAELEVEL2_INCHES;
+            case -3:
+                return ArmElevatorConstants.ELEVATOR_DEALGAELEVEL3_INCHES;
             default:
                 return ArmElevatorConstants.ELEVATOR_LEVEL1_INCHES;
         }
@@ -386,7 +400,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
     // Command -> Move from (STOW to LOADING to LEVEL) OR (LOADING TO LEVEL)
     public Command goToLevelCommand(int level) {
-        if (currentPreset == Preset.FUNNEL) {
+        if (currentPreset == Preset.FUNNEL && (level != -2 || level !=-3) ) {
             // IF WE ARE IN FUNNEL...
             // ADJUST ARM ANGLE TO FUNNEL ANGLE
             return Commands.sequence(
@@ -404,7 +418,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
                     }),
                     Commands.waitUntil(
-                            () -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2.0)),
+                            () -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2)),
+                    Commands.runOnce(() -> {
+                        desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+                    }),
+                    // WAIT UNTIL THE ARM IS IN TOLERANCE
+                    Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 5)),
                     // WAIT UNTIL THE INTAKE STALLS
                     // Commands.waitUntil(()->
                     // intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM).getAsBoolean()),
@@ -425,10 +444,19 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     }),
                     Commands.waitSeconds(0.5),
                     goToLevelFromLoadingCommand(level));
-        } else if (level == 2) {
+        } else if (currentPreset == Preset.FUNNEL && (level == -2 || level ==-3) ){
+            return goToLevelFromLoadingCommand(level);
+        } 
+        else if (level == 2) {
             return Commands.sequence(
-                    goToLevelFromLoadingCommand(3),
-                    goToLevelFromLoadingCommand(2));
+                goToLevelFromLoadingCommand(3),
+                goToLevelFromLoadingCommand(2)    
+            );
+        } else if (level == -2){
+            return Commands.sequence(
+                goToLevelFromLoadingCommand(3),
+                goToLevelFromLoadingCommand(-2)    
+            );
         } else {
             // IF WE ARE NOT IN FUNNEL...
             currentPreset = getPresetForLevel(level);
@@ -462,7 +490,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
         // Decision Matrix
         if (currentPreset == Preset.LEVEL2 ||
-                currentPreset == Preset.LEVEL2SCORE) {
+                currentPreset == Preset.LEVEL2SCORE || currentPreset == Preset.LEVEL2DEALGAE || currentPreset == Preset.LEVEL2DEALGAE) {
             return Commands.sequence(
                     // SET DESIRED ELEVATOR POSITION TO FUNNEL HEIGHT
                     Commands.runOnce(() -> {
@@ -586,7 +614,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // This command is used to transition from the loading position to a specific
     // level score position.
     private Command goToScoreFromLoadingCommand(int level) {
-        if (level == 2 || currentPreset == Preset.LEVEL2) {
+        if (level == 2 || currentPreset == Preset.LEVEL2 || level == -2 || currentPreset == Preset.LEVEL2DEALGAE || level ==-3 || currentPreset == Preset.LEVEL3DEALGAE) {
             return Commands.sequence(
                     Commands.runOnce(() -> {
                         startManualOuttake();
@@ -650,6 +678,25 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         setManualArm(0);
         desiredArmAngleDeg = getArmAngleDegrees();
         manualArm = false;
+    }
+
+    public Command WaitUntilArmToleranceMet(int level){
+        return Commands.waitUntil(()->
+            this.isArmInTolerance(level, 5)
+        );
+    }
+
+    public Command WaitUntilHeightToleranceMet(int level){
+        return Commands.waitUntil(()->
+            this.isElevatorInTolerance(level, 0.5)
+        );
+    }
+
+    public Command WaitUntilToleranceMet(int level){
+        return Commands.parallel(
+            WaitUntilArmToleranceMet(level),
+            WaitUntilHeightToleranceMet(level)
+        );
     }
 
     @Override

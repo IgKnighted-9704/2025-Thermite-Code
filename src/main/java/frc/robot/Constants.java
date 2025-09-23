@@ -54,7 +54,7 @@ public final class Constants {
     public static  double PATH_PLANNER_TRANSLATION_KD = 0;
     public static  double PATH_PLANNER_TRANSLATION_KI = 0.0;
 
-    public static  double PATH_PLANNER_ROTATION_KP = 60;
+    public static  double PATH_PLANNER_ROTATION_KP = 10;
     public static  double PATH_PLANNER_ROTATION_KD = 0.0;
     public static  double PATH_PLANNER_ROTATION_KI = 0.0;
   }
@@ -119,13 +119,13 @@ public final class Constants {
     // // public static final double ELEVATOR_MAX_INCHES = 84.0;
 
     // Angles and positions for funnel/loading presets.
-    public static final double ARM_LOADING_DEG = -51.674;
-    public static final double ARM_FUNNEL_DEG = -51.674;
+    public static final double ARM_LOADING_DEG = -65.5;
+    public static final double ARM_FUNNEL_DEG = -65.5;
 
     // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
     public static final double ELEVATOR_FUNNEL_INCHES = 14.790200;
-    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.174137;
+    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.67;
 
     // Stow positioning for the arm.
     public static final double ARM_STOW_DEG = 12;
@@ -134,7 +134,7 @@ public final class Constants {
     // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
     // PID and feedforward parameters for both the arm and the elevator.
-    public static double ARM_kP = 0.04;
+    public static double ARM_kP = 0.0375;
     public static double ARM_kI = 0.0;
     public static double ARM_kD = 0.0;
 
@@ -158,6 +158,8 @@ public final class Constants {
     public static final double ELEVATOR_LEVEL2_INCHES = 0;
     public static final double ELEVATOR_LEVEL3_INCHES = 19.5;
     public static final double ELEVATOR_LEVEL4_INCHES = 33.5;
+    public static final double ELEVATOR_DEALGAELEVEL3_INCHES = ELEVATOR_LEVEL3_INCHES; //TODO : Dealgae for L3
+    public static final double ELEVATOR_DEALGAELEVEL2_INCHES = 0.540; //TODO : Dealgae for L2
 
     // Offsets applied for score positions at each elevator level.
     public static final double ELEVATOR_SCORE_OFFSET = 12.0;
@@ -169,8 +171,10 @@ public final class Constants {
     // Corresponding arm angles for each level preset.
     public static final double ARM_LEVEL1_DEG = 0.;
     public static final double ARM_LEVEL2_DEG = 190;
-    public static final double ARM_LEVEL3_DEG = 190;
-    public static final double ARM_LEVEL4_DEG = 217;
+    public static final double ARM_LEVEL3_DEG = 197.67;
+    public static final double ARM_LEVEL4_DEG = 225;
+    public static final double ARM_DEALGAELEVEL2_DEG = 190;
+    public static final double ARM_DEALGAELEVEL3_DEG = 190;
 
     // // public static final double ARM_TOLERANCE_DEG = 2.0;
     // // public static final double ELEVATOR_TOLERANCE_INCH = 1.0;
