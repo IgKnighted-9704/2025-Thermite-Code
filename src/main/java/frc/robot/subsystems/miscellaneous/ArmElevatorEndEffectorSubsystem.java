@@ -680,24 +680,20 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         manualArm = false;
     }
 
-    public Command WaitUntilArmToleranceMet(int level){
-        return Commands.waitUntil(()->
-            this.isArmInTolerance(level, 5)
-        );
-    }
-
-    public Command WaitUntilHeightToleranceMet(int level){
-        return Commands.waitUntil(()->
-            this.isElevatorInTolerance(level, 0.5)
-        );
-    }
-
-    public Command WaitUntilToleranceMet(int level){
-        return Commands.parallel(
-            WaitUntilArmToleranceMet(level),
-            WaitUntilHeightToleranceMet(level)
-        );
-    }
+    // --------------------------------------------------------------------------
+    // Command Sequences For Autonomous
+    // --------------------------------------------------------------------------
+        public Command AutoScoreSequence(int level){
+            return Commands.sequence(
+                goToFunnelCommand(),
+                goToLevelCommand(level),
+                goToLevelScoreCommand(level),
+                goToStowCommand(),
+                Commands.waitUntil(()->
+                    (desiredArmAngleDeg == Constants.ArmElevatorConstants.ARM_STOW_DEG) && (desiredElevInches == Constants.ArmElevatorConstants.ELEVATOR_STOW_INCHES)
+                )
+            );
+        }
 
     @Override
     public void periodic(){

@@ -158,8 +158,8 @@ public final class Constants {
     public static final double ELEVATOR_LEVEL2_INCHES = 0;
     public static final double ELEVATOR_LEVEL3_INCHES = 19.5;
     public static final double ELEVATOR_LEVEL4_INCHES = 33.5;
-    public static final double ELEVATOR_DEALGAELEVEL3_INCHES = ELEVATOR_LEVEL3_INCHES; //TODO : Dealgae for L3
-    public static final double ELEVATOR_DEALGAELEVEL2_INCHES = 0.540; //TODO : Dealgae for L2
+    public static final double ELEVATOR_DEALGAELEVEL3_INCHES = ELEVATOR_LEVEL3_INCHES; 
+    public static final double ELEVATOR_DEALGAELEVEL2_INCHES = 0.540; 
 
     // Offsets applied for score positions at each elevator level.
     public static final double ELEVATOR_SCORE_OFFSET = 12.0;

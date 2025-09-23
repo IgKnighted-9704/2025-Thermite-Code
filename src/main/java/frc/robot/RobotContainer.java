@@ -154,32 +154,14 @@ public class RobotContainer {
                         }), new InstantCommand(() -> {
                                 armElevator.goToStowCommand().schedule(); // goes to stow position
                         }));
-        // SCORE COMMANDS
-        // SCORE L4
-        private Command scoreLevel4Command = new InstantCommand(() -> {
-                selectedLevel = 4;
-                armElevator.goToLevelCommand(4).schedule();
-        }, armElevator);
-        // SCORE L3
-        private Command scoreLevel3Command = new InstantCommand(() -> {
-                selectedLevel = 3;
-                armElevator.goToLevelCommand(3).schedule();
-        }, armElevator);
-        // SCORE L2
-        private Command scoreLevel2Command = new InstantCommand(() -> {
-                selectedLevel = 2;
-                armElevator.goToLevelCommand(2).schedule();
-        }, armElevator);
-        // GO TO FUNNEL
-        private Command goToFunnelCommand = new InstantCommand(() -> {
-                armElevator.goToFunnelCommand().schedule();
-        }, armElevator);
-        // GO TO STOW
-        private Command goToStowCommand = new InstantCommand(() -> {
-                armElevator.goToStowCommand().schedule();
-        }, armElevator);
+
 
         public RobotContainer() {
+
+                NamedCommands.registerCommand("L4 Coral", armElevator.AutoScoreSequence(4));
+                NamedCommands.registerCommand("L3 Coral", armElevator.AutoScoreSequence(3));
+                NamedCommands.registerCommand("L2 Coral", armElevator.AutoScoreSequence(2));
+                NamedCommands.registerCommand("L1 Coral", armElevator.AutoScoreSequence(1));
 
                 configureBindings();
 
@@ -191,9 +173,8 @@ public class RobotContainer {
                 AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight(1.0, 0.5));
                 AutonChooser.addOption("Straight Auton-Pathplanner", drivebase.getAutonomousCommand("Straight Auton"));
                 AutonChooser.addOption("Rotate Auton-Pathplanner", drivebase.getAutonomousCommand("Rotate Auton"));
-                AutonChooser.addOption("Two Step Approach", drivebase.getTestTwoStepApproach(2, 0, 0, 0));
                 AutonChooser.addOption("Coral L4 Score", L4AutonomousCommand);
-                SmartDashboard.putData("Drive Auton", AutonChooser);
+                        SmartDashboard.putData("Drive Auton", AutonChooser);
         }
 
         /**
@@ -285,6 +266,28 @@ public class RobotContainer {
                                         selectedLevel = 0;
                                         armElevator.goToStowCommand().schedule();
                                 }, armElevator));
+
+                                driverPS4.povUp().onTrue(Commands.runOnce(() -> {
+                                        selectedLevel = -3;
+                                        armElevator.goToLevelCommand(-3).schedule();
+                                }, armElevator));
+
+                                driverPS4.povDown().onTrue(Commands.runOnce(() -> {
+                                        selectedLevel = -2;
+                                        armElevator.goToLevelCommand(-2).schedule();
+                                }, armElevator));
+
+                                driverPS4.povRight().whileTrue(Commands.runOnce(() -> {
+                                        armElevator.setManualArm(0.1);
+                                })).onFalse(Commands.runOnce(() -> {
+                                        armElevator.stopManualArm();
+                                }));
+
+                                driverPS4.povLeft().whileTrue(Commands.runOnce(() -> {
+                                        armElevator.setManualArm(-0.1);
+                                })).onFalse(Commands.runOnce(() -> {
+                                        armElevator.stopManualArm();
+                                }));
                         } else {
                                 driverPS4.triangle().onTrue(Commands.runOnce(() -> {
                                         selectedLevel = 4;
@@ -463,38 +466,7 @@ public class RobotContainer {
          * Provides the autonomous command to be scheduled in auto mode.
          */
         public Command getAutonomousCommand() {
-                Command Auton = new SequentialCommandGroup(
-                                drivebase.getAutonomousCommand("M1AUTO1"),
-                                new WaitCommand(1),
-                                new InstantCommand(() -> {
-                                        armElevator.goToFunnelCommand().schedule();
-                                }), // goes to funnel position
-                                new WaitCommand(1),
-                                new InstantCommand(() -> {
-                                        armElevator.goToLevelCommand(4).schedule();
-                                }),
-                                new WaitCommand(5), // waits 1.5 seconds
-                                new InstantCommand(() -> {
-                                        armElevator.goToStowCommand().schedule();
-                                })
-                // new InstantCommand(() -> {
-                // armElevator.goToLevelCommand(4).schedule();
-                // })
-                // , // goes back to level 4
-                // new WaitCommand(2),
-                // new InstantCommand(() -> {
-                // armElevator.startManualOuttake(); // starts manual outtake
-                // }),
-                // new WaitCommand(1.5), // waits 2 seconds
-                // new InstantCommand(() -> {
-                // armElevator.stopIntake(); // stops the intake
-                // }),
-                // new WaitCommand(1.5)
-                // ,
-                // drivebase.getAutonomousCommand("M1AUTO2")
-                );
-
-                return Auton;
+               return drivebase.getAutonomousCommand("Straight Auton");
         }
 
         /** Sets the drive motors to brake or coast mode. */
