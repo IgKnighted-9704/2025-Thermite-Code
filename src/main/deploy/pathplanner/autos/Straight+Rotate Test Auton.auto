@@ -7,6 +7,12 @@
         {
           "type": "path",
           "data": {
+            "pathName": "Straight Path"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
             "pathName": "Rotate Path"
           }
         }

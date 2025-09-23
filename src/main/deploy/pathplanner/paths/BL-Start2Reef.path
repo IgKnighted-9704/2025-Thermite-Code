@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.371514548350786,
-        "y": 6.58989611559301
+        "x": 6.386215698063546,
+        "y": 6.579517415974805
       },
-      "isLocked": false,
-      "linkedName": null
+      "isLocked": true,
+      "linkedName": "Flush Left Start"
     },
     {
       "anchor": {
-        "x": 5.346516393442624,
-        "y": 5.463524590163933
+        "x": 5.442418032786885,
+        "y": 5.391598360655737
       },
       "prevControl": {
-        "x": 5.142676027722244,
-        "y": 5.2950571372011686
+        "x": 5.2479384903116095,
+        "y": 5.189650487166553
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Back Left Reef Branch"
     }
   ],
   "rotationTargets": [],
@@ -45,7 +45,7 @@
     "rotation": -119.99999999999999
   },
   "reversed": false,
-  "folder": "BL",
+  "folder": "Blue Left",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

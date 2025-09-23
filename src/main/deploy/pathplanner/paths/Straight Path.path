@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.6423155737704918,
-        "y": 7.38155737704918
+        "x": 2.0,
+        "y": 7.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.6550691078133424,
-        "y": 6.084691134549468
+        "x": 3.0,
+        "y": 7.0
       },
-      "isLocked": true,
-      "linkedName": "Left Coral Station"
+      "isLocked": false,
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.8600409836065577,
-        "y": 5.535450819672132
+        "x": 4.0,
+        "y": 7.0
       },
       "prevControl": {
-        "x": 3.75057761779539,
-        "y": 5.912282508788063
+        "x": 3.0,
+        "y": 7.0
       },
       "nextControl": null,
-      "isLocked": true,
-      "linkedName": "Front Left Reef Branch"
+      "isLocked": false,
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
+    "maxVelocity": 0.5,
     "maxAcceleration": 0.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -59.858614447924765
+    "rotation": 0.0
   },
   "reversed": false,
-  "folder": "Blue Left",
+  "folder": "Test Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -55.0
+    "rotation": 0.0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

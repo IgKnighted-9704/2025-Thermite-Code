@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.347,
-        "y": 5.464
+        "x": 5.442418032786885,
+        "y": 5.391598360655737
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.057182176440733,
-        "y": 5.918558051455484
+        "x": 4.126137390354149,
+        "y": 6.081481975118533
       },
       "isLocked": true,
-      "linkedName": null
+      "linkedName": "Back Left Reef Branch"
     },
     {
       "anchor": {
-        "x": 1.211,
-        "y": 6.95
+        "x": 1.6423155737704918,
+        "y": 7.38155737704918
       },
       "prevControl": {
-        "x": 3.9045213283755285,
-        "y": 5.705059566531428
+        "x": 4.436639523292155,
+        "y": 5.8516645838182635
       },
       "nextControl": null,
       "isLocked": true,
-      "linkedName": null
+      "linkedName": "Left Coral Station"
     }
   ],
   "rotationTargets": [],
@@ -45,7 +45,7 @@
     "rotation": -55.0
   },
   "reversed": false,
-  "folder": "BL",
+  "folder": "Blue Left",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -119.99999999999999
