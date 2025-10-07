@@ -732,11 +732,12 @@ public class SwerveSubsystem extends SubsystemBase {
 
   //PATH 1 - (Lineup With Red & Blue Markers to the Corners and the black marker to the center.) (Distance = 78-80 Inches)
   public Command getTestDriveStraight(double distance, double velocity) {
+    double time = Math.abs(distance/ velocity);
     Command autonomousCommand = Commands.sequence(
       new InstantCommand(() ->{
         this.driveCommand(() -> velocity/Constants.DrivebaseConstants.VELOCITY_DRIVE_RATIO, () -> 0.0, () -> 0.0).schedule();
       }),
-      Commands.waitSeconds(distance/ velocity),
+      Commands.waitSeconds(1),
             new InstantCommand(() ->{
         this.driveCommand(() -> 0, () -> 0.0, () -> 0.0).schedule();
       })

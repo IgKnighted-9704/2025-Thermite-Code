@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.swervedrive.Vision;
@@ -629,7 +630,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         } else {
             return Commands.sequence(
                     Commands.runOnce(() -> {
-                        desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
+                        desiredArmAngleDeg = getArmAngleForLevel(level)-Constants.ArmElevatorConstants.ARM_SCORE_DEG_OFFSET;
                         currentPreset = getScorePresetForLevel(level);
                     }));
         }
@@ -683,17 +684,74 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // --------------------------------------------------------------------------
     // Command Sequences For Autonomous
     // --------------------------------------------------------------------------
-        public Command AutoScoreSequence(int level){
+        public Command AutoScoreSetupSequence(int level){
+            Command CoralPickUP = Commands.sequence(
+                Commands.runOnce(() -> {
+                    desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+                }),
+                // WAIT UNTIL THE ARM IS IN TOLERANCE
+                Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 2.0)),
+                Commands.runOnce(() -> {
+                    manualIntakeActive = true;
+                    outtake = false;
+                }),
+                // MOVE ELEVATOR TO FUNNEL LOADING POSITION
+                Commands.runOnce(() -> {
+                    desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
+                }),
+                Commands.waitUntil(
+                        () -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2)),
+                Commands.runOnce(() -> {
+                    desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
+                }),
+                // WAIT UNTIL THE ARM IS IN TOLERANCE
+                Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 5)),
+                // WAIT UNTIL THE INTAKE STALLS
+                // Commands.waitUntil(()->
+                // intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM).getAsBoolean()),
+                Commands.waitSeconds(0.5),
+                // STOP INTAKE
+                Commands.runOnce(() -> {
+                    manualIntakeActive = false;
+                    outtake = false;
+                    intakeMotor.set(0);
+                }),
+                // MOVE ELEVATOR TO FUNNEL POSITION
+                Commands.runOnce(() -> {
+                    desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
+                }),
+                // WAIT UNTIL THE ELEVATOR IS IN TOLERANCE
+                Commands.waitUntil(() -> {
+                    return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2);
+                }),
+                Commands.waitSeconds(0.5),
+                goToLevelFromLoadingCommand(level));
+
             return Commands.sequence(
                 goToFunnelCommand(),
-                goToLevelCommand(level),
-                goToLevelScoreCommand(level),
-                goToStowCommand(),
-                Commands.waitUntil(()->
-                    (desiredArmAngleDeg == Constants.ArmElevatorConstants.ARM_STOW_DEG) && (desiredElevInches == Constants.ArmElevatorConstants.ELEVATOR_STOW_INCHES)
-                )
+                CoralPickUP,
+                Commands.waitSeconds(0.75)
             );
         }
+
+        public Command AutoScoreSequence(int level){
+            Command EndEffectorScore = Commands.sequence(
+                Commands.runOnce(()->{
+                    startManualOuttake();
+                }),
+                Commands.waitSeconds(1),
+                Commands.runOnce(()->{
+                    stopIntake();
+                })
+            );
+
+            return Commands.sequence(
+                goToLevelScoreCommand(level),
+                EndEffectorScore,
+                goToStowCommand()
+            );
+        }
+
 
     @Override
     public void periodic(){
@@ -772,7 +830,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Arm Desired Position", desiredArmAngleDeg);
             SmartDashboard.putNumber("Elevator Desired Position", desiredElevInches);
 
-            SmartDashboard.putNumber("Intake RPM", getIntakeRPM());
+            SmartDashboard.putString("Elevator Preset", currentPreset.toString());
         
         //ARM & ELEVATOR LOGIC (PERIODIC UPDATE)
 

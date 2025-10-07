@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.1541864772172072,
-        "y": 1.4817553456267045
+        "x": 1.7069581732549581,
+        "y": 0.9174679468059537
       },
       "isLocked": false,
       "linkedName": "Right Coral Station"
     },
     {
       "anchor": {
-        "x": 3.4884221311475407,
-        "y": 2.6943647540983604
+        "x": 3.812090163934426,
+        "y": 2.4785860655737704
       },
       "prevControl": {
-        "x": 3.6507902452917866,
-        "y": 2.504268474520771
+        "x": 3.6431572957354006,
+        "y": 1.95589536500046
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Front Right Reef Branch"
+      "linkedName": "Front Right Reef Branch 2"
     }
   ],
   "rotationTargets": [],
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 0.5,
+    "maxVelocity": 3.0,
     "maxAcceleration": 0.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 57.65255650055799
+    "rotation": 59.99999999999999
   },
   "reversed": false,
   "folder": "Blue Right",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -126.86989764584393
+    "rotation": 55.0
   },
   "useDefaultConstraints": true
 }

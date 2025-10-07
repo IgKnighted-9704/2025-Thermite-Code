@@ -7,37 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "BR-Start2Reef"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "L4 Coral"
+            "pathName": "TUNEPATH1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "BR-Reef2Station"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "BR-Station2Reef (2)"
+            "pathName": "TUNEPATH2"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "L4 Coral"
+            "name": "L4 Coral Setup"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "TUNEPATH3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4 Coral Score"
           }
         }
       ]

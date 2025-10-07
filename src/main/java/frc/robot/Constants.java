@@ -54,9 +54,9 @@ public final class Constants {
     public static  double PATH_PLANNER_TRANSLATION_KD = 0;
     public static  double PATH_PLANNER_TRANSLATION_KI = 0.0;
 
-    public static  double PATH_PLANNER_ROTATION_KP = 10;
+    public static  double PATH_PLANNER_ROTATION_KP = 7.5;
     public static  double PATH_PLANNER_ROTATION_KD = 0.0;
-    public static  double PATH_PLANNER_ROTATION_KI = 0.0;
+    public static  double PATH_PLANNER_ROTATION_KI = 0.5;
   }
 
   /**
@@ -119,8 +119,8 @@ public final class Constants {
     // // public static final double ELEVATOR_MAX_INCHES = 84.0;
 
     // Angles and positions for funnel/loading presets.
-    public static final double ARM_LOADING_DEG = -65.5;
-    public static final double ARM_FUNNEL_DEG = -65.5;
+    public static final double ARM_LOADING_DEG = -53.5;
+    public static final double ARM_FUNNEL_DEG = -53.5;
 
     // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
     // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
@@ -128,23 +128,23 @@ public final class Constants {
     public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.67;
 
     // Stow positioning for the arm.
-    public static final double ARM_STOW_DEG = 12;
-    public static final double ARM_SCORE_DEG = ARM_STOW_DEG;
+    public static final double ARM_STOW_DEG = 7;
+    public static final double ARM_SCORE_DEG_OFFSET = 24;
     // // public static final double ARM_STOW_TOLERANCE_DEG = 4.0;
     // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
     // PID and feedforward parameters for both the arm and the elevator.
-    public static double ARM_kP = 0.0375;
-    public static double ARM_kI = 0.0;
+    public static double ARM_kP = 0.0375; //Game - 0.0375, Test -
+    public static double ARM_kI = 0.0; 
     public static double ARM_kD = 0.0;
 
-    public static double ELEVATOR_kP = 3.0;
+    public static double ELEVATOR_kP = 10.0;
     public static double ELEVATOR_kI = 0.0;
     public static double ELEVATOR_kD = 0.0;
 
     public static double ELEV_kS = 0.0;
     public static double ELEV_kG = 0.41;
-    public static double ELEV_kV = 4.2;
+    public static double ELEV_kV = 4.0;
     public static double ELEV_kA = 0.5;
 
     // Constraints for the elevator’s maximum velocity and acceleration (m/s an d

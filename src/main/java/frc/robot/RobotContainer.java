@@ -1,6 +1,7 @@
 
 package frc.robot;
 
+import com.fasterxml.jackson.core.sym.Name;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -158,10 +159,15 @@ public class RobotContainer {
 
         public RobotContainer() {
 
-                NamedCommands.registerCommand("L4 Coral", armElevator.AutoScoreSequence(4));
-                NamedCommands.registerCommand("L3 Coral", armElevator.AutoScoreSequence(3));
-                NamedCommands.registerCommand("L2 Coral", armElevator.AutoScoreSequence(2));
-                NamedCommands.registerCommand("L1 Coral", armElevator.AutoScoreSequence(1));
+                NamedCommands.registerCommand("L4 Coral Setup", armElevator.AutoScoreSetupSequence(4));
+                NamedCommands.registerCommand("L3 Coral Setup", armElevator.AutoScoreSetupSequence(4));
+                NamedCommands.registerCommand("L2 Coral Setup", armElevator.AutoScoreSetupSequence(4));
+                NamedCommands.registerCommand("L1 Coral Setup", armElevator.AutoScoreSetupSequence(4));
+                NamedCommands.registerCommand("L4 Coral Score", armElevator.AutoScoreSequence(4));
+                NamedCommands.registerCommand("L3 Coral Score", armElevator.AutoScoreSequence(3));
+                NamedCommands.registerCommand("L2 Coral Score", armElevator.AutoScoreSequence(2));
+                NamedCommands.registerCommand("L1 Coral Score", armElevator.AutoScoreSequence(1));
+                NamedCommands.registerCommand("CLEARANCE DRIVE", drivebase.getTestDriveStraight(0.25, -0.25));
 
                 configureBindings();
 
@@ -466,7 +472,7 @@ public class RobotContainer {
          * Provides the autonomous command to be scheduled in auto mode.
          */
         public Command getAutonomousCommand() {
-               return drivebase.getAutonomousCommand("Straight Auton");
+               return drivebase.getAutonomousCommand("TUNEAUTON");
         }
 
         /** Sets the drive motors to brake or coast mode. */
