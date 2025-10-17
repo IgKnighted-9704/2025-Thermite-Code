@@ -7,6 +7,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.Sendable;
@@ -28,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.swervedrive.CustomVision;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.miscellaneous.ArmElevatorEndEffectorSubsystem;
 import frc.robot.subsystems.miscellaneous.AlgaeIntakeSubsystem;
@@ -58,8 +58,6 @@ public class RobotContainer {
         private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
         // Arm Elevator End Effector
         private final ArmElevatorEndEffectorSubsystem armElevator = new ArmElevatorEndEffectorSubsystem(drivebase);
-        // Vision Subsystem
-        private final CustomVision vision = new CustomVision("LEFT_CAMERA", "RIGHT_CAMERA", drivebase);
 
         // Default Drive
         // -------------------------------------------
@@ -106,68 +104,28 @@ public class RobotContainer {
         boolean ENABLE_ALGAE_INTAKE_SUBSYSTEM = false; // Set to false to disable the Algae Intake subsystem
         boolean ENABLE_DRIVEBASE_SUBSYSTEM = true; // Set to false to disable the Drivebase subsystem
         boolean ENABLE_MANUAL_CONTROL = false; // Set to false to disable manual control of the Arm Elevator subsystem
-        boolean ENABLE_VISION_SUBSYSTEM = false; // Set to false to disable the Vision subsystem
 
         // Driver Disable/Enable
         boolean varunMain = false;
         boolean jakeMain = true;
 
-        // Autonomous
-
         // Path Chooser
         SendableChooser<Command> AutonChooser;
-        SendableChooser<Command> DriverChooser;
-        // AUTONOMOUS COMMANDS
-        // PATH - 1
-        private Command L4AutonomousCommand = new SequentialCommandGroup(
-                        new InstantCommand(() -> {
-                                armElevator.goToFunnelCommand().schedule();
-                        }), // goes to funnel position
-                        new WaitCommand(2), // waits 2 seconds
-                        new InstantCommand(() -> {
-                                selectedLevel = 4;
-                                armElevator.goToLevelCommand(4).schedule();
-                        }), // goes to level 4
-                        new WaitCommand(2), // waits 2 seconds
-                        new InstantCommand(() -> {
-                                drivebase.driveCommand(() -> -0.5 / Constants.DrivebaseConstants.VELOCITY_DRIVE_RATIO,
-                                                () -> 0, () -> 0).schedule(); // drives with a velocity of 0.5 m/s
-                        }),
-                        new WaitCommand(8), // waits 1 second
-                        new InstantCommand(() -> {
-                                drivebase.driveCommand(() -> 0, () -> 0, () -> 0).schedule(); // stops the drivebase
-                        }),
-                        new WaitCommand(1.5), // wait 1.5 seconds
-                        new InstantCommand(() -> {
-                                armElevator.goToLevelScoreCommand(4).schedule(); // score L4
-                        }),
-                        new WaitCommand(1.5), // waits 1.5 seconds
-                        new InstantCommand(() -> {
-                                armElevator.goToLevelCommand(4).schedule();
-                        }), // goes back to level 4
-                        new WaitCommand(1),
-                        new InstantCommand(() -> {
-                                armElevator.startManualOuttake(); // starts manual outtake
-                        }),
-                        new WaitCommand(2), // waits 2 seconds
-                        new InstantCommand(() -> {
-                                armElevator.stopIntake(); // stops the intake
-                        }), new InstantCommand(() -> {
-                                armElevator.goToStowCommand().schedule(); // goes to stow position
-                        }));
-
 
         public RobotContainer() {
 
-                NamedCommands.registerCommand("L4 Coral Setup", armElevator.AutoScoreSetupSequence(4));
-                NamedCommands.registerCommand("L3 Coral Setup", armElevator.AutoScoreSetupSequence(4));
-                NamedCommands.registerCommand("L2 Coral Setup", armElevator.AutoScoreSetupSequence(4));
-                NamedCommands.registerCommand("L1 Coral Setup", armElevator.AutoScoreSetupSequence(4));
-                NamedCommands.registerCommand("L4 Coral Score", armElevator.AutoScoreSequence(4));
-                NamedCommands.registerCommand("L3 Coral Score", armElevator.AutoScoreSequence(3));
-                NamedCommands.registerCommand("L2 Coral Score", armElevator.AutoScoreSequence(2));
-                NamedCommands.registerCommand("L1 Coral Score", armElevator.AutoScoreSequence(1));
-                NamedCommands.registerCommand("CLEARANCE DRIVE", drivebase.getTestDriveStraight(0.25, -0.25));
+                // Setup Coral
+                        NamedCommands.registerCommand("L4 Coral Setup", armElevator.AutoScoreSequence(4, false));
+                        NamedCommands.registerCommand("L3 Coral Setup", armElevator.AutoScoreSequence(4, false));
+                        NamedCommands.registerCommand("L2 Coral Setup", armElevator.AutoScoreSequence(4, false));
+                        NamedCommands.registerCommand("L1 Coral Setup", armElevator.AutoScoreSequence(4, false));
+                // Score Coral
+                        NamedCommands.registerCommand("L4 Coral Score", armElevator.AutoScoreSequence(4, true));
+                        NamedCommands.registerCommand("L3 Coral Score", armElevator.AutoScoreSequence(4, true));
+                        NamedCommands.registerCommand("L2 Coral Score", armElevator.AutoScoreSequence(4, true));
+                        NamedCommands.registerCommand("L1 Coral Score", armElevator.AutoScoreSequence(4, true));
+                //Constraint Zone
+                        
 
                 configureBindings();
 
@@ -176,11 +134,13 @@ public class RobotContainer {
 
                 // Path Planner Chooser
                 AutonChooser = new SendableChooser<>();
-                AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight(1.0, 0.5));
-                AutonChooser.addOption("Straight Auton-Pathplanner", drivebase.getAutonomousCommand("Straight Auton"));
-                AutonChooser.addOption("Rotate Auton-Pathplanner", drivebase.getAutonomousCommand("Rotate Auton"));
-                AutonChooser.addOption("Coral L4 Score", L4AutonomousCommand);
-                        SmartDashboard.putData("Drive Auton", AutonChooser);
+                        //TEST PATHS
+                        AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight(1.0, 0.5));
+                        AutonChooser.addOption("Straight Auton-Pathplanner", drivebase.getAutonomousCommand("Straight Auton"));
+                        AutonChooser.addOption("Rotate Auton-Pathplanner", drivebase.getAutonomousCommand("Rotate Auton"));
+
+                        //Autonomous Paths
+                        AutonChooser.addOption(null, getAutonomousCommand());
         }
 
         /**
@@ -376,16 +336,6 @@ public class RobotContainer {
                                 selectedLevel = 0;
                                 armElevator.goToStowCommand().schedule();
                         }, armElevator));
-                }
-
-                // Vision Based Drive
-                if (ENABLE_VISION_SUBSYSTEM) {
-                        driverPS4.povLeft().onTrue(Commands.run(() -> {
-                                vision.autoAlign(true).schedule();
-                        }));
-                        driverPS4.povRight().onTrue(Commands.run(() -> {
-                                vision.autoAlign(false).schedule();
-                        }));
                 }
 
                 // Score Command (AUX)

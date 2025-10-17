@@ -7,19 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Straight Path"
+            "pathName": "Sucess Test"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Rotate Path"
+            "name": "L4 Coral Score"
           }
         }
       ]
     }
   },
-  "resetOdom": true,
+  "resetOdom": false,
   "folder": null,
   "choreoAuto": false
 }

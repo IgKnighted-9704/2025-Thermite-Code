@@ -7,37 +7,37 @@
         {
           "type": "path",
           "data": {
-            "pathName": "BR-Start2Reef"
+            "pathName": "BTR-H1R"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "L4 Coral"
+            "name": "L4 Coral Score"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "BR-Reef2Station"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "BR-Station2Reef (2)"
+            "pathName": "H1R-TLCS-H1L"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "L4 Coral"
+            "name": "L4 Coral Score"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "H1L-TLCS-H2L"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "L4 Coral Score"
           }
         }
       ]

@@ -109,9 +109,11 @@ public final class Constants {
     public static final int ARM_MOTOR_ID = 13;
     public static final int INTAKE_MOTOR_ID = 10; // The end effector motor.
     public static final int ARM_ENCODER_ID = 17;
+    public static final int CORAL_SENSOR_ID = 1;
 
     // Conversion factor from sensor ticks to elevator inches.
     public static double ELEV_TICKS_PER_INCH = 0.7290445833333333;
+
 
     // // public static double ARM_MIN_DEG = -167.0; // Retracted inside robot
     // // public static double ARM_MAX_DEG = 160.0;
