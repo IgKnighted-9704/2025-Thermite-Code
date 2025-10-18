@@ -1,11 +1,9 @@
 package frc.robot.subsystems.miscellaneous;
 
-import java.util.ArrayList;
 import java.util.function.BooleanSupplier;
 import java.util.List;
 
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -23,20 +21,14 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.swervedrive.Vision;
 import frc.robot.Constants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.ArmElevatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
-
-import java.util.Optional;
-import org.photonvision.targeting.PhotonPipelineResult;
+import frc.robot.subsystems.swervedrive.Cameras;
 
 
 public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
@@ -435,7 +427,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 // WAIT UNTIL THE ARM IS IN TOLERANCE
                 Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 5)),
                 // WAIT UNTIL THE INTAKE STALLS
-                Commands.waitUntil(()-> this.getCoralSensor()),
+                Commands.waitUntil(intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
                 // STOP INTAKE
                 Commands.runOnce(() -> {
                     manualIntakeActive = false;
@@ -489,6 +481,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
          * - Then moves the elevator to the stow height and disables auto intake.
          */
         Command DefaultStowPos = Commands.sequence(
+                Commands.runOnce(()->startManualOuttake()),
+                Commands.waitSeconds(0.25),
                 Commands.runOnce(() -> {
                     desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
                 }),
@@ -513,19 +507,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     }),
                     // WAIT UNTIL THE ELEVATOR IS IN TOLERANCE
                     Commands.waitUntil(() -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2.0)),
-                    // SET DESIRED ARM ANGLE TO STOW POSITION
-                    Commands.runOnce(() -> {
-                        desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
-                    }),
-                    // WAIT UNTIL THE ARM IS IN TOLERANCE
-                    Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 10)),
                     // RETURN TO DEFAULT STOW POSITION
                     DefaultStowPos);
         } else if (currentPreset == Preset.LOADING) {
             return Commands.sequence(
-                    Commands.runOnce(() -> {
-                        desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
-                    }),
                     goToFunnelCommand(),
                     DefaultStowPos);
         }
@@ -538,7 +523,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Find's Visible Reef's April Tag.
     // Returns Tag Id as an int if found, otherwise returns -1.
     private int findVisibleReefTag(List<Integer> visibleTags) {
-        for (Vision.Cameras cam : Vision.Cameras.values()) {
+        for (Cameras cam : VisionConstants.cameraList) {
             var bestResult = cam.getBestResult();
             if (bestResult.isEmpty()) {
                 continue;
@@ -621,14 +606,14 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Command -> Move from LOADING to LEVEL-SCORE
     // This command is used to transition from the loading position to a specific
     // level score position.
-    public Command goToLevelScoreCommand(int level) {
-        return goToScoreFromLoadingCommand(level);
+    public Command goToLevelScoreCommand(int level, boolean teleop) {
+        return goToScoreFromLoadingCommand(level, teleop);
     }
 
     // Command -> Move from LOADING to LEVEL-SCORE
     // This command is used to transition from the loading position to a specific
     // level score position.
-    private Command goToScoreFromLoadingCommand(int level) {
+    private Command goToScoreFromLoadingCommand(int level, boolean teleop) {
         if (level == 2 || currentPreset == Preset.LEVEL2 || level == -2 || currentPreset == Preset.LEVEL2DEALGAE || level ==-3 || currentPreset == Preset.LEVEL3DEALGAE) {
             return Commands.sequence(
                     Commands.runOnce(() -> {
@@ -641,6 +626,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     Commands.runOnce(() -> {
                         currentPreset = getScorePresetForLevel(level);
                     }));
+        } else if (teleop) {
+            return goToStowCommand();
         } else {
             return Commands.sequence(
                     Commands.runOnce(() -> {
@@ -699,24 +686,27 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // Command Sequences For Autonomous
     // --------------------------------------------------------------------------
         //TRUE - Score
-        //FALSE - Setup
+        //FALSE - Setup 
         public Command AutoScoreSequence(int level, boolean scoreOrSetup){
-            return Commands.sequence(
-              goToFunnelCommand(),
-                Commands.waitSeconds(0.1),
-              pickUpCoralCommand(level),
-                 Commands.waitSeconds(0.1),
-              goToLevelFromLoadingCommand(level),
-                Commands.waitSeconds(0.1),
-              new ConditionalCommand(goToScoreFromLoadingCommand(level), Commands.none(), ()-> scoreOrSetup)
+              return Commands.either(
+                goToScoreFromLoadingCommand(level, false), 
+                Commands.sequence(
+                    goToFunnelCommand(),
+                    pickUpCoralCommand(level),
+                    goToLevelFromLoadingCommand(level)
+                ), 
+                ()-> scoreOrSetup
             );
         }
 
     // --------------------------------------------------------------------------
     // Sensor Reading Tracker
     // --------------------------------------------------------------------------
-        public boolean getCoralSensor(){
-            return coralSensor.get();
+
+        //True - Detects Object
+        //False - No Object Detected
+        public boolean getCoralInFunnelSensor(){
+            return !coralSensor.get();
         }
 
     @Override

@@ -1,41 +1,21 @@
 
 package frc.robot;
 
-import com.fasterxml.jackson.core.sym.Name;
 import com.pathplanner.lib.auto.NamedCommands;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.util.sendable.Sendable;
-import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.miscellaneous.ArmElevatorEndEffectorSubsystem;
 import frc.robot.subsystems.miscellaneous.AlgaeIntakeSubsystem;
 import java.io.File;
-import swervelib.SwerveDrive;
 import swervelib.SwerveInputStream;
-import com.pathplanner.lib.auto.NamedCommands;
 
 /**
  * RobotContainer sets up the operator interface, button bindings, and default
@@ -116,14 +96,14 @@ public class RobotContainer {
 
                 // Setup Coral
                         NamedCommands.registerCommand("L4 Coral Setup", armElevator.AutoScoreSequence(4, false));
-                        NamedCommands.registerCommand("L3 Coral Setup", armElevator.AutoScoreSequence(4, false));
-                        NamedCommands.registerCommand("L2 Coral Setup", armElevator.AutoScoreSequence(4, false));
-                        NamedCommands.registerCommand("L1 Coral Setup", armElevator.AutoScoreSequence(4, false));
+                        NamedCommands.registerCommand("L3 Coral Setup", armElevator.AutoScoreSequence(3, false));
+                        NamedCommands.registerCommand("L2 Coral Setup", armElevator.AutoScoreSequence(2, false));
+                        NamedCommands.registerCommand("L1 Coral Setup", armElevator.AutoScoreSequence(1, false));
                 // Score Coral
                         NamedCommands.registerCommand("L4 Coral Score", armElevator.AutoScoreSequence(4, true));
-                        NamedCommands.registerCommand("L3 Coral Score", armElevator.AutoScoreSequence(4, true));
-                        NamedCommands.registerCommand("L2 Coral Score", armElevator.AutoScoreSequence(4, true));
-                        NamedCommands.registerCommand("L1 Coral Score", armElevator.AutoScoreSequence(4, true));
+                        NamedCommands.registerCommand("L3 Coral Score", armElevator.AutoScoreSequence(3, true));
+                        NamedCommands.registerCommand("L2 Coral Score", armElevator.AutoScoreSequence(2, true));
+                        NamedCommands.registerCommand("L1 Coral Score", armElevator.AutoScoreSequence(1, true));
                 //Constraint Zone
                         
 
@@ -347,11 +327,11 @@ public class RobotContainer {
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
                         driverPS4.R1().onTrue(Commands.runOnce(() -> {
                                 // Universal method that transitions to the appropriate "score" preset
-                                armElevator.goToLevelScoreCommand(selectedLevel).schedule();
+                                armElevator.goToLevelScoreCommand(selectedLevel, true).schedule();
                         }, armElevator));
                         auxPS4.R1().onTrue(Commands.runOnce(() -> {
                                 // Universal method that transitions to the appropriate "score" preset
-                                armElevator.goToLevelScoreCommand(selectedLevel).schedule();
+                                armElevator.goToLevelScoreCommand(selectedLevel, true).schedule();
                         }, armElevator));
                 }
 

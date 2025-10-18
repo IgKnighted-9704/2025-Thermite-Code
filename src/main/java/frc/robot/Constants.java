@@ -4,10 +4,16 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+
+import java.util.ArrayList;
 import java.util.List;
 import swervelib.math.Matter;
+
+import frc.robot.subsystems.swervedrive.Cameras;
 
 /**
  * The Constants class provides a single location for storing numeric and
@@ -30,13 +36,6 @@ public final class Constants {
 
   // Maximum robot speed in meters per second, used to constrain acceleration.
   public static final double MAX_SPEED = Units.feetToMeters(15.3);
-
-  // If you wanted an AutonConstants block, you could define it here:
-  // public static final class AutonConstants {
-  // public static final PIDConstants TRANSLATION_PID = new PIDConstants(0.7, 0,
-  // 0);
-  // public static final PIDConstants ANGLE_PID = new PIDConstants(0.4, 0, 0.01);
-  // }
 
   /**
    * Constants dedicated to the drivebase subsystem.
@@ -114,9 +113,6 @@ public final class Constants {
     // Conversion factor from sensor ticks to elevator inches.
     public static double ELEV_TICKS_PER_INCH = 0.7290445833333333;
 
-
-    // // public static double ARM_MIN_DEG = -167.0; // Retracted inside robot
-    // // public static double ARM_MAX_DEG = 160.0;
     // // public static double ELEVATOR_MIN_INCHES = 0.0;
     // // public static final double ELEVATOR_MAX_INCHES = 84.0;
 
@@ -124,16 +120,12 @@ public final class Constants {
     public static final double ARM_LOADING_DEG = -53.5;
     public static final double ARM_FUNNEL_DEG = -53.5;
 
-    // // public static final double ELEV_FUNNEL_SAFE_MIN_INCHES = 15.25;
-    // // public static final double ELEV_FUNNEL_SAFE_MAX_INCHES = 20.5;
     public static final double ELEVATOR_FUNNEL_INCHES = 14.790200;
     public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.67;
 
     // Stow positioning for the arm.
     public static final double ARM_STOW_DEG = 7;
     public static final double ARM_SCORE_DEG_OFFSET = 24;
-    // // public static final double ARM_STOW_TOLERANCE_DEG = 4.0;
-    // // public static final double ELEVATOR_SAFE_LOWER_THRESHOLD = 4.0;
 
     // PID and feedforward parameters for both the arm and the elevator.
     public static double ARM_kP = 0.0375; //Game - 0.0375, Test -
@@ -177,11 +169,6 @@ public final class Constants {
     public static final double ARM_LEVEL4_DEG = 225;
     public static final double ARM_DEALGAELEVEL2_DEG = 190;
     public static final double ARM_DEALGAELEVEL3_DEG = 190;
-
-    // // public static final double ARM_TOLERANCE_DEG = 2.0;
-    // // public static final double ELEVATOR_TOLERANCE_INCH = 1.0;
-    // // public static final double TILT_THRESHOLD_DEG = 10.0;
-    // // public static final double ACCEL_LIMIT_S CALE = 0.01;
 
     // Intake constants
     public static final double INTAKE_SPEED = 0.5;
@@ -231,6 +218,26 @@ public final class Constants {
     public static final double INTAKE_SPEED = 0.8;
 
     public static final double INTAKE_SLOW = 0.05;
+  }
+
+  public static final class VisionConstants {
+     public static final Cameras leftCam = new Cameras(
+        "CAMERA_LEFT",
+        new Rotation3d(Math.toRadians(0), Math.toRadians(25), Math.toRadians(0)),
+        new Translation3d(Units.inchesToMeters(27), Units.inchesToMeters(-23), Units.inchesToMeters(8.75)),
+        VecBuilder.fill(4, 4, 8),
+        VecBuilder.fill(0.5, 0.5, 1)
+    );
+
+    public static final Cameras rightCam = new Cameras(
+        "CAMERA_RIGHT",
+        new Rotation3d(Math.toRadians(0), Math.toRadians(155), Math.toRadians(0)),
+        new Translation3d(Units.inchesToMeters(27), Units.inchesToMeters(23), Units.inchesToMeters(8.75)),
+        VecBuilder.fill(4, 4, 8),
+        VecBuilder.fill(0.5, 0.5, 1)
+    );
+
+    public static final ArrayList<Cameras> cameraList = new ArrayList<Cameras>(List.of(leftCam, rightCam));
   }
 
   /**

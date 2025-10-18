@@ -28,23 +28,18 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
-import frc.robot.subsystems.swervedrive.Vision.Cameras;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
@@ -197,9 +192,9 @@ public class SwerveSubsystem extends SubsystemBase {
           new PPHolonomicDriveController(
               // PPHolonomicController is the built in path following controller for holonomic drive
               // trains
-              new PIDConstants(Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD), //TODO : TUNE DRIVE PID
+              new PIDConstants(Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI, Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD), 
               // Translation PID constants
-              new PIDConstants(Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KP, Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KI, Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KD) //TODO : TUNE ANGULAR PID
+              new PIDConstants(Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KP, Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KI, Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KD) 
              // Rotation PID constants
           ), config,
           // The robot configuration
@@ -737,7 +732,7 @@ public class SwerveSubsystem extends SubsystemBase {
       new InstantCommand(() ->{
         this.driveCommand(() -> velocity/Constants.DrivebaseConstants.VELOCITY_DRIVE_RATIO, () -> 0.0, () -> 0.0).schedule();
       }),
-      Commands.waitSeconds(1),
+      Commands.waitSeconds(time),
             new InstantCommand(() ->{
         this.driveCommand(() -> 0, () -> 0.0, () -> 0.0).schedule();
       })
