@@ -108,7 +108,8 @@ public final class Constants {
     public static final int ARM_MOTOR_ID = 13;
     public static final int INTAKE_MOTOR_ID = 10; // The end effector motor.
     public static final int ARM_ENCODER_ID = 17;
-    public static final int CORAL_SENSOR_ID = 1;
+    public static final int CORAL_FUNNEL_SENSOR_ID = 1;
+    public static final int CORAL_IN_ENDEFFECTOR_SENSOR_ID = 2;
 
     // Conversion factor from sensor ticks to elevator inches.
     public static double ELEV_TICKS_PER_INCH = 0.7290445833333333;
@@ -173,6 +174,9 @@ public final class Constants {
     // Intake constants
     public static final double INTAKE_SPEED = 0.5;
     public static final double INTAKE_STOPPED_RPM = 2.1;
+    
+    //Sensor Constants
+    public static final boolean TestEndEffectorSensor = true;
   }
 
   /**

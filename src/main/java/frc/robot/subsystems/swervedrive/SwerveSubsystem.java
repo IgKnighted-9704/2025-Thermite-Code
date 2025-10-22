@@ -143,18 +143,6 @@ public class SwerveSubsystem extends SubsystemBase {
       swerveDrive.updateOdometry();
       vision.updatePoseEstimation(swerveDrive);
     }
-    getPoseCommand();
-
-
-    Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KP = SmartDashboard.getNumber("ROTATION P", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KP);
-    Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KI = SmartDashboard.getNumber("ROTATION I", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KI);
-    Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KD = SmartDashboard.getNumber("ROTATION D", Constants.PathplannerConstants.PATH_PLANNER_ROTATION_KD);
-
-    Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP = SmartDashboard.getNumber("TRANSLATION P", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KP);
-    Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI = SmartDashboard.getNumber("TRANSLATION I", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KI);
-    Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD = SmartDashboard.getNumber("TRANSLATION D", Constants.PathplannerConstants.PATH_PLANNER_TRANSLATION_KD);
-
-
   }
 
   @Override

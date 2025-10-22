@@ -62,7 +62,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private boolean dealgaeState = false;
 
     //Sensor Reading Tracker
-    private DigitalInput coralSensor;
+    private DigitalInput coralFunnelSensor;
+    private DigitalInput coralInEndEffectorSensor;
+    private boolean funnelSensor;
+    private boolean endeffectorSensor;
 
     private enum Preset {
         STOW, FUNNEL, LOADING, LEVEL1, LEVEL2, LEVEL3, LEVEL4, LEVEL1SCORE, LEVEL2SCORE, LEVEL3SCORE, LEVEL4SCORE, LEVEL2DEALGAE, LEVEL3DEALGAE
@@ -104,7 +107,8 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         armMotor.setPosition(0);
 
         //Sensor Initialization
-        coralSensor = new DigitalInput(Constants.ArmElevatorConstants.CORAL_SENSOR_ID);
+        coralFunnelSensor = new DigitalInput(Constants.ArmElevatorConstants.CORAL_FUNNEL_SENSOR_ID);
+        coralInEndEffectorSensor = new DigitalInput(Constants.ArmElevatorConstants.CORAL_IN_ENDEFFECTOR_SENSOR_ID);
     }
 
     // Sensor Readouts
@@ -427,7 +431,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 // WAIT UNTIL THE ARM IS IN TOLERANCE
                 Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 5)),
                 // WAIT UNTIL THE INTAKE STALLS
-                Commands.waitUntil(intakeStallDetector(ArmElevatorConstants.INTAKE_STOPPED_RPM)),
+                Commands.either(Commands.waitUntil(()-> getCoralInEndEffectorSensor()), Commands.waitSeconds(0.5),  ()->ArmElevatorConstants.TestEndEffectorSensor),
                 // STOP INTAKE
                 Commands.runOnce(() -> {
                     manualIntakeActive = false;
@@ -446,7 +450,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
     // Command -> Move from (STOW to LOADING to LEVEL) OR (LOADING TO LEVEL)
     public Command goToLevelCommand(int level) {
-        if (currentPreset == Preset.FUNNEL && (level != -2 || level !=-3) ) {
+        if (currentPreset == Preset.FUNNEL && (level != -2 || level !=-3) && funnelSensor) {
             return Commands.sequence(
               pickUpCoralCommand(level),
               goToLevelFromLoadingCommand(level)
@@ -498,8 +502,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 Commands.runOnce(() -> currentPreset = Preset.STOW));
 
         // Decision Matrix
-        if (currentPreset == Preset.LEVEL2 ||
-                currentPreset == Preset.LEVEL2SCORE || currentPreset == Preset.LEVEL2DEALGAE || currentPreset == Preset.LEVEL2DEALGAE) {
+        if ((currentPreset == Preset.LEVEL2 || currentPreset == Preset.LEVEL2SCORE || currentPreset == Preset.LEVEL2DEALGAE || currentPreset == Preset.LEVEL2DEALGAE) && !endeffectorSensor) {
             return Commands.sequence(
                     // SET DESIRED ELEVATOR POSITION TO FUNNEL HEIGHT
                     Commands.runOnce(() -> {
@@ -509,7 +512,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     Commands.waitUntil(() -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2.0)),
                     // RETURN TO DEFAULT STOW POSITION
                     DefaultStowPos);
-        } else if (currentPreset == Preset.LOADING) {
+        } else if ((currentPreset == Preset.LOADING) && !endeffectorSensor) {
             return Commands.sequence(
                     goToFunnelCommand(),
                     DefaultStowPos);
@@ -614,7 +617,10 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     // This command is used to transition from the loading position to a specific
     // level score position.
     private Command goToScoreFromLoadingCommand(int level, boolean teleop) {
-        if (level == 2 || currentPreset == Preset.LEVEL2 || level == -2 || currentPreset == Preset.LEVEL2DEALGAE || level ==-3 || currentPreset == Preset.LEVEL3DEALGAE) {
+        if ((level == 2 || currentPreset == Preset.LEVEL2 || 
+        level == -2 || currentPreset == Preset.LEVEL2DEALGAE || 
+        level ==-3 || currentPreset == Preset.LEVEL3DEALGAE) 
+        && endeffectorSensor) {
             return Commands.sequence(
                     Commands.runOnce(() -> {
                         startManualOuttake();
@@ -626,7 +632,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     Commands.runOnce(() -> {
                         currentPreset = getScorePresetForLevel(level);
                     }));
-        } else if (teleop) {
+        } else if (teleop && endeffectorSensor) {
             return goToStowCommand();
         } else {
             return Commands.sequence(
@@ -689,12 +695,19 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         //FALSE - Setup 
         public Command AutoScoreSequence(int level, boolean scoreOrSetup){
               return Commands.either(
-                goToScoreFromLoadingCommand(level, false), 
+                Commands.sequence(
+                    goToScoreFromLoadingCommand(level, false), 
+                    Commands.waitUntil(()-> isArmInTolerance(getArmAngleForLevel(level)-Constants.ArmElevatorConstants.ARM_SCORE_DEG_OFFSET, 2.0)),
+                    goToStowCommand(),
+                    Commands.waitUntil(()->isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0) && isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_STOW_INCHES, 0.75)),
+                    Commands.none()),
                 Commands.sequence(
                     goToFunnelCommand(),
                     pickUpCoralCommand(level),
-                    goToLevelFromLoadingCommand(level)
-                ), 
+                    Commands.waitUntil(()-> isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0)),
+                    goToLevelFromLoadingCommand(level),
+                    Commands.waitUntil(()-> isElevatorInTolerance(getElevatorInchesForLevel(level), 0.75)),
+                    Commands.none()),
                 ()-> scoreOrSetup
             );
         }
@@ -706,7 +719,11 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         //True - Detects Object
         //False - No Object Detected
         public boolean getCoralInFunnelSensor(){
-            return !coralSensor.get();
+            return !coralFunnelSensor.get();
+        }
+
+        public boolean getCoralInEndEffectorSensor(){
+            return !coralInEndEffectorSensor.get();
         }
 
     @Override
@@ -786,6 +803,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Arm Desired Position", desiredArmAngleDeg);
             SmartDashboard.putNumber("Elevator Desired Position", desiredElevInches);
 
+
             SmartDashboard.putString("Elevator Preset", currentPreset.toString());
         
         //ARM & ELEVATOR LOGIC (PERIODIC UPDATE)
@@ -824,5 +842,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         intakeMotor.set(outtake ? ArmElevatorConstants.INTAKE_SPEED // Outtaking
                                 : -ArmElevatorConstants.INTAKE_SPEED); // Intaking
                     }
+                
+            //Sensor Updates
+                funnelSensor = getCoralInFunnelSensor();
+                endeffectorSensor = getCoralInEndEffectorSensor();
     }
 }

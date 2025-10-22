@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.subsystems.miscellaneous.ArmElevatorEndEffectorSubsystem;
-import frc.robot.subsystems.miscellaneous.AlgaeIntakeSubsystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
 
@@ -34,8 +33,6 @@ public class RobotContainer {
         // Drive Base
         private final SwerveSubsystem drivebase = new SwerveSubsystem(
                         new File(Filesystem.getDeployDirectory(), "swerve/maxSwerve"));
-        // Algae Intake
-        private final AlgaeIntakeSubsystem algaeIntake = new AlgaeIntakeSubsystem();
         // Arm Elevator End Effector
         private final ArmElevatorEndEffectorSubsystem armElevator = new ArmElevatorEndEffectorSubsystem(drivebase);
 
@@ -81,7 +78,6 @@ public class RobotContainer {
 
         // Subsystem Disable/Enable
         boolean ENABLE_ARM_ELEVATOR_SUBSYSTEM = true; // Set to false to disable the Arm Elevator subsystem
-        boolean ENABLE_ALGAE_INTAKE_SUBSYSTEM = false; // Set to false to disable the Algae Intake subsystem
         boolean ENABLE_DRIVEBASE_SUBSYSTEM = true; // Set to false to disable the Drivebase subsystem
         boolean ENABLE_MANUAL_CONTROL = false; // Set to false to disable manual control of the Arm Elevator subsystem
 
@@ -127,31 +123,6 @@ public class RobotContainer {
          * Defines and configures all button bindings and default commands.
          */
         private void configureBindings() {
-
-                // Algae Intake (MAIN)
-                // -------------------------------------------
-                // Maps PS4 controller triggers to control the Algae Intake pivot and rollers:
-                // - Holding L2 pivots the intake down and runs the intake forward
-                // (on release: disables PID and slows the intake)
-                // - Holding R2 runs the intake in reverse
-                // (on release: stops both pivot and intake)
-                // -------------------------------------------
-                if (ENABLE_ALGAE_INTAKE_SUBSYSTEM) {
-                        driverPS4.L2().whileTrue(Commands.run(() -> {
-                                algaeIntake.setPivotToIntake();
-                                algaeIntake.intakeForward();
-                        }, algaeIntake)).onFalse(Commands.runOnce(() -> {
-                                algaeIntake.disablePID();
-                                algaeIntake.intakeSlow();
-                        }, algaeIntake));
-
-                        driverPS4.R2().whileTrue(Commands.run(() -> {
-                                algaeIntake.intakeReverse();
-                        }, algaeIntake)).onFalse(Commands.runOnce(() -> {
-                                algaeIntake.stopPivot();
-                                algaeIntake.intakeStop();
-                        }, algaeIntake));
-                }
 
                 // End Effector Manual Control (AUX)
                 // -------------------------------------------
@@ -402,7 +373,7 @@ public class RobotContainer {
          * Provides the autonomous command to be scheduled in auto mode.
          */
         public Command getAutonomousCommand() {
-               return drivebase.getAutonomousCommand("TUNEAUTON");
+               return drivebase.getAutonomousCommand("Test Auton");
         }
 
         /** Sets the drive motors to brake or coast mode. */
