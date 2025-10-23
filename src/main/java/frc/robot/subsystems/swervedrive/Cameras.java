@@ -185,25 +185,28 @@ import org.photonvision.targeting.PhotonTrackedTarget;
        * timestamp.
        */
       private void updateUnreadResults() {
-        double mostRecentTimestamp =
-            resultsList.isEmpty() ? 0.0 : resultsList.get(0).getTimestampSeconds();
-        double currentTimestamp = Microseconds.of(NetworkTablesJNI.now()).in(Seconds);
-        double debounceTime = Milliseconds.of(15).in(Seconds);
-        for (PhotonPipelineResult result : resultsList) {
-          mostRecentTimestamp = Math.max(mostRecentTimestamp, result.getTimestampSeconds());
-        }
-        if ((resultsList.isEmpty() || (currentTimestamp - mostRecentTimestamp >= debounceTime))
-            && (currentTimestamp - lastReadTimestamp) >= debounceTime) {
-          resultsList = Robot.isReal() ? camera.getAllUnreadResults()
-              : cameraSim.getCamera().getAllUnreadResults();
-          lastReadTimestamp = currentTimestamp;
-          resultsList.sort((PhotonPipelineResult a, PhotonPipelineResult b) -> {
-            return a.getTimestampSeconds() >= b.getTimestampSeconds() ? 1 : -1;
-          });
-          if (!resultsList.isEmpty()) {
-            updateEstimatedGlobalPose();
-          }
-        }
+        // double mostRecentTimestamp =
+        //     resultsList.isEmpty() ? 0.0 : resultsList.get(0).getTimestampSeconds();
+        // double currentTimestamp = Microseconds.of(NetworkTablesJNI.now()).in(Seconds);
+        // double debounceTime = Milliseconds.of(15).in(Seconds);
+        // for (PhotonPipelineResult result : resultsList) {
+        //   mostRecentTimestamp = Math.max(mostRecentTimestamp, result.getTimestampSeconds());
+        // }
+        // if ((resultsList.isEmpty() || (currentTimestamp - mostRecentTimestamp >= debounceTime))
+        //     && (currentTimestamp - lastReadTimestamp) >= debounceTime) {
+        //   resultsList = Robot.isReal() ? camera.getAllUnreadResults()
+        //       : cameraSim.getCamera().getAllUnreadResults();
+        //   lastReadTimestamp = currentTimestamp;
+        //   resultsList.sort((PhotonPipelineResult a, PhotonPipelineResult b) -> {
+        //     return a.getTimestampSeconds() >= b.getTimestampSeconds() ? 1 : -1;
+        //   });
+        //   if (!resultsList.isEmpty()) {
+        //     updateEstimatedGlobalPose();
+        //   }
+        // }
+        System.out.println(camera.isConnected()); //TODO : Check is the camera is connected.
+        System.out.println(camera.getAllUnreadResults()); //TODO : Check if the camera is updating at all.
+        System.out.println(Robot.isReal()); //TODO : Check if the robot is in simulation or real.
       }
 
       /**

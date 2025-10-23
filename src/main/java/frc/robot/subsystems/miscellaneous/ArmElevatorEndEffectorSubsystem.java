@@ -728,7 +728,11 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
     @Override
     public void periodic(){
-        //UPDATED VALUES FROM SMARTDASHBOARD
+        //UPDATED VALUES FROM SMARTDASHBOARD        
+                //SENSOR UPDATES
+                funnelSensor = getCoralInFunnelSensor();
+                endeffectorSensor = getCoralInEndEffectorSensor();
+
             //ELEVATOR PIDF
                 ArmElevatorConstants.ELEVATOR_kP =
                     SmartDashboard.getNumber("Elevator kP", ArmElevatorConstants.ELEVATOR_kP);
@@ -842,9 +846,5 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                         intakeMotor.set(outtake ? ArmElevatorConstants.INTAKE_SPEED // Outtaking
                                 : -ArmElevatorConstants.INTAKE_SPEED); // Intaking
                     }
-                
-            //Sensor Updates
-                funnelSensor = getCoralInFunnelSensor();
-                endeffectorSensor = getCoralInEndEffectorSensor();
     }
 }
