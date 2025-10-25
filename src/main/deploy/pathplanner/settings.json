@@ -3,8 +3,7 @@
   "robotLength": 0.9,
   "holonomicMode": true,
   "pathFolders": [
-    "Blue Alliance",
-    "Red Alliance",
+    "Main Paths",
     "Test Paths"
   ],
   "autoFolders": [],

@@ -25,8 +25,9 @@ import frc.robot.subsystems.swervedrive.Cameras;
 public final class Constants {
 
   // Overall robot mass settings (in kilograms). Subtract manipulator weight if
-  // needed.
-  public static final double ROBOT_MASS = (148 - 20.3) * 0.453592;
+  // // needed.
+  // public static final double ROBOT_MASS = (148 - 20.3) * 0.453592;
+  public static final double ROBOT_MASS = 46.720;
   // We define our chassis as a "Matter" object, specifying the center of mass.
   public static final Matter CHASSIS = new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
 
@@ -92,11 +93,6 @@ public final class Constants {
    * values, and preset positions.
    */
   public static final class ArmElevatorConstants {
-
-    // Ratio used by the arm’s absolute encoder. If 1 sensor rotation = 360°, set to
-    // 1.0, etc.
-    public static double ARM_ABS_ENC_RATIO = 0.611111;
-
     // Offset applied to the arm’s absolute encoder reading to align it with the
     // robot's zero.
     public static double ARM_ABS_ENC_OFFSET = 86.456;
@@ -114,22 +110,19 @@ public final class Constants {
     // Conversion factor from sensor ticks to elevator inches.
     public static double ELEV_TICKS_PER_INCH = 0.7290445833333333;
 
-    // // public static double ELEVATOR_MIN_INCHES = 0.0;
-    // // public static final double ELEVATOR_MAX_INCHES = 84.0;
-
     // Angles and positions for funnel/loading presets.
-    public static final double ARM_LOADING_DEG = -53.5;
-    public static final double ARM_FUNNEL_DEG = -53.5;
+    public static final double ARM_LOADING_DEG = -53.5; //TODO : Fix Loading Angle
+    public static final double ARM_FUNNEL_DEG = -53.5; //TODO : Fix Funnel Angle
 
     public static final double ELEVATOR_FUNNEL_INCHES = 14.790200;
-    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.67;
+    public static final double ELEVATOR_FUNNEL_LOADING_INCHES = 12.67; //TODO : Fix Loading Height
 
     // Stow positioning for the arm.
-    public static final double ARM_STOW_DEG = 7;
+    public static final double ARM_STOW_DEG = 0;
     public static final double ARM_SCORE_DEG_OFFSET = 24;
 
     // PID and feedforward parameters for both the arm and the elevator.
-    public static double ARM_kP = 0.0375; //Game - 0.0375, Test -
+    public static double ARM_kP = 0.0375;
     public static double ARM_kI = 0.0; 
     public static double ARM_kD = 0.0;
 
@@ -164,64 +157,28 @@ public final class Constants {
     public static final double ELEVATOR_LEVEL4_SCORE_INCHES = ELEVATOR_LEVEL4_INCHES - ELEVATOR_SCORE_OFFSET;
 
     // Corresponding arm angles for each level preset.
-    public static final double ARM_LEVEL1_DEG = 0.;
-    public static final double ARM_LEVEL2_DEG = 190;
-    public static final double ARM_LEVEL3_DEG = 197.67;
-    public static final double ARM_LEVEL4_DEG = 225;
+    public static final double ARM_LEVEL1_DEG = 0; //TODO : Fix Arm Angles L1
+    public static final double ARM_LEVEL2_DEG = 190; //TODO : Fix Arm Angles L2
+    public static final double ARM_LEVEL3_DEG = 197.67; //TODO : Fix Arm Angles L3
+    public static final double ARM_LEVEL4_DEG = 225; //TODO : Fix Arm Angles L4
     public static final double ARM_DEALGAELEVEL2_DEG = 190;
     public static final double ARM_DEALGAELEVEL3_DEG = 190;
+
+    //Tolerance Constants
+    public static final double ELEVATOR_POSITION_TOLERANCE_INCHES = 0.75; //TODO : Fix Tolerance Elevator Height
+    public static final double ARM_POSITION_TOLERANCE_DEG = 2.0; //TODO : Fix Tolerance Arm Angle
+    public static final double ELEVATOR_MAX_HEIGHT_INCHES = 34.0; //TODO : Fix Max Elevator Height
+    public static final double ELEVATOR_MIN_HEIGHT_INCHES = 0.0; //TODO : Fix Min Elevator Height
+    public static final double ARM_MAX_ANGLE_DEG = 200.0; //TODO : Fix Max Arm Angle
+    public static final double ARM_MIN_ANGLE_DEG = -60.0;  //TODO : Fix Min Arm Angle
+
 
     // Intake constants
     public static final double INTAKE_SPEED = 0.5;
     public static final double INTAKE_STOPPED_RPM = 2.1;
     
     //Sensor Constants
-    public static final boolean TestEndEffectorSensor = true;
-  }
-
-  /**
-   * Constants for the climbing subsystem (pivot angles, motor IDs, etc.).
-   */
-  public static final class ClimbConstants {
-    // Climb motor CAN IDs.
-    public static final int CLIMB_MOTOR_A_ID = 16;
-    public static final int CLIMB_MOTOR_B_ID = 17;
-
-    // Physical range for the climb pivot mechanism.
-    public static final double CLIMB_MAX_POS = 100.0;
-    public static final double CLIMB_MIN_POS = 0.0;
-
-    // The ideal pivot angle we want to hold while climbing.
-    public static final double CLIMB_HOLD_ANGLE = 50.0;
-
-    // PID constants for controlling the climb pivot angle.
-    public static final double CLIMB_kP = 0.1;
-    public static final double CLIMB_kI = 0.0;
-    public static final double CLIMB_kD = 0.0;
-  }
-
-  /**
-   * Constants for the Algae Intake subsystem (motor IDs, angles, PID, etc.).
-   */
-  public static final class AlgaeIntakeConstants {
-    // Motor IDs for the pivot (CIM, brushed) and the intake (NEO, brushless).
-    public static final int PIVOT_MOTOR_ID = 14;
-    public static final int INTAKE_MOTOR_ID = 15;
-
-    // Limits and presets for the intake pivot angle.
-    public static final double PIVOT_MIN_ANGLE = 0.0;
-    public static final double PIVOT_MAX_ANGLE = 300.0;
-    public static final double PIVOT_INTAKE_ANGLE = 75.0;
-
-    // PID constants for pivot control.
-    public static double PIVOT_kP = 0.0;
-    public static double PIVOT_kI = 0.0;
-    public static double PIVOT_kD = 0.0;
-
-    // Intake speed (fraction of max).
-    public static final double INTAKE_SPEED = 0.8;
-
-    public static final double INTAKE_SLOW = 0.05;
+    public static final boolean TestEndEffectorSensor = false;
   }
 
   public static final class VisionConstants {
@@ -242,15 +199,5 @@ public final class Constants {
     );
 
     public static final ArrayList<Cameras> cameraList = new ArrayList<Cameras>(List.of(leftCam, rightCam));
-  }
-
-  /**
-   * Constants associated with coral elements on the field or certain scoring
-   * areas.
-   */
-  public static final class CoralConstants {
-    public static final List<Integer> CORAL_RED_IDS = List.of(1,2,3,4,5,6,7,8,9,10,11);
-    public static final List<Integer> CORAL_BLUE_IDS = List.of(12,13,14,15,16,17,18,19,20,21,22);
-    public static final double APPROACH_OFFSET_METERS = 0.3;
   }
 }

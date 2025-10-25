@@ -17,8 +17,11 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -67,6 +70,19 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     private boolean funnelSensor;
     private boolean endeffectorSensor;
 
+    //Shuffleboard
+     private final ShuffleboardTab armElevatortab;
+
+        // Live Data
+        private final GenericEntry armAngleDeg;
+        private final GenericEntry elevHeightIn;
+        private final GenericEntry armDesiredPos;
+        private final GenericEntry elevDesiredPos;
+        private final GenericEntry elevatorPreset;
+        private final GenericEntry funnelSensorEntry;
+        private final GenericEntry endeffectorSensorEntry;
+        private final GenericEntry state;
+
     private enum Preset {
         STOW, FUNNEL, LOADING, LEVEL1, LEVEL2, LEVEL3, LEVEL4, LEVEL1SCORE, LEVEL2SCORE, LEVEL3SCORE, LEVEL4SCORE, LEVEL2DEALGAE, LEVEL3DEALGAE
     }
@@ -109,6 +125,19 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         //Sensor Initialization
         coralFunnelSensor = new DigitalInput(Constants.ArmElevatorConstants.CORAL_FUNNEL_SENSOR_ID);
         coralInEndEffectorSensor = new DigitalInput(Constants.ArmElevatorConstants.CORAL_IN_ENDEFFECTOR_SENSOR_ID);
+
+        //Shuffleboard Setup
+            armElevatortab = Shuffleboard.getTab("Arm & Elevator Subsystem");
+
+        // Live Data
+        armAngleDeg = armElevatortab.add("Arm Angle (Deg)", getArmAngleDegrees()).getEntry();
+        elevHeightIn = armElevatortab.add("Elevator Height (In)", getElevatorHeightInches()).getEntry();
+        armDesiredPos = armElevatortab.add("Arm Desired Position", 0.0).getEntry();
+        elevDesiredPos = armElevatortab.add("Elevator Desired Position", 0.0).getEntry();
+        elevatorPreset = armElevatortab.add("Elevator Preset", Preset.STOW).getEntry();
+        funnelSensorEntry = armElevatortab.add("Coral in Funnel Sensor", getCoralInFunnelSensor()).getEntry();
+        endeffectorSensorEntry = armElevatortab.add("Coral in EndEffector Sensor", getCoralInEndEffectorSensor()).getEntry();
+        state = armElevatortab.add("Intake State", "Idle").getEntry();
     }
 
     // Sensor Readouts
@@ -127,12 +156,22 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
 
     // Utility Helpers
     private boolean isArmInTolerance(double targetDeg, double toleranceDeg) {
+        if (targetDeg < ArmElevatorConstants.ARM_MIN_ANGLE_DEG || 
+            targetDeg > ArmElevatorConstants.ARM_MAX_ANGLE_DEG) {
+            return false; // target is out of bounds
+        }
         return Math.abs(getArmAngleDegrees() - targetDeg) <= toleranceDeg;
     }
+    
 
     private boolean isElevatorInTolerance(double targetIn, double toleranceIn) {
+        if (targetIn < ArmElevatorConstants.ELEVATOR_MIN_HEIGHT_INCHES || 
+            targetIn > ArmElevatorConstants.ELEVATOR_MAX_HEIGHT_INCHES) {
+            return false; // target is out of bounds
+        }
         return Math.abs(getElevatorHeightInches() - targetIn) <= toleranceIn;
     }
+    
 
     /** Checks if we're in a LEVEL or LEVEL-SCORE preset. */
     private boolean isLevelOrScorePreset(Preset p) {
@@ -303,9 +342,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 Commands.waitUntil(() -> {
                     if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
                         return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES,
-                                2.0);
+                                ArmElevatorConstants.ELEVATOR_POSITION_TOLERANCE_INCHES);
                     } else {
-                        return isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0);
+                        return isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, ArmElevatorConstants.ARM_POSITION_TOLERANCE_DEG);
                     }
                 }),
                 // THEN, THEN MOVE THE SECOND PART (ELEVATOR OR FUNNEL) AND ENABLE AUTOINTAKE
@@ -346,9 +385,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 Commands.waitUntil(() -> {
                     if (currentPreset == Preset.STOW || isLevelOrScorePreset(currentPreset)) {
                         return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES,
-                                2.0);
+                        ArmElevatorConstants.ELEVATOR_POSITION_TOLERANCE_INCHES);
                     } else {
-                        return isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, 2.0);
+                        return isArmInTolerance(ArmElevatorConstants.ARM_LOADING_DEG, ArmElevatorConstants.ARM_POSITION_TOLERANCE_DEG);
                     }
                 }),
                 // THEN, THEN MOVE THE SECOND PART (ELEVATOR OR FUNNEL) AND ENABLE AUTOINTAKE
@@ -382,9 +421,9 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 // WAIT UNTIL THE ELEVATOR OR ARM IS IN TOLERANCE
                 Commands.race(Commands.waitUntil(() -> {
                     if (currentPreset == Preset.LOADING || currentPreset == Preset.FUNNEL) {
-                        return isArmInTolerance(getArmAngleForLevel(level), 2.0);
+                        return isArmInTolerance(getArmAngleForLevel(level), ArmElevatorConstants.ARM_POSITION_TOLERANCE_DEG);
                     } else {
-                        return isElevatorInTolerance(getElevatorInchesForLevel(level), 2.0);
+                        return isElevatorInTolerance(getElevatorInchesForLevel(level), ArmElevatorConstants.ELEVATOR_POSITION_TOLERANCE_INCHES);
                     }
                 }),
                         // WAIT FOR A SHORT TIME TO AVOID COLLISION
@@ -414,7 +453,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
                 }),
                 // WAIT UNTIL THE ARM IS IN TOLERANCE
-                Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 2.0)),
+                Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, ArmElevatorConstants.ARM_POSITION_TOLERANCE_DEG)),
                 Commands.runOnce(() -> {
                     manualIntakeActive = true;
                     outtake = false;
@@ -424,12 +463,12 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                     desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES;
                 }),
                 Commands.waitUntil(
-                        () -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, 2)),
+                        () -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_LOADING_INCHES, ArmElevatorConstants.ELEVATOR_POSITION_TOLERANCE_INCHES)),
                 Commands.runOnce(() -> {
                     desiredArmAngleDeg = ArmElevatorConstants.ARM_FUNNEL_DEG;
                 }),
                 // WAIT UNTIL THE ARM IS IN TOLERANCE
-                Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, 5)),
+                Commands.waitUntil(() -> isArmInTolerance(ArmElevatorConstants.ARM_FUNNEL_DEG, ArmElevatorConstants.ARM_POSITION_TOLERANCE_DEG)),
                 // WAIT UNTIL THE INTAKE STALLS
                 Commands.either(Commands.waitUntil(()-> getCoralInEndEffectorSensor()), Commands.waitSeconds(0.5),  ()->ArmElevatorConstants.TestEndEffectorSensor),
                 // STOP INTAKE
@@ -444,7 +483,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 }),
                 // WAIT UNTIL THE ELEVATOR IS IN TOLERANCE
                 Commands.waitUntil(() -> {
-                    return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2);
+                    return isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, ArmElevatorConstants.ELEVATOR_POSITION_TOLERANCE_INCHES);
                 }));
         }
 
@@ -485,15 +524,13 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
          * - Then moves the elevator to the stow height and disables auto intake.
          */
         Command DefaultStowPos = Commands.sequence(
-                Commands.runOnce(()->startManualOuttake()),
-                Commands.waitSeconds(0.25),
                 Commands.runOnce(() -> {
                     desiredArmAngleDeg = ArmElevatorConstants.ARM_STOW_DEG;
                 }),
                 Commands.race(
                         Commands.waitSeconds(1),
                         Commands.waitUntil(() -> {
-                            return isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0);
+                            return isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, ArmElevatorConstants.ARM_POSITION_TOLERANCE_DEG);
                         })),
                 Commands.runOnce(() -> {
                     desiredElevInches = ArmElevatorConstants.ELEVATOR_STOW_INCHES;
@@ -502,22 +539,53 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 Commands.runOnce(() -> currentPreset = Preset.STOW));
 
         // Decision Matrix
-        if ((currentPreset == Preset.LEVEL2 || currentPreset == Preset.LEVEL2SCORE || currentPreset == Preset.LEVEL2DEALGAE || currentPreset == Preset.LEVEL2DEALGAE) && !endeffectorSensor) {
+        if ((currentPreset == Preset.LEVEL2 || currentPreset == Preset.LEVEL2SCORE || currentPreset == Preset.LEVEL2DEALGAE || currentPreset == Preset.LEVEL2DEALGAE)) {
+           if(endeffectorSensor){
             return Commands.sequence(
-                    // SET DESIRED ELEVATOR POSITION TO FUNNEL HEIGHT
-                    Commands.runOnce(() -> {
-                        desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
-                    }),
-                    // WAIT UNTIL THE ELEVATOR IS IN TOLERANCE
-                    Commands.waitUntil(() -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, 2.0)),
-                    // RETURN TO DEFAULT STOW POSITION
-                    DefaultStowPos);
-        } else if ((currentPreset == Preset.LOADING) && !endeffectorSensor) {
+                // SET DESIRED ELEVATOR POSITION TO FUNNEL HEIGHT
+                Commands.runOnce(() -> {
+                    desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
+                }),
+                // WAIT UNTIL THE ELEVATOR IS IN TOLERANCE
+                Commands.waitUntil(() -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, ArmElevatorConstants.ELEVATOR_POSITION_TOLERANCE_INCHES)),
+                // RETURN TO DEFAULT STOW POSITION
+                Commands.runOnce(()->startManualOuttake()),
+                Commands.waitSeconds(0.5),
+                Commands.runOnce(() -> stopIntake()),
+                //RUN INTAKE FOR 0.5s TO GET RID OF CORAL
+                DefaultStowPos);
+           } else {
             return Commands.sequence(
+                // SET DESIRED ELEVATOR POSITION TO FUNNEL HEIGHT
+                Commands.runOnce(() -> {
+                    desiredElevInches = ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES;
+                }),
+                // WAIT UNTIL THE ELEVATOR IS IN TOLERANCE
+                Commands.waitUntil(() -> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, ArmElevatorConstants.ELEVATOR_POSITION_TOLERANCE_INCHES)),
+                // RETURN TO DEFAULT STOW POSITION
+                DefaultStowPos);
+           }
+        } else if ((currentPreset == Preset.LOADING)) {
+            if(endeffectorSensor){
+                return Commands.sequence(
+                    Commands.runOnce(()->startManualOuttake()),
+                    Commands.waitSeconds(0.5),
+                    Commands.runOnce(() -> stopIntake()),
                     goToFunnelCommand(),
                     DefaultStowPos);
+            } else {
+                return Commands.sequence(
+                    goToFunnelCommand(),
+                    DefaultStowPos);
+            }
         }
-        return DefaultStowPos;
+        return endeffectorSensor ? 
+        Commands.sequence(
+            Commands.runOnce(()->startManualOuttake()),
+            Commands.waitSeconds(0.5),
+            Commands.runOnce(() -> stopIntake()),
+            DefaultStowPos
+        ) : DefaultStowPos;
     }
 
     // --------------------------------------------------------------------------
@@ -696,17 +764,44 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
         public Command AutoScoreSequence(int level, boolean scoreOrSetup){
               return Commands.either(
                 Commands.sequence(
-                    goToScoreFromLoadingCommand(level, false), 
-                    Commands.waitUntil(()-> isArmInTolerance(getArmAngleForLevel(level)-Constants.ArmElevatorConstants.ARM_SCORE_DEG_OFFSET, 2.0)),
+                    goToLevelScoreCommand(level, false), 
+                    Commands.runOnce(()->{
+                        state.setString("goToLevelScoreCommand executed");
+                    }),
+                    Commands.waitUntil(()-> isArmInTolerance(getArmAngleForLevel(level)-Constants.ArmElevatorConstants.ARM_SCORE_DEG_OFFSET, ArmElevatorConstants.ARM_POSITION_TOLERANCE_DEG)),
+                    Commands.runOnce(()->{
+                        state.setString("gToLevelScoreCommand tolerance checker executed");
+                    }),
                     goToStowCommand(),
-                    Commands.waitUntil(()->isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0) && isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_STOW_INCHES, 0.75)),
+                    Commands.runOnce(()->{
+                        state.setString("goToStowCommand executed");
+                    }),
+                    Commands.waitUntil(()->isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, ArmElevatorConstants.ARM_POSITION_TOLERANCE_DEG) && isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_STOW_INCHES, ArmElevatorConstants.ELEVATOR_POSITION_TOLERANCE_INCHES)),
+                    Commands.runOnce(()->{
+                        state.setString("gToLevelScoreCommand tolerance checker executed");
+                    }),
                     Commands.none()),
                 Commands.sequence(
                     goToFunnelCommand(),
+                    Commands.runOnce(()->{
+                        state.setString("goToFunnelCommand executed");
+                    }),
                     pickUpCoralCommand(level),
-                    Commands.waitUntil(()-> isArmInTolerance(ArmElevatorConstants.ARM_STOW_DEG, 2.0)),
+                    Commands.runOnce(()->{
+                        state.setString("pickUpCoralCommand executed");
+                    }),
+                    Commands.waitUntil(()-> isElevatorInTolerance(ArmElevatorConstants.ELEVATOR_FUNNEL_INCHES, ArmElevatorConstants.ELEVATOR_POSITION_TOLERANCE_INCHES)),
+                    Commands.runOnce(()->{
+                        state.setString("pickUpCoralCommand tolerance checker executed");
+                    }),
                     goToLevelFromLoadingCommand(level),
-                    Commands.waitUntil(()-> isElevatorInTolerance(getElevatorInchesForLevel(level), 0.75)),
+                    Commands.runOnce(()->{
+                        state.setString("goToLevelFromLoadingCommand executed");
+                    }),
+                    Commands.waitUntil(()-> isElevatorInTolerance(getElevatorInchesForLevel(level), ArmElevatorConstants.ELEVATOR_POSITION_TOLERANCE_INCHES)), //TODO : If the command is skipped, ass this in the "true" scenario sequence and test
+                    Commands.runOnce(()->{
+                        state.setString("goToLevelFromLoadingCommand tolerance checker executed");
+                    }),
                     Commands.none()),
                 ()-> scoreOrSetup
             );
@@ -729,7 +824,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
     @Override
     public void periodic(){
         //UPDATED VALUES FROM SMARTDASHBOARD        
-                //SENSOR UPDATES
+            //SENSOR UPDATES
                 funnelSensor = getCoralInFunnelSensor();
                 endeffectorSensor = getCoralInEndEffectorSensor();
 
@@ -746,7 +841,7 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 ArmElevatorConstants.ELEVATOR_MAX_ACC = 
                     SmartDashboard.getNumber("Elevator MaxAccel",ArmElevatorConstants.ELEVATOR_MAX_ACC);
 
-                //APPLY NEW CONSTANTS TO ELEVATOR PIDF
+                //APPLY NEW CONSTANTS TO ELEVATOR PIDFgi
                     elevatorController.setP(ArmElevatorConstants.ELEVATOR_kP);
                     elevatorController.setI(ArmElevatorConstants.ELEVATOR_kI);
                     elevatorController.setD(ArmElevatorConstants.ELEVATOR_kD);
@@ -777,12 +872,6 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
                 elevatorFF =
                 new ElevatorFeedforward(ArmElevatorConstants.ELEV_kS, ArmElevatorConstants.ELEV_kG, ArmElevatorConstants.ELEV_kV, ArmElevatorConstants.ELEV_kA);
 
-            // EXTRA CONSTANTS
-                ArmElevatorConstants.ARM_ABS_ENC_RATIO = 
-                    SmartDashboard.getNumber("Arm Abs Encoder Ratio", ArmElevatorConstants.ARM_ABS_ENC_RATIO);
-                ArmElevatorConstants.ELEV_TICKS_PER_INCH = 
-                    SmartDashboard.getNumber("Elev Ticks per Inch", ArmElevatorConstants.ELEV_TICKS_PER_INCH);
-
         // CURRENT VALUES ON SMARTDASHBOARD
             SmartDashboard.putNumber("Elevator kP", ArmElevatorConstants.ELEVATOR_kP);
             SmartDashboard.putNumber("Elevator kI", ArmElevatorConstants.ELEVATOR_kI);
@@ -799,16 +888,13 @@ public class ArmElevatorEndEffectorSubsystem extends SubsystemBase {
             SmartDashboard.putNumber("Elev kV", ArmElevatorConstants.ELEV_kV);
             SmartDashboard.putNumber("Elev kA", ArmElevatorConstants.ELEV_kA);
 
-            SmartDashboard.putNumber("Arm Abs Encoder Ratio", ArmElevatorConstants.ARM_ABS_ENC_RATIO);
-            SmartDashboard.putNumber("Elev Ticks per Inch", ArmElevatorConstants.ELEV_TICKS_PER_INCH);
-
-            SmartDashboard.putNumber("Arm Angle (Deg)", getArmAngleDegrees());
-            SmartDashboard.putNumber("Elevator Height (In)", getElevatorHeightInches());
-            SmartDashboard.putNumber("Arm Desired Position", desiredArmAngleDeg);
-            SmartDashboard.putNumber("Elevator Desired Position", desiredElevInches);
-
-
-            SmartDashboard.putString("Elevator Preset", currentPreset.toString());
+            armAngleDeg.setDouble(getArmAngleDegrees());
+            elevHeightIn.setDouble(getElevatorHeightInches());
+            armDesiredPos.setDouble(desiredArmAngleDeg);
+            elevDesiredPos.setDouble(desiredElevInches);
+            elevatorPreset.setString(currentPreset.toString());
+            funnelSensorEntry.setBoolean(funnelSensor);
+            endeffectorSensorEntry.setBoolean(endeffectorSensor);
         
         //ARM & ELEVATOR LOGIC (PERIODIC UPDATE)
 

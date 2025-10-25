@@ -26,8 +26,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -65,7 +68,7 @@ public class SwerveSubsystem extends SubsystemBase {
   /**
    * Enable vision odometry updates while driving.
    */
-  private final boolean visionDriveTest = false;
+  private final boolean visionDriveTest = true;
   /**
    * PhotonVision class to keep an accurate odometry.
    */
@@ -76,6 +79,15 @@ public class SwerveSubsystem extends SubsystemBase {
    *
    * @param directory Directory of swerve drive config files.
    */
+
+   // Shuffleboard Setup
+   ShuffleboardTab swerveTab = Shuffleboard.getTab("Swerve Drive");
+          //Live Data
+      private GenericEntry RobotGyro;
+      private GenericEntry RobotSpeed;
+      private GenericEntry robotPoseX;
+      private GenericEntry robotPoseY;
+    
 
   public SwerveSubsystem(File directory) {
     boolean blueAlliance = false;
@@ -115,6 +127,12 @@ public class SwerveSubsystem extends SubsystemBase {
     }
     setupPathPlanner();
     RobotModeTriggers.autonomous().onTrue(Commands.runOnce(this::zeroGyroWithAlliance));
+
+    //Live Data
+      RobotGyro = swerveTab.add("Robot Gyro", this.getPose().getRotation().getDegrees()).getEntry();
+      RobotSpeed = swerveTab.add("Robot Speed", this.getRobotVelocity()).getEntry();
+      robotPoseX = swerveTab.add("Robot Pose X", this.getPose().getX()).getEntry();
+      robotPoseY = swerveTab.add("Robot Pose Y", this.getPose().getY()).getEntry();
   }
 
   /**
@@ -143,6 +161,11 @@ public class SwerveSubsystem extends SubsystemBase {
       swerveDrive.updateOdometry();
       vision.updatePoseEstimation(swerveDrive);
     }
+    //Live Data Update
+    RobotGyro.setDouble(this.getPose().getRotation().getDegrees());
+    RobotSpeed.setDouble(this.getRobotVelocity().vxMetersPerSecond);
+    robotPoseX.setDouble(this.getPose().getX());
+    robotPoseY.setDouble(this.getPose().getY());
   }
 
   @Override

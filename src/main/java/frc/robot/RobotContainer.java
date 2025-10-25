@@ -2,6 +2,8 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
+
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -100,8 +102,6 @@ public class RobotContainer {
                         NamedCommands.registerCommand("L3 Coral Score", armElevator.AutoScoreSequence(3, true));
                         NamedCommands.registerCommand("L2 Coral Score", armElevator.AutoScoreSequence(2, true));
                         NamedCommands.registerCommand("L1 Coral Score", armElevator.AutoScoreSequence(1, true));
-                //Constraint Zone
-                        
 
                 configureBindings();
 
@@ -110,13 +110,12 @@ public class RobotContainer {
 
                 // Path Planner Chooser
                 AutonChooser = new SendableChooser<>();
-                        //TEST PATHS
-                        AutonChooser.addOption("Straight Path", drivebase.getTestDriveStraight(1.0, 0.5));
-                        AutonChooser.addOption("Straight Auton-Pathplanner", drivebase.getAutonomousCommand("Straight Auton"));
-                        AutonChooser.addOption("Rotate Auton-Pathplanner", drivebase.getAutonomousCommand("Rotate Auton"));
-
-                        //Autonomous Paths
-                        AutonChooser.addOption(null, getAutonomousCommand());
+                        AutonChooser.addOption("Auton 1 - 12 Coral Auton", drivebase.getAutonomousCommand("ARL Champs Auton #1"));
+                        AutonChooser.addOption("Auton 2 - 6 Coral Auton", drivebase.getAutonomousCommand("ARL Champs Auton #2"));
+                        AutonChooser.addOption("Auton 3 - 1 Coral Auton", drivebase.getAutonomousCommand("ARL Champs Auton #3"));
+                        AutonChooser.addOption("Auton 4 - Clear 3 Algae + 3 Coral Setup", drivebase.getAutonomousCommand("ARL Champs Auton #4") );
+                        AutonChooser.addOption("Auton 5 - Leave Path", drivebase.getAutonomousCommand("ARL Champs Auton #5") );
+                        AutonChooser.setDefaultOption("Auton 5 - Leave Path", drivebase.getAutonomousCommand("ARL Champs Auton #5") );
         }
 
         /**
@@ -125,13 +124,6 @@ public class RobotContainer {
         private void configureBindings() {
 
                 // End Effector Manual Control (AUX)
-                // -------------------------------------------
-                // Maps Aux PS4 controller triggers to control manual intake and outtake:
-                // - Holding R2 activates the intake (pulls game piece in)
-                // → On release, slows the intake for smoother handoff or hold
-                // - Holding L2 activates the outtake (pushes game piece out)
-                // → On release, stops the intake completely
-                // -------------------------------------------
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
                         auxPS4.R2()
                                         .whileTrue(Commands.run(() -> armElevator.startManualIntake(),
@@ -145,19 +137,30 @@ public class RobotContainer {
                 }
 
                 // Elevator + Arm Control (AUX)
-                // -------------------------------------------
-                // Aux PS4 controller button mappings for arm/elevator presets and special
-                // positions:
-                //
-                // • Face Buttons:
-                // - Triangle => Go to Level 4 (highest scoring position)
-                // - Circle => Go to Level 3
-                // - Cross => Go to Level 2
-                // - Square => Loading station position (for game piece pickup)
-                //
-                // • D-Pad (POV):
-                // - Up => Funnel position (e.g., for scoring/drop-in zone)
-                // - Down => Stow everything (safe driving configuration)
+                       /*
+                        * -------------------------------------------
+                        * Varun - Main Driver
+                                * - Triangle: Level 4
+                        * - Square: Level 3
+                        * - Circle: Level 2
+                        * - R2: Funnel
+                        * - L1: Stow
+                        * - D-Pad Up: Manual Outtake
+                        * - D-Pad Down: Manual Intake
+                        * - L2: Manual Intake
+                        * - D-Pad Right: Manual Arm Out
+                        * - D-Pad Left: Manual Arm In
+                        * Jake - Main Driver
+                        * - Triangle: Level 4
+                        * - Square: Level 3
+                        * - Circle: Level 2
+                        * - Cross: Funnel
+                        * - L1: Stow
+                        * - R2: Manual Outtake
+                        * - L2: Manual Intake
+                        * - D-Pad Right: Manual Arm Out
+                        * - D-Pad Left: Manual Arm In
+                        */
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
                         // Driver PS4 Controls
                         if (varunMain) {
@@ -184,16 +187,6 @@ public class RobotContainer {
                                         armElevator.goToStowCommand().schedule();
                                 }, armElevator));
 
-                                driverPS4.povUp().onTrue(Commands.runOnce(() -> {
-                                        selectedLevel = -3;
-                                        armElevator.goToLevelCommand(-3).schedule();
-                                }, armElevator));
-
-                                driverPS4.povDown().onTrue(Commands.runOnce(() -> {
-                                        selectedLevel = -2;
-                                        armElevator.goToLevelCommand(-2).schedule();
-                                }, armElevator));
-
                                 driverPS4.povRight().whileTrue(Commands.runOnce(() -> {
                                         armElevator.setManualArm(0.1);
                                 })).onFalse(Commands.runOnce(() -> {
@@ -205,6 +198,36 @@ public class RobotContainer {
                                 })).onFalse(Commands.runOnce(() -> {
                                         armElevator.stopManualArm();
                                 }));
+
+                                driverPS4.povUp().onTrue(Commands.runOnce(()->{
+                                        armElevator.startManualOuttake();
+                                })).onFalse(Commands.runOnce(()->{
+                                        armElevator.stopIntake();
+                                }));
+                                
+                                driverPS4.povDown().onTrue(Commands.runOnce(()->{
+                                        armElevator.startManualOuttake();
+                                })).onFalse(Commands.runOnce(()->{
+                                        armElevator.stopIntake();
+                                }));
+
+                                //Alignment Assistance Buttons
+                                        driverPS4.R3().onTrue(Commands.runOnce(()->{
+                                                drivebase.drive(new ChassisSpeeds(0, -0.1, 0));
+                                        }));
+                                        driverPS4.L3().onTrue(Commands.runOnce(()->{
+                                                drivebase.drive(new ChassisSpeeds(0, 0.1, 0));
+                                        }));
+
+                                // driverPS4.povUp().onTrue(Commands.runOnce(() -> {
+                                //         selectedLevel = -3;
+                                //         armElevator.goToLevelCommand(-3).schedule();
+                                // }, armElevator));
+
+                                // driverPS4.povDown().onTrue(Commands.runOnce(() -> {
+                                //         selectedLevel = -2;
+                                //         armElevator.goToLevelCommand(-2).schedule();
+                                // }, armElevator));
                         } else {
                                 driverPS4.triangle().onTrue(Commands.runOnce(() -> {
                                         selectedLevel = 4;
@@ -238,18 +261,8 @@ public class RobotContainer {
                                 driverPS4.L2().whileTrue(Commands.runOnce(() -> {
                                         armElevator.startManualIntake();
                                 })).onFalse(Commands.runOnce(() -> {
-                                        armElevator.slowIntake();
+                                        armElevator.stopIntake();
                                 }));
-
-                                driverPS4.povUp().onTrue(Commands.runOnce(() -> {
-                                        selectedLevel = -3;
-                                        armElevator.goToLevelCommand(-3).schedule();
-                                }, armElevator));
-
-                                driverPS4.povDown().onTrue(Commands.runOnce(() -> {
-                                        selectedLevel = -2;
-                                        armElevator.goToLevelCommand(-2).schedule();
-                                }, armElevator));
 
                                 driverPS4.povRight().whileTrue(Commands.runOnce(() -> {
                                         armElevator.setManualArm(0.1);
@@ -262,6 +275,24 @@ public class RobotContainer {
                                 })).onFalse(Commands.runOnce(() -> {
                                         armElevator.stopManualArm();
                                 }));
+                                //Alignment Assistance Buttons
+                                        driverPS4.R3().onTrue(Commands.runOnce(()->{
+                                                drivebase.drive(new ChassisSpeeds(0, -0.1, 0));
+                                        }));
+                                        driverPS4.L3().onTrue(Commands.runOnce(()->{
+                                                drivebase.drive(new ChassisSpeeds(0, 0.1, 0));
+                                        }));
+                                
+                                // driverPS4.povUp().onTrue(Commands.runOnce(() -> {
+                                //         selectedLevel = -3;
+                                //         armElevator.goToLevelCommand(-3).schedule();
+                                // }, armElevator));
+
+                                // driverPS4.povDown().onTrue(Commands.runOnce(() -> {
+                                //         selectedLevel = -2;
+                                //         armElevator.goToLevelCommand(-2).schedule();
+                                // }, armElevator));
+                                
                         }
 
                         // Aux PS4 Controls
@@ -287,14 +318,17 @@ public class RobotContainer {
                                 selectedLevel = 0;
                                 armElevator.goToStowCommand().schedule();
                         }, armElevator));
+
+                        //Alignment Assistance Buttons
+                                auxPS4.R3().onTrue(Commands.runOnce(()->{
+                                        drivebase.drive(new ChassisSpeeds(0, -0.1, 0));
+                                }));
+                                auxPS4.L3().onTrue(Commands.runOnce(()->{
+                                        drivebase.drive(new ChassisSpeeds(0, 0.1, 0));
+                                }));
                 }
 
                 // Score Command (AUX)
-                // -------------------------------------------
-                // Maps the Right Bumper to move the elevator to the "score" position
-                // for the currently selected level (e.g., Level 1–4).
-                // Triggers the preset scoring height based on operator selection.
-                // -------------------------------------------
                 if (ENABLE_ARM_ELEVATOR_SUBSYSTEM) {
                         driverPS4.R1().onTrue(Commands.runOnce(() -> {
                                 // Universal method that transitions to the appropriate "score" preset
@@ -363,7 +397,7 @@ public class RobotContainer {
                 if (ENABLE_DRIVEBASE_SUBSYSTEM) {
                         driverPS4.options().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
                         if (varunMain) {
-                                driverPS4.R3().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
+                                driverPS4.share().onTrue(Commands.runOnce(drivebase::zeroGyro, drivebase));
                         }
                 }
 
@@ -373,7 +407,7 @@ public class RobotContainer {
          * Provides the autonomous command to be scheduled in auto mode.
          */
         public Command getAutonomousCommand() {
-               return drivebase.getAutonomousCommand("Test Auton");
+               return AutonChooser.getSelected();
         }
 
         /** Sets the drive motors to brake or coast mode. */
