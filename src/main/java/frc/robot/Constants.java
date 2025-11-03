@@ -24,9 +24,17 @@ public class Constants {
                     public static final double kTurningEncoderRot2Rad = (Math.PI * kWheelDiameterMeters)/kAngleMotorGearRatio; 
                     public static final double kTurningEncoderRot2RadPerSec = kTurningEncoderRot2Rad/60;
                 //PID Values-Angle Motor
-                    public static final double kPTurning = 0.0025; 
+                    public static final double kPTurning = 0.0; 
                     public static final double kITurning = 0.0; 
                     public static final double kDTurning = 0.0; 
+                //PID Values-Drive Motor
+                    public static final double kPDriving = 0.0; 
+                    public static final double kIDriving = 0.0; 
+                    public static final double kDDriving = 0.0;
+                //Feedforward Values-Drive Motor
+                    public static final double kSDriving = 0.0; 
+                    public static final double kVDriving = 0.0; 
+                    public static final double kADriving = 0.0;
             }
              public static final class DriveConstants{
                     // Front Left Module

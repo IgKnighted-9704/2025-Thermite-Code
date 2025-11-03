@@ -9,6 +9,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import frc.robot.Constants;
 
 public class SwerveModule{
@@ -20,40 +21,30 @@ public class SwerveModule{
     //Drive & Angle Encoders
     private final SparkAbsoluteEncoder angleEncoder;
 
-    private double angleEncoderPosition;
-    private double angleEncoderVelocity;
-    private double driveEncoderPosition;
-    private double driveEncoderVelocity;
-
-    private final boolean absoluteEncoderReversed;
-    private final double absoluteEncoderOffsetRad;
+    private final boolean angleMotorReversed;
+    private final boolean driveMotorReversed;
 
     private final PIDController anglePIDController;
+    private final PIDController drivePIDController;
+    private final SimpleMotorFeedforward drivFeedforward;
 
-    public SwerveModule(int driveMotorID, int angleMotorID, boolean driveMotorReversed, boolean angleMotorReversed, double absoluteEncoderOffsetDeg, boolean absoluteEncoderReversed){
+    public SwerveModule(int driveMotorID, int angleMotorID, boolean driveMotorReversed, boolean angleMotorReversed){
         this.driveMotor = new TalonFX(driveMotorID);
         this.angleMotor = new SparkMax(angleMotorID, MotorType.kBrushless);
 
-        this.absoluteEncoderReversed = absoluteEncoderReversed;
-        this.absoluteEncoderOffsetRad = Math.toRadians(absoluteEncoderOffsetDeg);
-
         this.angleEncoder = angleMotor.getAbsoluteEncoder();
 
-        //Encoedr Values
-        driveEncoderPosition = driveMotorReversed ? 
-            -1 * (driveMotor.getPosition().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters) : 
-            driveMotor.getPosition().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters;
-        driveEncoderVelocity = driveMotorReversed ? 
-            -1 * driveMotor.getVelocity().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec : 
-            driveMotor.getVelocity().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec;
-        angleEncoderPosition = angleMotorReversed ? 
-            -1 * angleEncoder.getPosition() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2Rad : 
-            angleEncoder.getPosition() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2Rad;
-        angleEncoderVelocity = angleMotorReversed ? 
-            -1 * angleEncoder.getVelocity() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2RadPerSec : 
-            angleEncoder.getVelocity() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2RadPerSec;  
+        this.angleMotorReversed = angleMotorReversed;
+        this.driveMotorReversed = driveMotorReversed;
 
-
+        //Drive PID Initialization
+        drivePIDController = new PIDController(Constants.SwerveConstants.ModuleConstants.kPDriving, 
+                                              Constants.SwerveConstants.ModuleConstants.kIDriving,
+                                              Constants.SwerveConstants.ModuleConstants.kDDriving);
+        //Drive Feedforward Initialization
+        drivFeedforward = new SimpleMotorFeedforward(Constants.SwerveConstants.ModuleConstants.kSDriving, 
+                                                     Constants.SwerveConstants.ModuleConstants.kVDriving, 
+                                                     Constants.SwerveConstants.ModuleConstants.kADriving);
         //Angle PID Initialization 
         anglePIDController = new PIDController(Constants.SwerveConstants.ModuleConstants.kPTurning, 
                                                Constants.SwerveConstants.ModuleConstants.kITurning,
@@ -66,21 +57,28 @@ public class SwerveModule{
 
     }
 
-
     public double getDrivePosition(){
-        return driveEncoderPosition;
+        return driveMotorReversed ? 
+        -1 * (driveMotor.getPosition().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters) : 
+        driveMotor.getPosition().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters;
     }
 
     public double getAngularPosition(){
-        return angleEncoderPosition;
+        return angleMotorReversed ? 
+        -1 * angleEncoder.getPosition() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2Rad : 
+        angleEncoder.getPosition() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2Rad;
     }
 
     public double getDriveVelocity(){
-        return driveEncoderVelocity;
+        return  driveMotorReversed ? 
+        -1 * driveMotor.getVelocity().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec : 
+        driveMotor.getVelocity().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec;
     }
 
     public double getAngularVelocity(){
-        return angleEncoderVelocity;
+        return angleMotorReversed ? 
+        -1 * angleEncoder.getVelocity() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2RadPerSec : 
+        angleEncoder.getVelocity() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2RadPerSec;
     }
 
     public void resetEncoders(){
@@ -97,7 +95,9 @@ public class SwerveModule{
             return;
         }
         state.optimize(getState().angle);
-        driveMotor.set(state.speedMetersPerSecond / Constants.SwerveConstants.ModuleConstants.kPhysicalMaxSpeedMetersPerSecond);
+            double totalSpeed = drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond) + 
+                                drivFeedforward.calculate(state.speedMetersPerSecond);
+        driveMotor.set(totalSpeed);
         angleMotor.set(anglePIDController.calculate(getAngularPosition(), state.angle.getRadians()));
    }
 
