@@ -14,14 +14,14 @@ public class SwerveJoystickCommand extends Command{
 
     private final SwerveSubsystem swerveSubsystem;
     private final Supplier<Double> xSpeedSupplier, ySpeedSupplier, rotSupplier;
-    private final Supplier<Boolean> fieldOrientedFunction;
+    private final boolean fieldOrientedFunction;
     private final SlewRateLimiter xLimiter, yLimiter, rotLimiter;
 
     public SwerveJoystickCommand(SwerveSubsystem swerveSubsystem,
                                 Supplier<Double> xSpeedSupplier,
                                 Supplier<Double> ySpeedSupplier,
                                 Supplier<Double> rotSupplier,
-                                Supplier<Boolean> fieldOrientedFunction){
+                                boolean fieldOrientedFunction){
         this.swerveSubsystem = swerveSubsystem;
         this.xSpeedSupplier = xSpeedSupplier;
         this.ySpeedSupplier = ySpeedSupplier;
@@ -58,24 +58,7 @@ public class SwerveJoystickCommand extends Command{
         ySpeed = yLimiter.calculate(ySpeed * ModuleConstants.kPhysicalMaxSpeedMetersPerSecond);
         rotSpeed = rotLimiter.calculate(rotSpeed * ModuleConstants.kPhysicalMaxSpeedMetersPerSecond);
 
-        ChassisSpeeds chassispeeds;
-        // Construct Desired Chassis Speeds
-        if(fieldOrientedFunction.get()){
-            //Relative To Field
-            chassispeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                xSpeed,
-                ySpeed,
-                rotSpeed,
-                swerveSubsystem.getRotation2d()
-            );
-        } else {
-            //Relative To Robot
-            chassispeeds = new ChassisSpeeds(
-                xSpeed,
-                ySpeed,
-                rotSpeed
-            );
-        }
+        ChassisSpeeds chassispeeds = SwerveSubsystem.toChassisSpeeds(xSpeed, ySpeed, rotSpeed, fieldOrientedFunction, swerveSubsystem);
 
         //Convert Chassis Speeds To Individual Module States
         SwerveModuleState[] moduleStates = SwerveConstants.DriveConstants.kDriveKinematics.toSwerveModuleStates(chassispeeds);

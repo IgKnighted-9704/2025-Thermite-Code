@@ -10,13 +10,13 @@ public class Constants {
         public static final class SwerveConstants{
             public static final class ModuleConstants{
                 // Gear Ratios & Physical Constants
-                public static final double kWheelDiameterMeters = Units.inchesToMeters(0.0); 
-                public static final double kPhysicalMaxSpeedMetersPerSecond = 0.0;
-                public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = 0.0; 
+                public static final double kWheelDiameterMeters = Units.inchesToMeters(3); 
+                public static final double kPhysicalMaxSpeedMetersPerSecond = 5;
+                public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = Math.PI; 
+                public static final double kTeleDriveMaxAccelerationUnitsPerSecond = 2.5; 
+                public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = 2.5; 
                 public static final double kDriveMotorGearRatio = 4.71; 
                 public static final double kAngleMotorGearRatio = 46.42;  
-                public static final double kTeleDriveMaxAccelerationUnitsPerSecond = 0.0; 
-                public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = 0.0; 
                 
                 //Conversion Factors
                     public static final double kDriveEncoderRot2Meters = (Math.PI * kWheelDiameterMeters)/kDriveMotorGearRatio; 
@@ -83,10 +83,95 @@ public class Constants {
                         new Translation2d(-kWheelBase / 2, kTrackWidth / 2), //Back Left
                         new Translation2d(-kWheelBase / 2, -kTrackWidth / 2) //Back Right
                     );
+
+                    //Auto Constants
+                        //Translation PID Values
+                            public static final double kPTranslation = 0.0;
+                            public static final double kITranslation = 0.0;
+                            public static final double kDTranslation = 0.0;
+                        //Rotation PID Values
+                            public static final double kPRotation = 0.0;
+                            public static final double kIRotation = 0.0;
+                            public static final double kDRotation = 0.0;
              }
              public static final class JoyStickConstants {
                 public static final double kDeadBand = 0.2;
              }
         }
+    //ArmElevator Constants
+        public static final class ArmElevatorConstants{
+            public static final class StateConstants{
+            //Ratios
+                public static final double kElevatorMotorRot2Inches = 0.0;
+            //End Effector
+                public static final int kEndEffectorMotorID = 10;
+            //Elevator 
+                    //MOTOR IDs
+                        public static final int kElevatorMotorAID = 11;
+                        public static final int kElevatorMotorBID = 12;
+                    //PID Values
+                        public static final double kPElevator = 0.0;
+                        public static final double kIElevator = 0.0;
+                        public static final double kDElevator = 0.0;
+                        public static final double kProfileConstantsMaxSpeed = 0.0;
+                        public static final double kProfileConstantsMaxAccel = 0.0;
+                    //Feedforward Values
+                        public static final double kSElevator = 0.0;
+                        public static final double kVElevator = 0.0;
+                        public static final double kAElevator = 0.0;
+            //Arm
+                //MOTOR IDs
+                    public static final int kArmMotorID = 13;
+                    public static final int kArmAbsoluteEncoderID = 17;
+                //Offset
+                    public static final double kArmAbsoluteEncoderOffset = 0.0;
+                //PID Values
+                    public static final double kPArm = 0.0;
+                    public static final double kIArm = 0.0;
+                    public static final double kDArm = 0.0;
+                //Feedforward Values
+                    public static final double kSArm = 0.0;
+                    public static final double kVArm = 0.0;
+                    public static final double kAArm = 0.0;
+            //Sensors
+                public static final int kCoralFunnelSensorPort = 1;
+                public static final int kCoralInEndEffectorSensorPort = 2;
+            }
+            public static final class LevelConstants {
+                //Max and Min Heights/Angles
+                    public static final double maxElevatorHeightInches = 0.0;
+                    public static final double minElevatorHeightInches = 0.0;
+                    public static final double maxArmAngleDegrees = 0.0;
+                    public static final double minArmAngleDegrees = 0.0;
+                //Setpoints For Levels
+                    public static final double kStowElevatorSetpoint = 0.0;
+                    public static final double kStowArmSetpoint = 0.0;
 
+                    public static final double kLoadingElevatorSetpoint = 0.0;
+                    public static final double kLoadingArmSetpoint = 0.0;
+
+                    public static final double kL1FunnelSetpoint = 0.0;
+                    public static final double kFunnelArmSetpoint = 0.0;
+
+                    public static final double kL2ElevatorSetpoint = 0.0;
+                    public static final double kL2ArmSetpoint = 0.0;
+
+                    public static final double kL2ScoreElevatorSetpoint = 0.0;
+                    public static final double kL2ScoreArmSetpoint = 0.0;
+
+                    public static final double kL3ElevatorSetpoint = 0.0;
+                    public static final double kL3ArmSetpoint = 0.0;
+
+                    public static final double kL3ScoreElevatorSetpoint = 0.0;
+                    public static final double kL3ScoreArmSetpoint = 0.0;
+
+                    public static final double kL4ElevatorSetpoint = 0.0;
+                    public static final double kL4ArmSetpoint = 0.0;
+
+                    public static final double kL4ScoreElevatorSetpoint = 0.0;
+                    public static final double kL4ScoreArmSetpoint = 0.0;
+            }
+        
+        }
+        
 }

@@ -1,9 +1,7 @@
 package frc.robot.commands;
-import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -25,7 +23,7 @@ public class SubsystemCommands {
                 double xSpeed = xLimiter.calculate(velocity * Math.cos(angle) * ModuleConstants.kPhysicalMaxSpeedMetersPerSecond);
                 double ySpeed = yLimiter.calculate(velocity * Math.sin(angle) * ModuleConstants.kPhysicalMaxSpeedMetersPerSecond);
             
-            ChassisSpeeds setPointSpeeds = SwerveSubsystem.getChassisSpeeds(xSpeed, ySpeed, 0);
+            ChassisSpeeds setPointSpeeds = SwerveSubsystem.toChassisSpeeds(xSpeed, ySpeed, 0.0, false, swerveSubsystem);
             SwerveModuleState[] setPointStates = Constants.SwerveConstants.DriveConstants.kDriveKinematics.toSwerveModuleStates(setPointSpeeds);
             
             return Commands.sequence(

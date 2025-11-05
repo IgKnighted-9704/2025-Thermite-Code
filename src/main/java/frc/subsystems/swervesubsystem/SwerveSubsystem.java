@@ -1,5 +1,9 @@
 package frc.subsystems.swervesubsystem;
-import frc.subsystems.miscellaneous.*;
+
+import java.io.IOException;
+import java.util.function.BooleanSupplier;
+
+import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 
@@ -10,11 +14,16 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Constants.SwerveConstants;
 import frc.robot.Constants.SwerveConstants.DriveConstants;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 public class SwerveSubsystem extends SubsystemBase {
 	private final SwerveModule frontLeftModule;
@@ -22,6 +31,7 @@ public class SwerveSubsystem extends SubsystemBase {
     private final SwerveModule backLeftModule;
     private final SwerveModule backRightModule;
     private Pigeon2 gyroscope;
+
 
     private final SwerveDrivePoseEstimator poseEstimator;
 
@@ -70,12 +80,14 @@ public class SwerveSubsystem extends SubsystemBase {
 
         // Initial Module Positions
             SwerveModulePosition [] initialModulePositions = {
-                new SwerveModulePosition(frontLeftModule.getDrivePosition(), frontLeftModule.getState().angle),
-                new SwerveModulePosition(frontRightModule.getDrivePosition(), frontRightModule.getState().angle),
-                new SwerveModulePosition(backLeftModule.getDrivePosition(), backLeftModule.getState().angle),
-                new SwerveModulePosition(backRightModule.getDrivePosition(), backRightModule.getState().angle)
+                frontLeftModule.getPosition(),
+                frontRightModule.getPosition(),
+                backLeftModule.getPosition(),
+                backRightModule.getPosition()
             };
         poseEstimator = new SwerveDrivePoseEstimator(Constants.SwerveConstants.DriveConstants.kDriveKinematics, getRotation2d(), initialModulePositions , new Pose2d(0, 0, new Rotation2d(0)));
+
+        setupPathPlanner();
     }
 
     public void zeroGyroscope(){
@@ -89,6 +101,19 @@ public class SwerveSubsystem extends SubsystemBase {
     public Rotation2d getRotation2d(){
         return Rotation2d.fromDegrees(getHeading());
     }
+
+    public Pose2d getPose(){
+        return poseEstimator.getEstimatedPosition();
+    }
+
+    public ChassisSpeeds getRobotVelocity(){
+        return Constants.SwerveConstants.DriveConstants.kDriveKinematics.toChassisSpeeds(
+            frontLeftModule.getState(),
+            frontRightModule.getState(),
+            backLeftModule.getState(),
+            backRightModule.getState()
+        );
+    } 
 
     public void stopModules(){
         frontLeftModule.stop();
@@ -111,12 +136,60 @@ public class SwerveSubsystem extends SubsystemBase {
 
     }
 
-    public static ChassisSpeeds getChassisSpeeds(double vx, double vy, double omega){
-        return new ChassisSpeeds(vx, vy, omega);
+    public static ChassisSpeeds toChassisSpeeds(double vx, double vy, double omega, boolean fieldRelative, SwerveSubsystem swerveSubsystem){
+        return fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(vx, vy, omega , swerveSubsystem.getRotation2d()) : 
+                               new ChassisSpeeds(vx, vy, omega);
     }
 
-    public Pose2d getPose(){
-        return poseEstimator.getEstimatedPosition();
+    public void setupPathPlanner(){
+
+        RobotConfig config;
+        try {
+            config = RobotConfig.fromGUISettings();
+            AutoBuilder.configure(
+                () -> this.getPose(), 
+                pose -> this.poseEstimator.resetPosition(
+                    getRotation2d(), 
+                    new SwerveModulePosition[] {
+                        frontLeftModule.getPosition(),
+                        frontRightModule.getPosition(),
+                        backLeftModule.getPosition(),
+                        backRightModule.getPosition()
+                    },
+                    pose) , 
+                    () -> this.getRobotVelocity(), 
+                    (speeds, feedforwards) -> this.setModuleStates(
+                        SwerveConstants.DriveConstants.kDriveKinematics.toSwerveModuleStates(
+                            toChassisSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, false, this)
+                        )
+                    ), 
+                    new PPHolonomicDriveController( 
+                            new PIDConstants(
+                                SwerveConstants.DriveConstants.kPTranslation, 
+                                SwerveConstants.DriveConstants.kITranslation, 
+                                SwerveConstants.DriveConstants.kDTranslation
+                            ),
+                            new PIDConstants(
+                                SwerveConstants.DriveConstants.kPRotation, 
+                                SwerveConstants.DriveConstants.kIRotation, 
+                                SwerveConstants.DriveConstants.kDRotation
+                            ) 
+                            
+                    ),
+                    config, 
+                    () -> {
+                      var alliance = DriverStation.getAlliance();
+                      if (alliance.isPresent()) {
+                        return alliance.get() == DriverStation.Alliance.Red;
+                      }
+                      return false;
+                    },
+                    this
+            );
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

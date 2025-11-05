@@ -22,7 +22,7 @@ public class RobotContainer {
           () -> -main.getLeftY(),
           () -> -main.getLeftX(),
           () -> -main.getRightX(),
-          () -> true
+          true
         );
 
   public RobotContainer() {
