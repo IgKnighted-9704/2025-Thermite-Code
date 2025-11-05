@@ -9,6 +9,7 @@ import frc.robot.Constants.SwerveConstants.JoyStickConstants;
 import frc.robot.Constants.SwerveConstants.ModuleConstants;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SwerveJoystickCommand extends Command{
 
@@ -56,7 +57,7 @@ public class SwerveJoystickCommand extends Command{
         //Use Slew Rate Limiters To Make Drive Smoother
         xSpeed = xLimiter.calculate(xSpeed * ModuleConstants.kPhysicalMaxSpeedMetersPerSecond);
         ySpeed = yLimiter.calculate(ySpeed * ModuleConstants.kPhysicalMaxSpeedMetersPerSecond);
-        rotSpeed = rotLimiter.calculate(rotSpeed * ModuleConstants.kPhysicalMaxSpeedMetersPerSecond);
+        rotSpeed = rotLimiter.calculate(rotSpeed * ModuleConstants.kPhysicalMaxAngularSpeedRadiansPerSecond);
 
         ChassisSpeeds chassispeeds = SwerveSubsystem.toChassisSpeeds(xSpeed, ySpeed, rotSpeed, fieldOrientedFunction, swerveSubsystem);
 
@@ -65,6 +66,11 @@ public class SwerveJoystickCommand extends Command{
 
         //Set Module States
         swerveSubsystem.setModuleStates(moduleStates);
+
+        //Smartdashboard
+            double setPointSpeed = (xSpeed < 0 || ySpeed < 0) ? - Math.hypot(xSpeed, ySpeed) : Math.hypot(xSpeed, ySpeed);
+        SmartDashboard.putNumber("Module Setpoint Speed", Math.hypot(xSpeed, ySpeed));
+        SmartDashboard.putNumber("Module Setpoint Angular Speed", rotSpeed);
     }
     @Override
     public void end(boolean interrupted) {

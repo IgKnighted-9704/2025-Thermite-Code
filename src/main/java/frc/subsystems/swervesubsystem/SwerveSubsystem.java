@@ -1,7 +1,6 @@
 package frc.subsystems.swervesubsystem;
 
 import java.io.IOException;
-import java.util.function.BooleanSupplier;
 
 import org.json.simple.parser.ParseException;
 
@@ -125,6 +124,8 @@ public class SwerveSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Robot Heading", getHeading()); 
+        SmartDashboard.putNumber("Module Drive Velocity", frontLeftModule.getDriveVelocity()/Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec);
+        SmartDashboard.putNumber("Module Angular Velocity", frontLeftModule.getAngularVelocity()/Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2RadPerSec);
     }
 
     public void setModuleStates(SwerveModuleState[] desiredStates){
