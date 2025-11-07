@@ -2,6 +2,7 @@ package frc.subsystems.swervesubsystem;
 
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -21,6 +22,7 @@ public class SwerveModule{
     
     //Drive & Angle Encoders
     private final SparkAbsoluteEncoder angleEncoder;
+    private final RelativeEncoder driveEncoder;
 
     private final boolean angleMotorReversed;
     private final boolean driveMotorReversed;
@@ -33,7 +35,8 @@ public class SwerveModule{
         this.driveMotor = new TalonFX(driveMotorID);
         this.angleMotor = new SparkMax(angleMotorID, MotorType.kBrushless);
 
-        this.angleEncoder = angleMotor.getAbsoluteEncoder();
+        this.angleEncoder = angleMotor.getAbsoluteEncoder(); //Spark Absolute Encoder - Neo
+        this.driveEncoder = angleMotor.getEncoder(); //Spark Relative Encoder - Kraken
 
         this.angleMotorReversed = angleMotorReversed;
         this.driveMotorReversed = driveMotorReversed;
@@ -59,9 +62,11 @@ public class SwerveModule{
     }
 
     public double getDrivePosition(){
-        return driveMotorReversed ? 
-        -1 * (driveMotor.getPosition().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters) : 
-        driveMotor.getPosition().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters;
+        // return driveMotorReversed ? 
+        // -1 * (driveMotor.getPosition().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters) : 
+        // driveMotor.getPosition().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters;
+        return driveMotorReversed ? driveEncoder.getPosition() * -1 * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters :
+                                   driveEncoder.getPosition() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters;
     }
 
     public double getAngularPosition(){
@@ -71,9 +76,11 @@ public class SwerveModule{
     }
 
     public double getDriveVelocity(){
-        return  driveMotorReversed ? 
-        -1 * driveMotor.getVelocity().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec : 
-        driveMotor.getVelocity().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec;
+        // return  driveMotorReversed ? 
+        // -1 * driveMotor.getVelocity().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec : 
+        // driveMotor.getVelocity().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec;
+        return driveMotorReversed ? driveEncoder.getVelocity() * -1 * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec :
+                                   driveEncoder.getVelocity() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec;
     }
 
     public double getAngularVelocity(){

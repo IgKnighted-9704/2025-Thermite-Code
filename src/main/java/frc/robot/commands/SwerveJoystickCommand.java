@@ -69,7 +69,7 @@ public class SwerveJoystickCommand extends Command{
 
         //Smartdashboard
             double setPointSpeed = (xSpeed < 0 || ySpeed < 0) ? - Math.hypot(xSpeed, ySpeed) : Math.hypot(xSpeed, ySpeed);
-        SmartDashboard.putNumber("Module Setpoint Speed", Math.hypot(xSpeed, ySpeed));
+        SmartDashboard.putNumber("Module Setpoint Speed", setPointSpeed);
         SmartDashboard.putNumber("Module Setpoint Angular Speed", rotSpeed);
     }
     @Override

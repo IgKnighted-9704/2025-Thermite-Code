@@ -178,6 +178,7 @@ public class ArmElevatorSubsystem extends SubsystemBase {
     }
 
     //Utility Methods
+        //Current Preset Name - String
         private String getPresetName(){
             switch (currentPreset){
                 case STOW:
@@ -203,6 +204,74 @@ public class ArmElevatorSubsystem extends SubsystemBase {
             }
         }
 
+        //Level - Preset
+        private Preset getPresetForLevel(int level){
+            switch (level){
+                case 2:
+                    return Preset.L2;
+                case 3:
+                    return Preset.L3;
+                case 4:
+                    return Preset.L4;
+                default:
+                    return Preset.STOW;
+            }
+        }
+
+        //Level - Inches
+        private double getInchesForLevel(int level){
+            switch (level){
+                case 2:
+                    return LevelConstants.kL2ElevatorSetpoint;
+                case 3:
+                    return LevelConstants.kL3ElevatorSetpoint;
+                case 4:
+                    return LevelConstants.kL4ElevatorSetpoint;
+                default:
+                    return 0.0;
+            }
+        }
+
+        //Level Score - Inches
+        private double getInchesForLevelScore(int level){
+            switch (level){
+                case 2:
+                    return LevelConstants.kL2ScoreElevatorSetpoint;
+                case 3:
+                    return LevelConstants.kL3ScoreElevatorSetpoint;
+                case 4:
+                    return LevelConstants.kL4ScoreElevatorSetpoint;
+                default:
+                    return 0.0;
+            }
+        }
+
+        //Level - Degrees
+        private double getDegreesForLevel(int level){
+            switch (level){
+                case 2:
+                    return LevelConstants.kL2ArmSetpoint;
+                case 3:
+                    return LevelConstants.kL3ArmSetpoint;
+                case 4:
+                    return LevelConstants.kL4ArmSetpoint;
+                default:
+                    return 0.0;
+            }
+        }
+        //Level Score - Degrees
+        private double getDegreesForLevelScore(int level){
+            switch (level){
+                case 2:
+                    return LevelConstants.kL2ScoreArmSetpoint;
+                case 3:
+                    return LevelConstants.kL3ScoreArmSetpoint;
+                case 4:
+                    return LevelConstants.kL4ScoreArmSetpoint;
+                default:
+                    return 0.0;
+            }
+        }
         //Arm Angle In Degrees
         private double getArmAngleDeg(){
             return armEncoder.getPosition() - Constants.ArmElevatorConstants.StateConstants.kArmAbsoluteEncoderOffset;
@@ -240,6 +309,13 @@ public class ArmElevatorSubsystem extends SubsystemBase {
         private double getEndEffectorRPM(){
             return endEffectorMotor.getVelocity().getValueAsDouble();
         }
+        //Shortened IF-ELSE
+        private boolean isLevelPreset(){
+            return (currentPreset == Preset.L2 || currentPreset == Preset.L3 || currentPreset == Preset.L4);
+        }
+        private boolean isScorePreset(){
+            return (currentPreset == Preset.L2Score || currentPreset == Preset.L3Score || currentPreset == Preset.L4Score);
+        }
         //End Effector Controls
         public void startManualIntake() {
             manualIntakeActive = true;
@@ -268,13 +344,98 @@ public class ArmElevatorSubsystem extends SubsystemBase {
         }
 
         public Command goToStow(){
+            Command goToStowCommand;
             if(currentPreset == Preset.FUNNEL){
-                return Commands.runOnce(()->{
+                goToStowCommand = Commands.runOnce(()->{
                     desiredElevInches = LevelConstants.kStowElevatorSetpoint;
                     currentPreset = Preset.STOW;
                 });
             } else if(currentPreset == Preset.LOADING){
-                return Commands.sequence(
+                goToStowCommand = Commands.sequence(
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kL1FunnelSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kL1FunnelSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = LevelConstants.kStowArmSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isArmInTolerance(LevelConstants.kStowArmSetpoint, getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kStowElevatorSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kStowElevatorSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        currentPreset = Preset.STOW;
+                    })
+                );
+            } else if (isLevelPreset()) {
+                goToStowCommand = Commands.sequence(
+                    Commands.either(
+                        Commands.sequence(
+                            Commands.runOnce(()->{
+                                startManualOuttake();
+                            }),
+                            Commands.waitUntil(
+                                ()-> !endEffectorSensor
+                            ),
+                            Commands.runOnce(()->{
+                                stopIntake();
+                            })
+                        ),
+                        Commands.none(), 
+                        ()-> endEffectorSensor
+                    ),
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kL1FunnelSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kL1FunnelSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = LevelConstants.kStowArmSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isArmInTolerance(LevelConstants.kStowArmSetpoint, getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kStowElevatorSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kStowElevatorSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        currentPreset = Preset.STOW;
+                    })
+                );
+            } else if (isLevelPreset()|| isScorePreset()) {
+                goToStowCommand = Commands.sequence(
+                    Commands.either(
+                        Commands.sequence(
+                            Commands.runOnce(()->{
+                                desiredArmAngleDeg = LevelConstants.kDropCoralArmSetpoint;
+                            }),
+                            Commands.waitUntil(
+                                ()-> isArmInTolerance(LevelConstants.kDropCoralArmSetpoint, getArmAngleDeg())
+                            ),
+                            Commands.runOnce(()->{
+                                startManualOuttake();
+                            }),
+                            Commands.waitUntil(
+                                ()-> !endEffectorSensor
+                            ),
+                            Commands.runOnce(()->{
+                                stopIntake();
+                            })
+                        ),
+                        Commands.none(), 
+                        ()-> endEffectorSensor
+                    ),
                     Commands.runOnce(()->{
                         desiredElevInches = LevelConstants.kL1FunnelSetpoint;
                     }),
@@ -298,7 +459,169 @@ public class ArmElevatorSubsystem extends SubsystemBase {
                     })
                 );
             } else {
-                return Commands.sequence(
+                goToStowCommand = Commands.none();
+            }
+
+            goToStowCommand.addRequirements(this);
+            return goToStowCommand;
+        }
+
+        public Command goToFunnel(){
+            Command goToFunnelCommand;
+            if(currentPreset == Preset.STOW || isLevelPreset() || isScorePreset() || currentPreset == Preset.LOADING){
+                goToFunnelCommand = Commands.sequence(
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kL1FunnelSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kL1FunnelSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = LevelConstants.kFunnelArmSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isArmInTolerance(LevelConstants.kFunnelArmSetpoint, getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        currentPreset = Preset.FUNNEL;
+                    })
+                );
+            } else {
+                goToFunnelCommand = Commands.none();
+            }
+
+            goToFunnelCommand.addRequirements(this);
+            return goToFunnelCommand;
+        }
+
+        public Command goToLevelScore(int level){
+            Command goToLevelScoreCommand;
+            if(isLevelPreset()){
+                goToLevelScoreCommand = Commands.sequence(
+                    Commands.runOnce(()->{
+                        desiredElevInches = getInchesForLevelScore(level);
+                    }),
+                    Commands.waitUntil(()->
+                        isElevatorInTolerance(getInchesForLevelScore(level), getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = getDegreesForLevelScore(level);
+                    }),
+                    Commands.waitUntil(()->
+                        isArmInTolerance(getDegreesForLevelScore(level), getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        currentPreset = getPresetForLevel(level);
+                    })
+                );
+            } else {
+                goToLevelScoreCommand = Commands.none();
+            }
+
+            goToLevelScoreCommand.addRequirements(this);
+            return goToLevelScoreCommand;
+        }
+
+        public Command goToLevel(int level){
+            Command goToLevelCommand;
+            if(currentPreset == Preset.FUNNEL && funnelSensor){
+                goToLevelCommand = Commands.sequence(
+                    PickUpCoralCommand(),
+                    Commands.runOnce(()->{
+                        desiredElevInches = getInchesForLevel(level);
+                    }),
+                    Commands.waitUntil(()->
+                        isElevatorInTolerance(getInchesForLevel(level), getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = getDegreesForLevel(level);
+                    }),
+                    Commands.waitUntil(()->
+                        isArmInTolerance(getDegreesForLevel(level), getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        currentPreset = getPresetForLevel(level);
+                    })
+                );
+            } else if (currentPreset == Preset.STOW || isLevelPreset() || isScorePreset()){
+                goToLevelCommand = Commands.sequence(
+                    Commands.runOnce(()->{
+                        desiredElevInches = getInchesForLevel(level);
+                    }),
+                    Commands.waitUntil(()->
+                        isElevatorInTolerance(getInchesForLevel(level), getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = getDegreesForLevel(level);
+                    }),
+                    Commands.waitUntil(()->
+                        isArmInTolerance(getDegreesForLevel(level), getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        currentPreset = getPresetForLevel(level);
+                    })
+                );
+            } else if (currentPreset == Preset.LOADING){
+                goToLevelCommand = Commands.sequence(
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kL1FunnelSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kL1FunnelSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = LevelConstants.kStowArmSetpoint;
+                    }),
+                    Commands.waitUntil(()->
+                        isArmInTolerance(LevelConstants.kStowArmSetpoint, getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredElevInches = getInchesForLevel(level);
+                    }),
+                    Commands.waitUntil(()->
+                        isElevatorInTolerance(getInchesForLevel(level), getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = getDegreesForLevel(level);
+                    }),
+                    Commands.waitUntil(()->
+                        isArmInTolerance(getDegreesForLevel(level), getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        currentPreset = getPresetForLevel(level);
+                    })
+                );
+            } else {
+                goToLevelCommand = Commands.none();
+            }
+
+            goToLevelCommand.addRequirements(this);
+            return goToLevelCommand;
+        }
+
+        public Command PickUpCoralCommand(){
+            Command pickUp;
+            if(currentPreset == Preset.FUNNEL && funnelSensor){
+                pickUp =  Commands.sequence(
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = LevelConstants.kLoadingArmSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isArmInTolerance(LevelConstants.kLoadingArmSetpoint, getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        startManualIntake();
+                    }),
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kLoadingElevatorSetpoint;
+                    }),
+                    Commands.runOnce(()->{
+                        currentPreset = Preset.LOADING;
+                    }),
+                    Commands.waitUntil(() -> getEndEffectorRPM() >= LevelConstants.kEndEffectorStallRPM),
+                    Commands.runOnce(()->{
+                        stopIntake();
+                    }),
                     Commands.runOnce(()->{
                         desiredElevInches = LevelConstants.kL1FunnelSetpoint;
                     }),
@@ -312,16 +635,112 @@ public class ArmElevatorSubsystem extends SubsystemBase {
                         ()-> isArmInTolerance(LevelConstants.kStowArmSetpoint, getArmAngleDeg())
                     ),
                     Commands.runOnce(()->{
-                        desiredElevInches = LevelConstants.kStowElevatorSetpoint;
-                    }),
-                    Commands.waitUntil(
-                        ()-> isElevatorInTolerance(LevelConstants.kStowElevatorSetpoint, getElevatorHeightInches())
-                    ),
-                    Commands.runOnce(()->{
-                        currentPreset = Preset.STOW;
+                        currentPreset = Preset.FUNNEL;
                     })
                 );
+            } else if (currentPreset == Preset.STOW && funnelSensor){
+                pickUp = Commands.sequence(
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kL1FunnelSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kL1FunnelSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = LevelConstants.kLoadingArmSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isArmInTolerance(LevelConstants.kLoadingArmSetpoint, getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        startManualIntake();
+                    }),
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kLoadingElevatorSetpoint;
+                    }),
+                    Commands.runOnce(()->{
+                        currentPreset = Preset.LOADING;
+                    }),
+                    Commands.waitUntil(() -> getEndEffectorRPM() >= LevelConstants.kEndEffectorStallRPM),
+                    Commands.runOnce(()->{
+                        stopIntake();
+                    }),
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kL1FunnelSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kL1FunnelSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = LevelConstants.kStowArmSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isArmInTolerance(LevelConstants.kStowArmSetpoint, getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        currentPreset = Preset.FUNNEL;
+                    })
+                );
+            } else if ((isLevelPreset() || isScorePreset()) && funnelSensor){
+                pickUp = Commands.sequence(
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kL1FunnelSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kL1FunnelSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = LevelConstants.kStowArmSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isArmInTolerance(LevelConstants.kStowArmSetpoint, getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kL1FunnelSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kL1FunnelSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = LevelConstants.kLoadingArmSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isArmInTolerance(LevelConstants.kLoadingArmSetpoint, getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        startManualIntake();
+                    }),
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kLoadingElevatorSetpoint;
+                    }),
+                    Commands.runOnce(()->{
+                        currentPreset = Preset.LOADING;
+                    }),
+                    Commands.waitUntil(() -> getEndEffectorRPM() >= LevelConstants.kEndEffectorStallRPM),
+                    Commands.runOnce(()->{
+                        stopIntake();
+                    }),
+                    Commands.runOnce(()->{
+                        desiredElevInches = LevelConstants.kL1FunnelSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isElevatorInTolerance(LevelConstants.kL1FunnelSetpoint, getElevatorHeightInches())
+                    ),
+                    Commands.runOnce(()->{
+                        desiredArmAngleDeg = LevelConstants.kStowArmSetpoint;
+                    }),
+                    Commands.waitUntil(
+                        ()-> isArmInTolerance(LevelConstants.kStowArmSetpoint, getArmAngleDeg())
+                    ),
+                    Commands.runOnce(()->{
+                        currentPreset = Preset.FUNNEL;
+                    })
+                );
+            } else {
+                pickUp = Commands.none();
             }
+            pickUp.addRequirements(this);
+            return pickUp;
         }
 
      @Override

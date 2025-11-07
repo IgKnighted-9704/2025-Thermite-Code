@@ -126,6 +126,11 @@ public class SwerveSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Robot Heading", getHeading()); 
         SmartDashboard.putNumber("Module Drive Velocity", frontLeftModule.getDriveVelocity()/Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec);
         SmartDashboard.putNumber("Module Angular Velocity", frontLeftModule.getAngularVelocity()/Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2RadPerSec);
+        SmartDashboard.putNumber("kDriveEncoderRot2MetersPerSec", Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec);
+        SmartDashboard.putNumber("kTurningEncoderRot2RadPerSec", Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2RadPerSec);
+        SmartDashboard.putNumber("Pose Estimator - X", getPose().getX());
+        SmartDashboard.putNumber("Pose Estimator - Y", getPose().getY());
+        SmartDashboard.putNumber("Pose Estimator - Rotation", getPose().getRotation().getDegrees());
     }
 
     public void setModuleStates(SwerveModuleState[] desiredStates){

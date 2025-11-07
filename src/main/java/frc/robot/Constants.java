@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Unit;
 
 public class Constants {
 
@@ -138,6 +137,9 @@ public class Constants {
             public static final double kSArm = 0.0;
             public static final double kVArm = 0.0;
             public static final double kAArm = 0.0;
+            // Manual Speed Multipliers
+            public static final double kManualElevatorSpeedMultiplier = 0.75;
+            public static final double kManualArmSpeedMultiplier = 0.75;
             // Sensors
             public static final int kCoralFunnelSensorPort = 1;
             public static final int kCoralInEndEffectorSensorPort = 2;
@@ -176,6 +178,11 @@ public class Constants {
 
             public static final double kL4ScoreElevatorSetpoint = 0.0;
             public static final double kL4ScoreArmSetpoint = 0.0;
+
+            public static final double kDropCoralArmSetpoint = 0.0;
+
+            //STALL RPM
+            public static final double kEndEffectorStallRPM = 0.0;
         }
 
     }
