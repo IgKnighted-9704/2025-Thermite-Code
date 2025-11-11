@@ -343,6 +343,7 @@ public class ArmElevatorSubsystem extends SubsystemBase {
             outtake = false;
         }
 
+    //Elevator Methods
         public Command goToStow(){
             Command goToStowCommand;
             if(currentPreset == Preset.FUNNEL){

@@ -9,7 +9,7 @@ import frc.robot.Constants.SwerveConstants.JoyStickConstants;
 import frc.robot.Constants.SwerveConstants.ModuleConstants;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.networktables.GenericEntry;
 
 public class SwerveJoystickCommand extends Command{
 
@@ -17,6 +17,9 @@ public class SwerveJoystickCommand extends Command{
     private final Supplier<Double> xSpeedSupplier, ySpeedSupplier, rotSupplier;
     private final boolean fieldOrientedFunction;
     private final SlewRateLimiter xLimiter, yLimiter, rotLimiter;
+        private GenericEntry ModuleSetPointSpeed;
+        private GenericEntry ModuleSetPointAngularSpeed;
+        private GenericEntry ModuleSetPointAngularPosition;
 
     public SwerveJoystickCommand(SwerveSubsystem swerveSubsystem,
                                 Supplier<Double> xSpeedSupplier,
@@ -33,6 +36,9 @@ public class SwerveJoystickCommand extends Command{
         this.yLimiter = new SlewRateLimiter(ModuleConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
         this.rotLimiter = new SlewRateLimiter(ModuleConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
 
+        ModuleSetPointSpeed = swerveSubsystem.SwerveSubsystemTracker.add("Module SetPointSpeed", Math.hypot(xSpeedSupplier.get().doubleValue(), ySpeedSupplier.get().doubleValue())).getEntry();
+        ModuleSetPointAngularSpeed = swerveSubsystem.SwerveSubsystemTracker.add("Module SetPointAngularSpeed", rotSupplier.get().doubleValue()).getEntry();
+        ModuleSetPointAngularPosition = swerveSubsystem.SwerveSubsystemTracker.add("Module SetPointAngularPosition", Math.atan2(ySpeedSupplier.get().doubleValue(), xSpeedSupplier.get().doubleValue())).getEntry();
 
         addRequirements(swerveSubsystem);
     }
@@ -69,8 +75,9 @@ public class SwerveJoystickCommand extends Command{
 
         //Smartdashboard
             double setPointSpeed = (xSpeed < 0 || ySpeed < 0) ? - Math.hypot(xSpeed, ySpeed) : Math.hypot(xSpeed, ySpeed);
-        SmartDashboard.putNumber("Module Setpoint Speed", setPointSpeed);
-        SmartDashboard.putNumber("Module Setpoint Angular Speed", rotSpeed);
+        ModuleSetPointSpeed.setDouble(setPointSpeed);
+        ModuleSetPointAngularSpeed.setDouble(rotSpeed);
+        ModuleSetPointAngularPosition.setDouble(Math.atan(ySpeed/xSpeed));
     }
     @Override
     public void end(boolean interrupted) {

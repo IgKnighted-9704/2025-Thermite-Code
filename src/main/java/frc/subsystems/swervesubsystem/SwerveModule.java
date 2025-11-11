@@ -27,9 +27,9 @@ public class SwerveModule{
     private final boolean angleMotorReversed;
     private final boolean driveMotorReversed;
 
-    private final PIDController anglePIDController;
-    private final PIDController drivePIDController;
-    private final SimpleMotorFeedforward drivFeedforward;
+    private PIDController anglePIDController;
+    private PIDController drivePIDController;
+    private SimpleMotorFeedforward driveFeedforward;
 
     public SwerveModule(int driveMotorID, int angleMotorID, boolean driveMotorReversed, boolean angleMotorReversed){
         this.driveMotor = new TalonFX(driveMotorID);
@@ -46,7 +46,7 @@ public class SwerveModule{
                                               Constants.SwerveConstants.ModuleConstants.kIDriving,
                                               Constants.SwerveConstants.ModuleConstants.kDDriving);
         //Drive Feedforward Initialization
-        drivFeedforward = new SimpleMotorFeedforward(Constants.SwerveConstants.ModuleConstants.kSDriving, 
+        driveFeedforward = new SimpleMotorFeedforward(Constants.SwerveConstants.ModuleConstants.kSDriving, 
                                                      Constants.SwerveConstants.ModuleConstants.kVDriving, 
                                                      Constants.SwerveConstants.ModuleConstants.kADriving);
         //Angle PID Initialization 
@@ -56,7 +56,6 @@ public class SwerveModule{
 
         //Rather then using the max and min input range as constraints, it considers them to be the same point and automatically calculates the shortest route to the setpoint.
         anglePIDController.enableContinuousInput(-Math.PI, Math.PI);
-
         resetEncoders();
 
     }
@@ -89,10 +88,6 @@ public class SwerveModule{
         angleEncoder.getVelocity() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2RadPerSec;
     }
 
-    public void resetEncoders(){
-        driveMotor.setPosition(0.0);
-   }
-
    public SwerveModuleState getState(){
         return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getAngularPosition()));
    }
@@ -101,6 +96,32 @@ public class SwerveModule{
         return new SwerveModulePosition(getDrivePosition(), new Rotation2d(getAngularPosition()));
    }
 
+   public PIDController getDrivePID(){
+        return drivePIDController; 
+   }
+
+   public PIDController getAngularPID(){
+        return anglePIDController;
+   }
+
+   public SimpleMotorFeedforward getSimpleMotorFeedforward(){
+        return driveFeedforward;
+   }
+
+   public void setDrivePID(double kP, double kI, double kD){
+        drivePIDController.setPID(kP, kI, kD);
+   }
+
+   public void setAngularPID(double kP, double kI, double kD){
+        anglePIDController.setPID(kP, kI, kD);
+   }
+   public void setDriveFeedForward(double kS, double kV, double kA){
+        driveFeedforward = new SimpleMotorFeedforward(kS, kV, kA);
+   }
+
+   public void resetEncoders(){
+    driveMotor.setPosition(0.0);
+}
    public void setDesiredState(SwerveModuleState state){
         if(Math.abs(state.speedMetersPerSecond) < 0.001){
             stop();
@@ -108,7 +129,7 @@ public class SwerveModule{
         }
         state.optimize(getState().angle);
             double totalSpeed = drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond) + 
-                                drivFeedforward.calculate(state.speedMetersPerSecond);
+                                driveFeedforward.calculate(state.speedMetersPerSecond);
         driveMotor.set(totalSpeed);
         angleMotor.set(anglePIDController.calculate(getAngularPosition(), state.angle.getRadians()));
    }

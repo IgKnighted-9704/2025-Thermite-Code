@@ -25,17 +25,17 @@ public class Constants {
             public static final double kTurningEncoderRot2Rad = (Math.PI * kWheelDiameterMeters) / kAngleMotorGearRatio;
             public static final double kTurningEncoderRot2RadPerSec = kTurningEncoderRot2Rad / 60;
             // PID Values-Angle Motor
-            public static final double kPTurning = 0.0;
-            public static final double kITurning = 0.0;
-            public static final double kDTurning = 0.0;
+            public static double kPTurning = 0.0;
+            public static double kITurning = 0.0;
+            public static double kDTurning = 0.0;
             // PID Values-Drive Motor
-            public static final double kPDriving = 0.2;
-            public static final double kIDriving = 0.0;
-            public static final double kDDriving = 0.0;
+            public static double kPDriving = 0.2;
+            public static double kIDriving = 0.0;
+            public static double kDDriving = 0.0;
             // Feedforward Values-Drive Motor
-            public static final double kSDriving = 0.0;
-            public static final double kVDriving = 0.0;
-            public static final double kADriving = 0.0;
+            public static double kSDriving = 0.0;
+            public static double kVDriving = 0.0;
+            public static double kADriving = 0.0;
         }
 
         public static final class DriveConstants {
@@ -87,14 +87,14 @@ public class Constants {
             );
 
             // Auto Constants
-            // Translation PID Values
-            public static final double kPTranslation = 0.0;
-            public static final double kITranslation = 0.0;
-            public static final double kDTranslation = 0.0;
-            // Rotation PID Values
-            public static final double kPRotation = 0.0;
-            public static final double kIRotation = 0.0;
-            public static final double kDRotation = 0.0;
+                // Translation PID Values
+                public static double kPTranslation = 0.0;
+                public static double kITranslation = 0.0;
+                public static double kDTranslation = 0.0;
+                // Rotation PID Values
+                public static double kPRotation = 0.0;
+                public static double kIRotation = 0.0;
+                public static double kDRotation = 0.0;
         }
 
         public static final class JoyStickConstants {
@@ -114,15 +114,15 @@ public class Constants {
             public static final int kElevatorMotorAID = 11;
             public static final int kElevatorMotorBID = 12;
             // PID Values
-            public static final double kPElevator = 0.0;
-            public static final double kIElevator = 0.0;
-            public static final double kDElevator = 0.0;
-            public static final double kProfileConstantsMaxSpeed = 0.0;
-            public static final double kProfileConstantsMaxAccel = 0.0;
+            public static double kPElevator = 0.0;
+            public static double kIElevator = 0.0;
+            public static  double kDElevator = 0.0;
+            public static double kProfileConstantsMaxSpeed = 0.0;
+            public static double kProfileConstantsMaxAccel = 0.0;
             // Feedforward Values
-            public static final double kSElevator = 0.0;
-            public static final double kVElevator = 0.0;
-            public static final double kAElevator = 0.0;
+            public static double kSElevator = 0.0;
+            public static double kVElevator = 0.0;
+            public static double kAElevator = 0.0;
             // Arm
             // MOTOR IDs
             public static final int kArmMotorID = 13;
@@ -130,13 +130,13 @@ public class Constants {
             // Offset
             public static final double kArmAbsoluteEncoderOffset = 0.0;
             // PID Values
-            public static final double kPArm = 0.0;
-            public static final double kIArm = 0.0;
-            public static final double kDArm = 0.0;
+            public static double kPArm = 0.0;
+            public static double kIArm = 0.0;
+            public static double kDArm = 0.0;
             // Feedforward Values
-            public static final double kSArm = 0.0;
-            public static final double kVArm = 0.0;
-            public static final double kAArm = 0.0;
+            public static double kSArm = 0.0;
+            public static double kVArm = 0.0;
+            public static double kAArm = 0.0;
             // Manual Speed Multipliers
             public static final double kManualElevatorSpeedMultiplier = 0.75;
             public static final double kManualArmSpeedMultiplier = 0.75;
