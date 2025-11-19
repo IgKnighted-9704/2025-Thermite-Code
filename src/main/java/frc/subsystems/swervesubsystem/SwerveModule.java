@@ -25,15 +25,17 @@ public class SwerveModule{
     private final RelativeEncoder driveEncoder;
 
     private final boolean angleMotorReversed;
+     private final double angleMotorOffsetRad;
     private final boolean driveMotorReversed;
 
     private PIDController anglePIDController;
     private PIDController drivePIDController;
     private SimpleMotorFeedforward driveFeedforward;
 
-    public SwerveModule(int driveMotorID, int angleMotorID, boolean driveMotorReversed, boolean angleMotorReversed){
+    public SwerveModule(int driveMotorID, int angleMotorID, boolean driveMotorReversed, boolean angleMotorReversed, double angleMotorOffsetRad){
         this.driveMotor = new TalonFX(driveMotorID);
         this.angleMotor = new SparkMax(angleMotorID, MotorType.kBrushless);
+        this.angleMotorOffsetRad = angleMotorOffsetRad;
 
         this.angleEncoder = angleMotor.getAbsoluteEncoder(); //Spark Absolute Encoder - Neo
         this.driveEncoder = angleMotor.getEncoder(); //Spark Relative Encoder - Kraken
@@ -70,8 +72,8 @@ public class SwerveModule{
 
     public double getAngularPosition(){
         return angleMotorReversed ? 
-        -1 * angleEncoder.getPosition() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2Rad : 
-        angleEncoder.getPosition() * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2Rad;
+        -1 * (angleEncoder.getPosition() - angleMotorOffsetRad) * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2Rad : 
+        (angleEncoder.getPosition() - angleMotorOffsetRad) * Constants.SwerveConstants.ModuleConstants.kTurningEncoderRot2Rad;
     }
 
     public double getDriveVelocity(){

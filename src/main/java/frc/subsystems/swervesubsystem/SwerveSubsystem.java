@@ -73,28 +73,32 @@ public class SwerveSubsystem extends SubsystemBase {
             DriveConstants.kFrontLeftDriveMotorPort,
             DriveConstants.kFrontLeftTurningMotorPort,
             DriveConstants.kFrontLeftDriveEncoderReversed,
-            DriveConstants.kFrontLeftTurningEncoderReversed
+            DriveConstants.kFrontLeftTurningEncoderReversed,
+            0.0
         );
 
         frontRightModule = new SwerveModule(
             DriveConstants.kFrontRightDriveMotorPort,
             DriveConstants.kFrontRightTurningMotorPort,
             DriveConstants.kFrontRightDriveEncoderReversed,
-            DriveConstants.kFrontRightTurningEncoderReversed
+            DriveConstants.kFrontRightTurningEncoderReversed,
+            0.0
         );
 
         backLeftModule = new SwerveModule(
             DriveConstants.kBackLeftDriveMotorPort,
             DriveConstants.kBackLeftTurningMotorPort,
             DriveConstants.kBackLeftDriveEncoderReversed,
-            DriveConstants.kBackLeftTurningEncoderReversed
+            DriveConstants.kBackLeftTurningEncoderReversed,
+            0.0
         );
 
         backRightModule = new SwerveModule(
             DriveConstants.kBackRightDriveMotorPort,
             DriveConstants.kBackRightTurningMotorPort,
             DriveConstants.kBackRightDriveEncoderReversed,
-            DriveConstants.kBackRightTurningEncoderReversed
+            DriveConstants.kBackRightTurningEncoderReversed,
+            0.0
         );
 
         //Gyroscope Initializaiton
@@ -326,53 +330,52 @@ public class SwerveSubsystem extends SubsystemBase {
                 PoseEstimatorRotation.setDouble(getPose().getRotation().getDegrees());
             //Path Planner
                 //Translation
-                    //SET NEW PID
-                    PathPlannerTranslationkP.setDouble(Constants.SwerveConstants.DriveConstants.kPTranslation);
-                    PathPlannerTranslationkI.setDouble(Constants.SwerveConstants.DriveConstants.kITranslation);
-                    PathPlannerTranslationkD.setDouble(Constants.SwerveConstants.DriveConstants.kDTranslation);
                     //GET NEW PID
                     Constants.SwerveConstants.DriveConstants.kPTranslation = PathPlannerTranslationkP.getDouble(Constants.SwerveConstants.DriveConstants.kPTranslation);
                     Constants.SwerveConstants.DriveConstants.kITranslation = PathPlannerTranslationkI.getDouble(Constants.SwerveConstants.DriveConstants.kITranslation);
                     Constants.SwerveConstants.DriveConstants.kDTranslation = PathPlannerTranslationkD.getDouble(Constants.SwerveConstants.DriveConstants.kDTranslation);
-                //Rotation
                     //SET NEW PID
-                    PathPlannerRotationkP.setDouble(Constants.SwerveConstants.DriveConstants.kPRotation);
-                    PathPlannerRotationkI.setDouble(Constants.SwerveConstants.DriveConstants.kIRotation);
-                    PathPlannerRotationKd.setDouble(Constants.SwerveConstants.DriveConstants.kDRotation);
+                    PathPlannerTranslationkP.setDouble(Constants.SwerveConstants.DriveConstants.kPTranslation);
+                    PathPlannerTranslationkI.setDouble(Constants.SwerveConstants.DriveConstants.kITranslation);
+                    PathPlannerTranslationkD.setDouble(Constants.SwerveConstants.DriveConstants.kDTranslation);
+                //Rotation
                     //GET NEW PID
                     Constants.SwerveConstants.DriveConstants.kPRotation = PathPlannerRotationkP.getDouble(Constants.SwerveConstants.DriveConstants.kPRotation);
                     Constants.SwerveConstants.DriveConstants.kIRotation = PathPlannerRotationkI.getDouble(Constants.SwerveConstants.DriveConstants.kIRotation);
                     Constants.SwerveConstants.DriveConstants.kDRotation = PathPlannerRotationKd.getDouble(Constants.SwerveConstants.DriveConstants.kDRotation);
+                    //SET NEW PID
+                    PathPlannerRotationkP.setDouble(Constants.SwerveConstants.DriveConstants.kPRotation);
+                    PathPlannerRotationkI.setDouble(Constants.SwerveConstants.DriveConstants.kIRotation);
+                    PathPlannerRotationKd.setDouble(Constants.SwerveConstants.DriveConstants.kDRotation);
             //Raw Drive
                 //Drive PID
-                    //SET NEW PID
-                    DrivekP.setDouble(Constants.SwerveConstants.ModuleConstants.kPDriving);
-                    DrivekI.setDouble(Constants.SwerveConstants.ModuleConstants.kIDriving);
-                    DrivekD.setDouble(Constants.SwerveConstants.ModuleConstants.kDDriving);
                     //GET NEW PID
                     Constants.SwerveConstants.ModuleConstants.kPDriving = DrivekP.getDouble(Constants.SwerveConstants.ModuleConstants.kPDriving);
                     Constants.SwerveConstants.ModuleConstants.kIDriving = DrivekI.getDouble(Constants.SwerveConstants.ModuleConstants.kIDriving);
                     Constants.SwerveConstants.ModuleConstants.kDDriving = DrivekD.getDouble(Constants.SwerveConstants.ModuleConstants.kDDriving);
+                    //SET NEW PID
+                    DrivekP.setDouble(Constants.SwerveConstants.ModuleConstants.kPDriving);
+                    DrivekI.setDouble(Constants.SwerveConstants.ModuleConstants.kIDriving);
+                    DrivekD.setDouble(Constants.SwerveConstants.ModuleConstants.kDDriving);
                 // Angle PID
-                    // SET NEW PID
-                    AnglekP.setDouble(Constants.SwerveConstants.ModuleConstants.kPTurning);
-                    AnglekI.setDouble(Constants.SwerveConstants.ModuleConstants.kITurning);
-                    AnglekD.setDouble(Constants.SwerveConstants.ModuleConstants.kDTurning);
                     // GET NEW PID
                     Constants.SwerveConstants.ModuleConstants.kPTurning = AnglekP.getDouble(Constants.SwerveConstants.ModuleConstants.kPTurning);
                     Constants.SwerveConstants.ModuleConstants.kITurning = AnglekI.getDouble(Constants.SwerveConstants.ModuleConstants.kITurning);
                     Constants.SwerveConstants.ModuleConstants.kDTurning = AnglekD.getDouble(Constants.SwerveConstants.ModuleConstants.kDTurning);
+                    // SET NEW PID
+                    AnglekP.setDouble(Constants.SwerveConstants.ModuleConstants.kPTurning);
+                    AnglekI.setDouble(Constants.SwerveConstants.ModuleConstants.kITurning);
+                    AnglekD.setDouble(Constants.SwerveConstants.ModuleConstants.kDTurning);
 
                 // Drive Feedforward
-                    // SET NEW Feedforward
-                    DriveFFkS.setDouble(Constants.SwerveConstants.ModuleConstants.kSDriving);
-                    DriveFFkV.setDouble(Constants.SwerveConstants.ModuleConstants.kVDriving);
-                    DriveFFkA.setDouble(Constants.SwerveConstants.ModuleConstants.kADriving);
                     // GET NEW Feedforward
                     Constants.SwerveConstants.ModuleConstants.kSDriving = DriveFFkS.getDouble(Constants.SwerveConstants.ModuleConstants.kSDriving);
                     Constants.SwerveConstants.ModuleConstants.kVDriving = DriveFFkV.getDouble(Constants.SwerveConstants.ModuleConstants.kVDriving);
                     Constants.SwerveConstants.ModuleConstants.kADriving = DriveFFkA.getDouble(Constants.SwerveConstants.ModuleConstants.kADriving);
-            
+                    // SET NEW Feedforward
+                    DriveFFkS.setDouble(Constants.SwerveConstants.ModuleConstants.kSDriving);
+                    DriveFFkV.setDouble(Constants.SwerveConstants.ModuleConstants.kVDriving);
+                    DriveFFkA.setDouble(Constants.SwerveConstants.ModuleConstants.kADriving);
     }
 
 }

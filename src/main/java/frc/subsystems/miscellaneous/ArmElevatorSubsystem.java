@@ -1,5 +1,9 @@
 package frc.subsystems.miscellaneous;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
@@ -12,12 +16,17 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.ArmElevatorConstants.LevelConstants;
 
@@ -105,6 +114,11 @@ public class ArmElevatorSubsystem extends SubsystemBase {
                             private final GenericEntry kSArmEntry;
                             private final GenericEntry kVArmEntry;
                             private final GenericEntry kAArmEntry;
+            //SysID
+                private SysIdRoutine ElevSysIdRoutine = new SysIdRoutine(
+                 new SysIdRoutine.Config(),
+                 new SysIdRoutine.Mechanism(this :: setElevatorVoltage, this :: logData, this)
+                );
 
     public ArmElevatorSubsystem() {
         //Elevator Motor Initialization
@@ -342,6 +356,32 @@ public class ArmElevatorSubsystem extends SubsystemBase {
             endEffectorMotor.set(0.0);
             outtake = false;
         }
+        //SysID
+            //Set Elevator Voltage for SysID
+            public void setElevatorVoltage(Voltage ElevVolts){
+                elevatorMotorA.setVoltage(ElevVolts.baseUnitMagnitude());
+                elevatorMotorB.setVoltage(-ElevVolts.baseUnitMagnitude());
+            }
+            //Get Log Data for SysID
+            public void logData(SysIdRoutineLog log) {
+                var elevatorLogMotorA = log.motor("elevator");
+                elevatorLogMotorA.voltage(elevatorMotorA.getMotorVoltage().getValue());
+                elevatorLogMotorA.linearPosition(Distance.ofBaseUnits(getElevatorHeightInches(), Inches));
+                elevatorLogMotorA.linearVelocity(LinearVelocity.ofBaseUnits(elevatorMotorA.getVelocity().getValueAsDouble(), MetersPerSecond));
+
+                var elevatorLogMotorB = log.motor("elevator");
+                elevatorLogMotorB.voltage(elevatorMotorB.getMotorVoltage().getValue());
+                elevatorLogMotorB.linearPosition(Distance.ofBaseUnits(getElevatorHeightInches(), Inches));
+                elevatorLogMotorB.linearVelocity(LinearVelocity.ofBaseUnits(elevatorMotorB.getVelocity().getValueAsDouble(), MetersPerSecond));
+            }
+            public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+                return ElevSysIdRoutine.quasistatic(direction);
+              }
+              
+            public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+                return ElevSysIdRoutine.dynamic(direction);
+            }
+
 
     //Elevator Methods
         public Command goToStow(){
@@ -743,7 +783,6 @@ public class ArmElevatorSubsystem extends SubsystemBase {
             pickUp.addRequirements(this);
             return pickUp;
         }
-
      @Override
         public void periodic(){
             //Update Sensors
@@ -760,10 +799,6 @@ public class ArmElevatorSubsystem extends SubsystemBase {
             endeffectorSensorEntry.setBoolean(endEffectorSensor);
             //PID & FEEDFORWARD Updates From Shuffleboard
                 //Elevator
-                    //PID
-                        elevatorPIDController.setP(kPElevatorEntry.getDouble(Constants.ArmElevatorConstants.StateConstants.kPElevator));
-                        elevatorPIDController.setI(kIElevatorEntry.getDouble(Constants.ArmElevatorConstants.StateConstants.kIElevator));
-                        elevatorPIDController.setD(kDElevatorEntry.getDouble(Constants.ArmElevatorConstants.StateConstants.kDElevator));
                     //Feedforward
                         elevatorFeedforward = new ElevatorFeedforward(
                             kSElevatorEntry.getDouble(Constants.ArmElevatorConstants.StateConstants.kSElevator),
@@ -771,10 +806,6 @@ public class ArmElevatorSubsystem extends SubsystemBase {
                             kAElevatorEntry.getDouble(Constants.ArmElevatorConstants.StateConstants.kAElevator)
                         );
                 //Arm
-                    //PID
-                        armPIDController.setP(kPArmEntry.getDouble(Constants.ArmElevatorConstants.StateConstants.kPArm));
-                        armPIDController.setI(kIArmEntry.getDouble(Constants.ArmElevatorConstants.StateConstants.kIArm));
-                        armPIDController.setD(kDArmEntry.getDouble(Constants.ArmElevatorConstants.StateConstants.kDArm));
                     //Feedforward
                         armFeedforward = new SimpleMotorFeedforward(
                             kSArmEntry.getDouble(Constants.ArmElevatorConstants.StateConstants.kSArm),
@@ -799,7 +830,7 @@ public class ArmElevatorSubsystem extends SubsystemBase {
                 );
 
                 if (!manualElevator){
-                    elevatorMotorA.setVoltage(totalElevVolts);
+                    elevatorMotorA.setVoltage(-totalElevVolts);
                     elevatorMotorB.setVoltage(totalElevVolts);
                 }
 
