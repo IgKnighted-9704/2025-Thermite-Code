@@ -74,10 +74,9 @@ public class SwerveJoystickCommand extends Command{
         swerveSubsystem.setModuleStates(moduleStates);
 
         //Smartdashboard
-            double setPointSpeed = (xSpeed < 0 || ySpeed < 0) ? - Math.hypot(xSpeed, ySpeed) : Math.hypot(xSpeed, ySpeed);
-        ModuleSetPointSpeed.setDouble(setPointSpeed);
+        ModuleSetPointSpeed.setDouble((xSpeed < 0 || ySpeed < 0) ? - Math.hypot(xSpeed, ySpeed) : Math.hypot(xSpeed, ySpeed));
         ModuleSetPointAngularSpeed.setDouble(rotSpeed);
-        ModuleSetPointAngularPosition.setDouble(Math.atan(ySpeed/xSpeed));
+        ModuleSetPointAngularPosition.setDouble((Math.toDegrees(Math.atan2(ySpeed, xSpeed)) + 360) % 360);
     }
     @Override
     public void end(boolean interrupted) {

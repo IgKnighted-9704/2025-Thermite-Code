@@ -13,7 +13,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import frc.robot.Constants;
-
 public class SwerveModule{
 
     //Drive & Angle Motors
@@ -63,9 +62,6 @@ public class SwerveModule{
     }
 
     public double getDrivePosition(){
-        // return driveMotorReversed ? 
-        // -1 * (driveMotor.getPosition().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters) : 
-        // driveMotor.getPosition().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters;
         return driveMotorReversed ? driveEncoder.getPosition() * -1 * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters :
                                    driveEncoder.getPosition() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2Meters;
     }
@@ -77,9 +73,6 @@ public class SwerveModule{
     }
 
     public double getDriveVelocity(){
-        // return  driveMotorReversed ? 
-        // -1 * driveMotor.getVelocity().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec : 
-        // driveMotor.getVelocity().getValueAsDouble() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec;
         return driveMotorReversed ? driveEncoder.getVelocity() * -1 * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec :
                                    driveEncoder.getVelocity() * Constants.SwerveConstants.ModuleConstants.kDriveEncoderRot2MetersPerSec;
     }

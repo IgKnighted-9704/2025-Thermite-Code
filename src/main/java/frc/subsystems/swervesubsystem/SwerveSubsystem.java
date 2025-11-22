@@ -36,8 +36,15 @@ public class SwerveSubsystem extends SubsystemBase {
     public final ShuffleboardTab SwerveSubsystemTracker;
         private GenericEntry RobotVelocity;
         private GenericEntry RobotHeading;
-        private GenericEntry ModuleDriveVelocity;
-        private GenericEntry ModuleAngle;
+        
+        private GenericEntry FrontRightModuleDriveVelocity;
+        private GenericEntry FrontRightModuleAngle;
+        private GenericEntry FrontLeftModuleDriveVelocity;
+        private GenericEntry FrontLeftModuleAngle;
+        private GenericEntry BackRightModuleDriveVelocity;
+        private GenericEntry BackRightModuleAngle;
+        private GenericEntry BackLeftModuleDriveVelocity;
+        private GenericEntry BackLeftModuleAngle;
         
         private GenericEntry PoseEstimatorX;
         private GenericEntry PoseEstimatorY;
@@ -129,8 +136,15 @@ public class SwerveSubsystem extends SubsystemBase {
             //Robot Information
                 RobotVelocity = SwerveSubsystemTracker.add("Robot Velocity", Math.hypot(getRobotVelocity().vxMetersPerSecond, getRobotVelocity().vyMetersPerSecond)).getEntry();
                 RobotHeading = SwerveSubsystemTracker.add("Robot Heading", getHeading()).getEntry();
-                ModuleDriveVelocity = SwerveSubsystemTracker.add("Module Drive Velocity", frontRightModule.getDriveVelocity()).getEntry();
-                ModuleAngle = SwerveSubsystemTracker.add("Module Angle", frontRightModule.getAngularPosition()).getEntry();
+            //Module Information
+                FrontRightModuleDriveVelocity = SwerveSubsystemTracker.add("Module Drive Velocity", frontRightModule.getDriveVelocity()).getEntry();
+                FrontRightModuleAngle = SwerveSubsystemTracker.add("Module Angle", Math.toDegrees(frontRightModule.getAngularPosition())).getEntry();
+                FrontLeftModuleDriveVelocity = SwerveSubsystemTracker.add("Front Left Module Drive Velocity", frontLeftModule.getDriveVelocity()).getEntry();
+                FrontLeftModuleAngle = SwerveSubsystemTracker.add("Front Left Module Angle", Math.toDegrees(frontLeftModule.getAngularPosition())).getEntry();
+                BackRightModuleDriveVelocity = SwerveSubsystemTracker.add("Back Right Module Drive Velocity", backRightModule.getDriveVelocity()).getEntry();
+                BackRightModuleAngle = SwerveSubsystemTracker.add("Back Right Module Angle", Math.toDegrees(backRightModule.getAngularPosition())).getEntry();
+                BackLeftModuleDriveVelocity = SwerveSubsystemTracker.add("Back Left Module Drive Velocity", backLeftModule.getDriveVelocity()).getEntry();
+                BackLeftModuleAngle = SwerveSubsystemTracker.add("Back Left Module Angle", Math.toDegrees(backLeftModule.getAngularPosition())).getEntry();            
             //Pose Estimator
                 PoseEstimatorX = SwerveSubsystemTracker.add("Pose Estimator X", getPose().getX()).getEntry();
                 PoseEstimatorY = SwerveSubsystemTracker.add("Pose Estimator Y", getPose().getY()).getEntry();
@@ -319,11 +333,18 @@ public class SwerveSubsystem extends SubsystemBase {
                this.getModulePositions()
         );
         //Shuffleboard
-            //Live Data
+            //Robot Information
                 RobotVelocity.setDouble(Math.hypot(getRobotVelocity().vxMetersPerSecond, getRobotVelocity().vyMetersPerSecond));
                 RobotHeading.setDouble(getHeading());
-                ModuleDriveVelocity.setDouble(frontRightModule.getDriveVelocity());
-                ModuleAngle.setDouble(frontRightModule.getAngularPosition());
+            //Module Information
+                FrontRightModuleDriveVelocity.setDouble(frontRightModule.getDriveVelocity());
+                FrontRightModuleAngle.setDouble(frontRightModule.getAngularPosition());
+                FrontLeftModuleDriveVelocity.setDouble(frontLeftModule.getDriveVelocity());
+                FrontLeftModuleAngle.setDouble(frontLeftModule.getAngularPosition());
+                BackRightModuleDriveVelocity.setDouble(backRightModule.getDriveVelocity());
+                BackRightModuleAngle.setDouble(backRightModule.getAngularPosition());
+                BackLeftModuleDriveVelocity.setDouble(backLeftModule.getDriveVelocity());
+                BackLeftModuleAngle.setDouble(backLeftModule.getAngularPosition());
             //Pose Estimator
                 PoseEstimatorX.setDouble(getPose().getX());
                 PoseEstimatorY.setDouble(getPose().getY());
